@@ -24,7 +24,7 @@
        </tr>
        <tr class="crm-electoral-api-form-block-county">
            <td>{$form.includedCounties.label}</td>
-           <td>{$form.includedCounties.html|crmAddClass:huge}<br />
+           <td>{$form.includedCounties.html|crmAddClass:huge}&nbsp;&nbsp;{$form.allCounties.html}  {$form.allCounties.label}<br />
            <span class="description">{ts}Select counties to include in API scheduled jobs.{/ts}</span></td>
        </tr>
        <tr class="crm-electoral-api-form-block-city">
