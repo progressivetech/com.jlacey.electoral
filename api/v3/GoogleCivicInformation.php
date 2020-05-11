@@ -194,10 +194,15 @@ function google_civic_information_county_districts($level, $limit, $update) {
   }
 
   //Counties
-  $includedCounties = civicrm_api3('Setting', 'getvalue', ['name' => 'includedCounties']);
-  foreach( $includedCounties as $countyId) {
-    $counties[$countyId] = strtolower(CRM_Core_PseudoConstant::county($countyId));
+  $allCounties = civicrm_api3('Setting', 'getvalue', ['name' => 'allCounties']);
+  $includedCounties = NULL;
+  if (!$allCounties) {
+    $includedCounties = civicrm_api3('Setting', 'getvalue', ['name' => 'includedCounties']);
+    foreach( $includedCounties as $countyId) {
+      $counties[$countyId] = strtolower(CRM_Core_PseudoConstant::county($countyId));
+    }
   }
+  
 
   $contactAddresses = electoral_district_addresses($limit, $level, $includedStatesProvinces, $update);
 
@@ -210,6 +215,7 @@ function google_civic_information_county_districts($level, $limit, $update) {
     $city = rawurlencode($contactAddresses->city);
     $stateProvinceAbbrev = CRM_Core_PseudoConstant::stateProvinceAbbreviation($contactAddresses->state_province_id);
     $url = "https://www.googleapis.com/civicinfo/v2/representatives?key=$apikey&address=$streetAddress%20$city%20$stateProvinceAbbrev";
+    $url = 'https://www.googleapis.com/civicinfo/v2/representatives?key=AIzaSyCWfiDFh1qw70c8TM5bdZ4dTI_UJplzAGc&address=100%20Deslande%20New%20Orleans%20LA';
 
     $districts = electoral_curl($url);
 
@@ -226,12 +232,12 @@ function google_civic_information_county_districts($level, $limit, $update) {
         $divisionDistrict = ''; 
         $divisionParts = explode('/', str_replace($countyDivision . '/', '', $divisionKey));
         if(substr($divisionParts[0], 0, 6) == 'county' &&
-           substr($divisionParts[1], 0, 16) == 'council_district' &&
-           in_array(substr($divisionParts[0], 7), $counties)) {
-           
-          $county = ucwords(substr($divisionParts[0], 7));
-          $divisionDistrict = substr($divisionParts[1], 17);
-          electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, $county, NULL, NULL, $divisionDistrict);
+           substr($divisionParts[1], 0, 16) == 'council_district') {
+           if ($allCounties || in_array(substr($divisionParts[0], 7), $counties)) {
+            $county = ucwords(substr($divisionParts[0], 7));
+            $divisionDistrict = substr($divisionParts[1], 17);
+            electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, $county, NULL, NULL, $divisionDistrict);
+           }
         }
       }
       $addressesDistricted++;
@@ -381,7 +387,6 @@ function electoral_district_addresses($limit, $level, $statesProvinces, $update)
 
   //Throttling
   $addressSql .= "
-     GROUP BY cc.id
      ORDER BY cc.id DESC
         LIMIT %2
   ";
