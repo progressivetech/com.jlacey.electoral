@@ -1,6 +1,17 @@
 <?php
 
 /**
+ * Adjust metadata for "Districts" action.
+ *
+ * @param array $params
+ */
+function civicrm_api3_google_civic_information_districts_spec(&$params) {
+  $params['level']['api.required'] = 1;
+  $params['limit']['api.default'] = 100;
+  $params['update']['api.default'] = 0;
+}
+
+/**
  * Google Civic Information API
  *
  * @param array $params
@@ -21,6 +32,10 @@ function civicrm_api3_google_civic_information_districts($params) {
   }
 
   switch ($params['level']) {
+    case 'all':
+      $result = google_civic_information_all_districts($limit, $update);
+      break;
+
     case 'country':
       $result = google_civic_information_country_districts($params['level'], $limit, $update);
       break;
@@ -180,6 +195,12 @@ function google_civic_information_state_districts($level, $limit, $update) {
   }
   return $edDistrictReturn;
 }
+/**
+ * Function to sort divisions by length to determine their level.
+ */
+function electoral_division_sort(string $a, string $b) {
+  return strlen($a) - strlen($b);
+}
 
 /**
  * Function to create county level districts
@@ -189,10 +210,9 @@ function google_civic_information_all_districts(int $limit, bool $update) {
   //Set variables
   $addressesDistricted = $addressesWithErrors = 0;
 
-  $contactAddresses = electoral_district_addresses_new($limit, 'all', $includedStatesProvinces, $update);
+  $contactAddresses = electoral_district_addresses_new($limit, $update);
 
   while ($contactAddresses->fetch()) {
-
     $streetAddress = $city = $stateProvinceAbbrev = $districts = '';
 
     //Assemble the API URL
@@ -209,21 +229,54 @@ function google_civic_information_all_districts(int $limit, bool $update) {
       $addressesWithErrors++;
       electoral_district_address_errors($districts, $contactAddresses->id);
     }
-    //Process divisions
+    //Process offices
     else {
-      $countyDivision = strtolower("ocd-division/country:us/state:$stateProvinceAbbrev");
-      foreach ($districts['divisions'] as $divisionKey => $division) {
-        //Check if there's a district
-        $divisionDistrict = '';
-        $divisionParts = explode('/', str_replace($countyDivision . '/', '', $divisionKey));
-        if (substr($divisionParts[0], 0, 6) == 'county' &&
-           substr($divisionParts[1], 0, 16) == 'council_district' &&
-           in_array(substr($divisionParts[0], 7), $counties)) {
+      $chamber = $cityName = $county = $stateDivisionId = NULL;
 
-          $county = ucwords(substr($divisionParts[0], 7));
-          $divisionDistrict = substr($divisionParts[1], 17);
-          electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, $county, NULL, NULL, $divisionDistrict);
+      // Sort the divisions by length.  Shortest is country, second-shortest is administrativeArea1 (state/province).
+      $divisions = array_keys($districts['divisions']);
+      usort($divisions, 'electoral_division_sort');
+      $countryDivisionId = $divisions[0];
+      $administrativeArea1DivisionId = $divisions[1];
+
+      foreach ($districts['offices'] as $officeKey => $office) {
+        $levels = ['country', 'administrativeArea1', 'AdministrativeArea2', 'locality'];
+        // Get the level of government
+        foreach ($levels as $level) {
+          if (in_array($level, $office['levels'])) {
+            break;
+          }
         }
+        // Get the chamber, if one exists.
+        if (in_array('legislatorUpperBody', $office['roles'])) {
+          $chamber = 'upper';
+        }
+        if (in_array('legislatorLowerBody', $office['roles'])) {
+          $chamber = 'lower';
+        }
+        // Get the district, if one exists.
+        preg_match('/:(\d+)$/', $office['divisionId'], $matches);
+        $district = $matches[1];
+
+        // Get the state-level divisionId, we need this for figuring out lower-level divisions.
+        // This works by some magic - the first state-level ID should be for the head of govt, so shouldn't have a district #.
+        if (!$stateDivisionId) {
+          $stateDivisionId = $office['divisionId'];
+        }
+        // At country and state/province level, only record legislative body districts.
+        // Note this is US-centric and excludes Nebraska, but NE state legislative data seems not to be present in the API anyway.
+        if (in_array($level, ['country', 'administrativeArea1']) && !$chamber) {
+          continue;
+        }
+        // Add County to administrativeArea2
+        if ($level == 'administrativeArea2') {
+          preg_match('/ocd-division\/.*\/.*\/.*:(.*)$/', $office['divisionId'], $countyMatch);
+          $county = $countyMatch[1];
+        }
+        if ($level == 'locality') {
+          $cityName = $contactAddresses->city;
+        }
+        electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, $county, $cityName, $chamber, $district, 0, $office['name']);
       }
       $addressesDistricted++;
     }
@@ -234,21 +287,6 @@ function google_civic_information_all_districts(int $limit, bool $update) {
     $edDistrictReturn .= " $addressesWithErrors addresses with errors.";
   }
   return $edDistrictReturn;
-}
-
-/**
- * Returns an array of all divisions from the Google Civic "Divisions" endpoint.
- * @param $country The ISO code of the country (lowercased)
- * @param $stateProvince The ISO code of the state/province (lowercased)
- */
-function electoral_get_divisions(string $country, string $stateProvince) {
-  static $divisions;
-  if (!$divisions) {
-    $url = "https://www.googleapis.com/civicinfo/v2/divisions?query=ocd-division/country\:{$country}/state\:{$stateProvince}";
-    $response = electoral_curl($url);
-    
-  }
-  return $divisions;
 }
 
 /**
@@ -402,15 +440,15 @@ function google_civic_information_city_districts($level, $limit, $update) {
  */
 function electoral_district_addresses_new(int $limit, bool $update) {
   //States
-  $includedStatesProvinces = civicrm_api3('Setting', 'getvalue', ['name' => 'includedStatesProvinces']);
-  foreach ($includedStatesProvinces as $stateProvinceId) {
-    $statesProvinces[$stateProvinceId] = strtolower(CRM_Core_PseudoConstant::stateProvinceAbbreviation($stateProvinceId));
-  }
+  $includedStatesProvinces = implode(',', civicrm_api3('Setting', 'getvalue', ['name' => 'includedStatesProvinces']));
 
   //Counties
-  $includedCounties = civicrm_api3('Setting', 'getvalue', ['name' => 'includedCounties']);
-  foreach ($includedCounties as $countyId) {
-    $counties[$countyId] = strtolower(CRM_Core_PseudoConstant::county($countyId));
+  $allCounties = civicrm_api3('Setting', 'getvalue', ['name' => 'allCounties']);
+  if (!$allCounties) {
+    $includedCounties = civicrm_api3('Setting', 'getvalue', ['name' => 'includedCounties']);
+    foreach ($includedCounties as $countyId) {
+      $counties[$countyId] = strtolower(CRM_Core_PseudoConstant::county($countyId));
+    }
   }
 
   // Localities
@@ -422,21 +460,17 @@ function electoral_district_addresses_new(int $limit, bool $update) {
   //Location Types
   $addressLocationType = civicrm_api3('Setting', 'getvalue', ['name' => 'addressLocationType']);
 
-  
   //Electoral District table
   $edTableName = civicrm_api3('CustomGroup', 'getvalue', ['return' => "table_name", 'name' => "electoral_districts"]);
-  
+
   //Electoral Status table
   $esTableName = civicrm_api3('CustomGroup', 'getvalue', ['return' => "table_name", 'name' => "electoral_status"]);
-  
-  //States list used for SQL address lookup query
-  $addressStatesProvinces = implode(', ', $statesProvinces);
-  
+
   // Set params for address lookup
   $addressSqlParams = [
     1 => [$addressLocationType, 'Integer'],
     2 => [$limit, 'Integer'],
-    3 => [$addressStatesProvinces, 'String'],
+    3 => [$includedStatesProvinces, 'String'],
   ];
 
   //Assemble address lookup query
@@ -456,7 +490,7 @@ function electoral_district_addresses_new(int $limit, bool $update) {
               ON ca.contact_id = cc.id
             WHERE ca.street_address IS NOT NULL
               AND ca.city IS NOT NULL
-              AND ca.state_province_id IN (%4)
+              AND ca.state_province_id IN (%3)
               AND ca.country_id = 1228
               AND cc.is_deceased != 1
               AND cc.is_deleted != 1
@@ -484,7 +518,7 @@ function electoral_district_addresses_new(int $limit, bool $update) {
 
   //Throttling
   $addressSql .= "
-        ORDER BY cc.id DESC
+        ORDER BY ca.id DESC
           LIMIT %2
   ";
 
@@ -585,7 +619,7 @@ function electoral_district_address_errors($districts, $addressId) {
 /**
  * Helper function to create or update electoral districts custom data
  */
-function electoral_district_create_update($contactId, $level, $stateProvinceId = NULL, $countyId = NULL, $city = NULL, $chamber = NULL, $district = NULL, $inOffice = 0) {
+function electoral_district_create_update($contactId, $level, $stateProvinceId = NULL, $countyId = NULL, $city = NULL, $chamber = NULL, $district = NULL, $inOffice = 0, $officeName = NULL) {
   //Check if this level exists already
   $contactEdExists = electoral_district_exists($contactId, "$level", "$chamber");
   if ($contactEdExists['count'] == 1) {
@@ -602,6 +636,7 @@ function electoral_district_create_update($contactId, $level, $stateProvinceId =
       "custom_electoral_districts:Chamber:$edId" => "$chamber",
       "custom_electoral_districts:District:$edId" => "$district",
       "custom_electoral_districts:In office?:$edId" => $inOffice,
+      "custom_electoral_districts:Office:$edId" => $officeName,
     ));
   }
   else {
@@ -615,6 +650,7 @@ function electoral_district_create_update($contactId, $level, $stateProvinceId =
       'custom_electoral_districts:Chamber' => "$chamber",
       'custom_electoral_districts:District' => "$district",
       'custom_electoral_districts:In office?' => $inOffice,
+      'custom_electoral_districts:Office' => $officeName,
     ));
   }
 }
