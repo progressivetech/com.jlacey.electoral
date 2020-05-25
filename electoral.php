@@ -227,6 +227,22 @@ function electoral_civicrm_managed(&$entities) {
       'is_active'     => 0,
     ),
   );
+  $entities[] = [
+    'module' => 'com.jlacey.electoral',
+    'name' => 'googlecivicinfo_all_districts',
+    'entity' => 'Job',
+    'params' => [
+      'version' => 3,
+      'name'          => 'Google Civic Information API - Districts Lookup',
+      'description'   => 'Adds US city representative contacts via the Google Civic Information API',
+      'run_frequency' => 'Daily',
+      'api_entity'    => 'GoogleCivicInformation',
+      'api_action'    => 'reps',
+      'parameters'    => "level=all",
+      'is_active'     => 0,
+    ],
+  ];
+
   _electoral_civix_civicrm_managed($entities);
 }
 

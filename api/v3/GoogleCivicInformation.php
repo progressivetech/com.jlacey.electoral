@@ -184,6 +184,72 @@ function google_civic_information_state_districts($level, $limit, $update) {
 /**
  * Function to create county level districts
  */
+function google_civic_information_all_districts(int $limit, bool $update) {
+
+  //Set variables
+  $addressesDistricted = $addressesWithErrors = 0;
+
+  //API Key
+  $apikey = civicrm_api3('Setting', 'getvalue', ['name' => 'googleCivicInformationAPIKey']);
+
+  $contactAddresses = electoral_district_addresses_new($limit, 'all', $includedStatesProvinces, $update);
+
+  while ($contactAddresses->fetch()) {
+
+    $streetAddress = $city = $state = $districts = '';
+
+    //Assemble the API URL
+    $streetAddress = rawurlencode($contactAddresses->street_address);
+    $city = rawurlencode($contactAddresses->city);
+    $stateProvinceAbbrev = CRM_Core_PseudoConstant::stateProvinceAbbreviation($contactAddresses->state_province_id);
+    $url = "https://www.googleapis.com/civicinfo/v2/representatives?key=$apikey&address=$streetAddress%20$city%20$stateProvinceAbbrev";
+
+    $districts = electoral_curl($url);
+
+    //Process the response
+    //Check for errors first
+    if (isset($districts['error'])) {
+      $addressesWithErrors++;
+      electoral_district_address_errors($districts, $contactAddresses->id);
+    }
+    //Process divisions
+    else {
+      $countyDivision = strtolower("ocd-division/country:us/state:$stateProvinceAbbrev");
+      foreach ($districts['divisions'] as $divisionKey => $division) {
+        //Check if there's a district
+        $divisionDistrict = '';
+        $divisionParts = explode('/', str_replace($countyDivision . '/', '', $divisionKey));
+        if (substr($divisionParts[0], 0, 6) == 'county' &&
+           substr($divisionParts[1], 0, 16) == 'council_district' &&
+           in_array(substr($divisionParts[0], 7), $counties)) {
+
+          $county = ucwords(substr($divisionParts[0], 7));
+          $divisionDistrict = substr($divisionParts[1], 17);
+          electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, $county, NULL, NULL, $divisionDistrict);
+        }
+      }
+      $addressesDistricted++;
+    }
+  }
+
+  $edDistrictReturn = "$addressesDistricted addresses districted.";
+  if ($addressesWithErrors > 0) {
+    $edDistrictReturn .= " $addressesWithErrors addresses with errors.";
+  }
+  return $edDistrictReturn;
+}
+
+function getDivisions(string $country, string $stateProvince) {
+  static $divisions;
+  if (!$divisions) {
+    
+  }
+  return $divisions;
+}
+
+/**
+ * Function to create county level districts
+ */
 function google_civic_information_county_districts($level, $limit, $update) {
 
   //Set variables
@@ -324,6 +390,102 @@ function google_civic_information_city_districts($level, $limit, $update) {
 /**
  * Helper function to assemble address district query
  */
+function electoral_district_addresses_new(int $limit, bool $update) {
+  //States
+  $includedStatesProvinces = civicrm_api3('Setting', 'getvalue', ['name' => 'includedStatesProvinces']);
+  foreach ($includedStatesProvinces as $stateProvinceId) {
+    $statesProvinces[$stateProvinceId] = strtolower(CRM_Core_PseudoConstant::stateProvinceAbbreviation($stateProvinceId));
+  }
+
+  //Counties
+  $includedCounties = civicrm_api3('Setting', 'getvalue', ['name' => 'includedCounties']);
+  foreach ($includedCounties as $countyId) {
+    $counties[$countyId] = strtolower(CRM_Core_PseudoConstant::county($countyId));
+  }
+
+  // Localities
+  $includedCities = explode(',', civicrm_api3('Setting', 'getvalue', array('name' => 'includedCities')));
+  foreach ($includedCities as $city) {
+    $cities[] = strtolower($city);
+  }
+
+  //Location Types
+  $addressLocationType = civicrm_api3('Setting', 'getvalue', ['name' => 'addressLocationType']);
+
+  
+  //Electoral District table
+  $edTableName = civicrm_api3('CustomGroup', 'getvalue', ['return' => "table_name", 'name' => "electoral_districts"]);
+  
+  //Electoral Status table
+  $esTableName = civicrm_api3('CustomGroup', 'getvalue', ['return' => "table_name", 'name' => "electoral_status"]);
+  
+  //States list used for SQL address lookup query
+  $addressStatesProvinces = implode(', ', $statesProvinces);
+  
+  // Set params for address lookup
+  $addressSqlParams = [
+    1 => [$addressLocationType, 'Integer'],
+    2 => [$limit, 'Integer'],
+    3 => [$addressStatesProvinces, 'String'],
+  ];
+
+  //Assemble address lookup query
+  //TODO Why do we not include the postal code?
+  $addressSql = "
+  SELECT DISTINCT ca.id,
+                  ca.street_address,
+                  ca.city,
+                  ca.state_province_id,
+                  ca.contact_id
+            FROM civicrm_address ca
+        LEFT JOIN $edTableName ed
+              ON ca.contact_id = ed.entity_id
+        LEFT JOIN $esTableName es
+              ON ca.id = es.entity_id
+      INNER JOIN civicrm_contact cc
+              ON ca.contact_id = cc.id
+            WHERE ca.street_address IS NOT NULL
+              AND ca.city IS NOT NULL
+              AND ca.state_province_id IN (%4)
+              AND ca.country_id = 1228
+              AND cc.is_deceased != 1
+              AND cc.is_deleted != 1
+              AND es.electoral_status_error_code IS NULL
+  ";
+
+  //Handle a location type of Primary.
+  if ($addressLocationType == 0) {
+    $addressSql .= "
+              AND ca.is_primary = 1
+    ";
+  }
+  else {
+    $addressSql .= "
+              AND ca.location_type_id = %1
+    ";
+  }
+
+  //FIXME there's probably a better way to do this
+  if (!$update) {
+    $addressSql .= "
+              AND ed.id IS NULL
+    ";
+  }
+
+  //Throttling
+  $addressSql .= "
+        ORDER BY cc.id DESC
+          LIMIT %2
+  ";
+
+  $addresses = CRM_Core_DAO::executeQuery($addressSql, $addressSqlParams);
+  return $addresses;
+}
+
+/**
+ * Helper function to assemble address district query
+ * @deprecated
+ */
 function electoral_district_addresses($limit, $level, $statesProvinces, $update) {
   //Location Types
   $addressLocationType = civicrm_api3('Setting', 'getvalue', ['name' => 'addressLocationType']);
@@ -389,11 +551,9 @@ function electoral_district_addresses($limit, $level, $statesProvinces, $update)
 
   //Throttling
   $addressSql .= "
-     GROUP BY cc.id
      ORDER BY cc.id DESC
         LIMIT %2
   ";
-  //CRM_Core_Error::debug_var('addressSql', $addressSql);
 
   $addresses = CRM_Core_DAO::executeQuery($addressSql, $addressSqlParams);
   return $addresses;
