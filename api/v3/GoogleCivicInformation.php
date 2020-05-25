@@ -265,11 +265,6 @@ function google_civic_information_county_districts($level, $limit, $update) {
   }
 
   //Counties
-<<<<<<< HEAD
-  $includedCounties = civicrm_api3('Setting', 'getvalue', ['name' => 'includedCounties']);
-  foreach ($includedCounties as $countyId) {
-    $counties[$countyId] = strtolower(CRM_Core_PseudoConstant::county($countyId));
-=======
   $allCounties = civicrm_api3('Setting', 'getvalue', ['name' => 'allCounties']);
   $includedCounties = NULL;
   if (!$allCounties) {
@@ -277,7 +272,6 @@ function google_civic_information_county_districts($level, $limit, $update) {
     foreach( $includedCounties as $countyId) {
       $counties[$countyId] = strtolower(CRM_Core_PseudoConstant::county($countyId));
     }
->>>>>>> origin/metadata-settings
   }
   
 
@@ -309,15 +303,6 @@ function google_civic_information_county_districts($level, $limit, $update) {
         //Check if there's a district
         $divisionDistrict = '';
         $divisionParts = explode('/', str_replace($countyDivision . '/', '', $divisionKey));
-<<<<<<< HEAD
-        if (substr($divisionParts[0], 0, 6) == 'county' &&
-           substr($divisionParts[1], 0, 16) == 'council_district' &&
-           in_array(substr($divisionParts[0], 7), $counties)) {
-
-          $county = ucwords(substr($divisionParts[0], 7));
-          $divisionDistrict = substr($divisionParts[1], 17);
-          electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, $county, NULL, NULL, $divisionDistrict);
-=======
         if(substr($divisionParts[0], 0, 6) == 'county' &&
            substr($divisionParts[1], 0, 16) == 'council_district') {
            if ($allCounties || in_array(substr($divisionParts[0], 7), $counties)) {
@@ -325,7 +310,6 @@ function google_civic_information_county_districts($level, $limit, $update) {
             $divisionDistrict = substr($divisionParts[1], 17);
             electoral_district_create_update($contactAddresses->contact_id, $level, $contactAddresses->state_province_id, $county, NULL, NULL, $divisionDistrict);
            }
->>>>>>> origin/metadata-settings
         }
       }
       $addressesDistricted++;
