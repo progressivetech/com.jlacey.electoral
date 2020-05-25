@@ -189,20 +189,17 @@ function google_civic_information_all_districts(int $limit, bool $update) {
   //Set variables
   $addressesDistricted = $addressesWithErrors = 0;
 
-  //API Key
-  $apikey = civicrm_api3('Setting', 'getvalue', ['name' => 'googleCivicInformationAPIKey']);
-
   $contactAddresses = electoral_district_addresses_new($limit, 'all', $includedStatesProvinces, $update);
 
   while ($contactAddresses->fetch()) {
 
-    $streetAddress = $city = $state = $districts = '';
+    $streetAddress = $city = $stateProvinceAbbrev = $districts = '';
 
     //Assemble the API URL
     $streetAddress = rawurlencode($contactAddresses->street_address);
     $city = rawurlencode($contactAddresses->city);
     $stateProvinceAbbrev = CRM_Core_PseudoConstant::stateProvinceAbbreviation($contactAddresses->state_province_id);
-    $url = "https://www.googleapis.com/civicinfo/v2/representatives?key=$apikey&address=$streetAddress%20$city%20$stateProvinceAbbrev";
+    $url = "https://www.googleapis.com/civicinfo/v2/representatives?address=$streetAddress%20$city%20$stateProvinceAbbrev";
 
     $districts = electoral_curl($url);
 
@@ -239,9 +236,16 @@ function google_civic_information_all_districts(int $limit, bool $update) {
   return $edDistrictReturn;
 }
 
-function getDivisions(string $country, string $stateProvince) {
+/**
+ * Returns an array of all divisions from the Google Civic "Divisions" endpoint.
+ * @param $country The ISO code of the country (lowercased)
+ * @param $stateProvince The ISO code of the state/province (lowercased)
+ */
+function electoral_get_divisions(string $country, string $stateProvince) {
   static $divisions;
   if (!$divisions) {
+    $url = "https://www.googleapis.com/civicinfo/v2/divisions?query=ocd-division/country\:{$country}/state\:{$stateProvince}";
+    $response = electoral_curl($url);
     
   }
   return $divisions;
@@ -1212,8 +1216,11 @@ function electoral_tag_party($contactId, $party) {
 function electoral_curl($url) {
   //CRM_Core_Error::debug_var('url', $url);
 
+  $apikey = civicrm_api3('Setting', 'getvalue', ['name' => 'googleCivicInformationAPIKey']);
   $verifySSL = civicrm_api('Setting', 'getvalue', ['version' => 3, 'name' => 'verifySSL']);
 
+  // Add the API key.
+  $url .= "&key=$apikey";
   //Intitalize curl
   $ch = curl_init();
   curl_setopt($ch, CURLOPT_URL, $url);

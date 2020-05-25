@@ -59,7 +59,7 @@ return array(
     'is_domain' => 1,
     'is_contact' => 0,
     'description' => 'States and Provinces included in API calls',
-    'help_text' => 'Add states and provinces to include in API scheduled jobs',    
+    'help_text' => 'Add states and provinces to include in API scheduled jobs',
     'html_type' => 'select',
     'html_attributes' => [
       'multiple' => 1,
