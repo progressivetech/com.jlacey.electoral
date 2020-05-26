@@ -5,3 +5,9 @@ After installing the extension, the first configurations to make are the top lev
 The second major step is to enable the Scheduled Jobs that will do the regular lookups. Again from the administration bar, Administer > System Settings > Scheduled Jobs. All the relevant jobs should be prefaced, 'Google Civic Information API'. Enable the ones relevant to your electoral level. Note that Google's Civic Information API has a free limit of 2500/day, about 100/hour. To get faster results, you'll need to pay for extra daily lookups.
 
 That should be everything you need to get it rolling. Two caveats: this is very much a beta extension, so there are bugs. Second my interest in supporting this extension has waned, so additional development isn't planned. Obviously feel free to fork it and submit PR's.
+
+TODO:
+* Add a new setting to allow selecting some levels of government but not others
+* Add a new setting to exclude certain types of positions (e.g. school board, judges)
+* Add tests
+* Refactor the representative lookup functions into a single function similar to districts
