@@ -42,15 +42,30 @@ function electoral_division_sort(string $a, string $b) {
 }
 
 /**
- * Function to create county level districts
+ * Function to populate district data.
+ * @return string A status message to return for the API call.
  */
 function google_civic_information_all_districts(int $limit, bool $update) {
 
   //Set variables
   $addressesDistricted = $addressesWithErrors = 0;
 
-  $contactAddresses = electoral_district_addresses_new($limit, $update);
+  $contactAddresses = electoral_district_addresses($limit, $update);
 
+  list($addressesDistricted, $addressesWithErrors) = google_civic_process_districts_for_addresses($contactAddresses);
+
+  $edDistrictReturn = "$addressesDistricted addresses districted.";
+  if ($addressesWithErrors > 0) {
+    $edDistrictReturn .= " $addressesWithErrors addresses with errors.";
+  }
+  return $edDistrictReturn;
+}
+
+/**
+ * Given a DAO result of addresses, add district records to the contact.
+ * @return array Two elements - number of addresses districted and the number of addresses with errors.
+ */
+function google_civic_process_districts_for_addresses(CRM_Core_DAO $contactAddresses) {
   while ($contactAddresses->fetch()) {
     $streetAddress = $city = $stateProvinceAbbrev = $districts = '';
 
@@ -132,36 +147,30 @@ function google_civic_information_all_districts(int $limit, bool $update) {
       $addressesDistricted++;
     }
   }
-
-  $edDistrictReturn = "$addressesDistricted addresses districted.";
-  if ($addressesWithErrors > 0) {
-    $edDistrictReturn .= " $addressesWithErrors addresses with errors.";
-  }
-  return $edDistrictReturn;
+  return [$addressesDistricted, $addressesWithErrors];
 }
 
 /**
  * Helper function to assemble address district query
  */
-function electoral_district_addresses_new(int $limit, bool $update) {
+function electoral_district_addresses(int $limit, bool $update) {
   //States
   $includedStatesProvinces = implode(',', civicrm_api3('Setting', 'getvalue', ['name' => 'includedStatesProvinces']));
 
   //Counties
   $allCounties = civicrm_api3('Setting', 'getvalue', ['name' => 'allCounties']);
+  $counties = '';
   if (!$allCounties) {
-    $includedCounties = civicrm_api3('Setting', 'getvalue', ['name' => 'includedCounties']);
-    foreach ($includedCounties as $countyId) {
-      $counties[$countyId] = strtolower(CRM_Core_PseudoConstant::county($countyId));
-    }
+    $counties = implode(',', civicrm_api3('Setting', 'getvalue', ['name' => 'includedCounties']));
   }
 
   // Localities
-  $includedCities = explode(',', civicrm_api3('Setting', 'getvalue', array('name' => 'includedCities')));
-  foreach ($includedCities as $city) {
-    $cities[] = strtolower($city);
+  // Get the "includedCities" setting, trim out space around commas, and put quotation marks in where needed.
+  $cities = explode(',', preg_replace('/\s*,\s*/', ',', civicrm_api3('Setting', 'getvalue', array('name' => 'includedCities'))));
+  foreach ($cities as $cityKey => $city) {
+    $cities[$cityKey] = CRM_Utils_Type::escape($city, 'String');
   }
-
+  $cities = "'" . implode("','", $cities) . "'";
   //Location Types
   $addressLocationType = civicrm_api3('Setting', 'getvalue', ['name' => 'addressLocationType']);
 
@@ -176,56 +185,60 @@ function electoral_district_addresses_new(int $limit, bool $update) {
     1 => [$addressLocationType, 'Integer'],
     2 => [$limit, 'Integer'],
     3 => [$includedStatesProvinces, 'String'],
+    4 => [$counties, 'String'],
   ];
 
   //Assemble address lookup query
   //TODO Why do we not include the postal code?
-  $addressSql = "
-  SELECT DISTINCT ca.id,
+  $addressSql = " SELECT DISTINCT ca.id,
                   ca.street_address,
                   ca.city,
                   ca.state_province_id,
                   ca.contact_id
-            FROM civicrm_address ca
+             FROM civicrm_address ca
         LEFT JOIN $edTableName ed
-              ON ca.contact_id = ed.entity_id
+               ON ca.contact_id = ed.entity_id
         LEFT JOIN $esTableName es
-              ON ca.id = es.entity_id
-      INNER JOIN civicrm_contact cc
-              ON ca.contact_id = cc.id
+               ON ca.id = es.entity_id
+       INNER JOIN civicrm_contact cc
+               ON ca.contact_id = cc.id
             WHERE ca.street_address IS NOT NULL
               AND ca.city IS NOT NULL
               AND ca.state_province_id IN (%3)
               AND ca.country_id = 1228
               AND cc.is_deceased != 1
               AND cc.is_deleted != 1
-              AND es.electoral_status_error_code IS NULL
-  ";
+              AND es.electoral_status_error_code IS NULL";
 
+  if ($cities) {
+    // This is sanitized above.
+    $addressSql .= "
+              AND ca.city IN ($cities)";
+  }
+  if ($counties) {
+    $addressSql .= "
+              AND ca.county_id IN (%4)";
+  }
   //Handle a location type of Primary.
   if ($addressLocationType == 0) {
     $addressSql .= "
-              AND ca.is_primary = 1
-    ";
+              AND ca.is_primary = 1";
   }
   else {
     $addressSql .= "
-              AND ca.location_type_id = %1
-    ";
+              AND ca.location_type_id = %1";
   }
 
   //FIXME there's probably a better way to do this
   if (!$update) {
     $addressSql .= "
-              AND ed.id IS NULL
-    ";
+              AND ed.id IS NULL";
   }
 
   //Throttling
   $addressSql .= "
-        ORDER BY ca.id DESC
-          LIMIT %2
-  ";
+         ORDER BY ca.id DESC
+            LIMIT %2";
 
   $addresses = CRM_Core_DAO::executeQuery($addressSql, $addressSqlParams);
   return $addresses;
@@ -249,7 +262,7 @@ function electoral_district_address_errors($districts, $addressId) {
  */
 function electoral_district_create_update($contactId, $level, $stateProvinceId = NULL, $countyId = NULL, $city = NULL, $chamber = NULL, $district = NULL, $inOffice = 0, $officeName = NULL) {
   //Check if this level exists already
-  $contactEdExists = electoral_district_exists($contactId, "$level", "$chamber", $countyId, $cityName);
+  $contactEdExists = electoral_district_exists($contactId, "$level", "$chamber", $countyId, $city);
   if ($contactEdExists['count'] == 1) {
     //Get the custom value set id
     $edTableNameId = electoral_district_table_name_id();
