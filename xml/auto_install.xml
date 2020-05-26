@@ -59,21 +59,6 @@
       <custom_group_name>electoral_districts</custom_group_name>
     </CustomField>
     <CustomField>
-      <name>electoral_districts_office</name>
-      <label>Office</label>
-      <data_type>String</data_type>
-      <html_type>Text</html_type>
-      <is_required>0</is_required>
-      <is_searchable>1</is_searchable>
-      <is_search_range>0</is_search_range>
-      <weight>3</weight>
-      <is_active>1</is_active>
-      <is_view>0</is_view>
-      <column_name>electoral_districts_office</column_name>
-      <in_selector>1</in_selector>
-      <custom_group_name>electoral_districts</custom_group_name>
-    </CustomField>
-    <CustomField>
       <name>electoral_counties</name>
       <label>County</label>
       <data_type>String</data_type>

@@ -8,30 +8,6 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
   // By convention, functions that look like "function upgrade_NNNN()" are
   // upgrade tasks. They are executed in order (like Drupal's hook_update_N).
 
-  public function upgrade_1000() {
-    $this->ctx->log->info('Adding Electoral Districts Office field');
-    $officeExists = civicrm_api3('CustomField', 'get', [
-      'sequential' => 1,
-      'name' => "electoral_districts_office",
-    ])['count'];
-    if (!$officeExists) {
-      civicrm_api3('CustomField', 'create', [
-        'custom_group_id' => "electoral_districts",
-        'label' => "Office",
-        'data_type' => "String",
-        'html_type' => "Text",
-        'is_required' => 0,
-        'is_searchable' => 1,
-        'weight' => 3,
-        'is_active' => 1,
-        'column_name' => "electoral_districts_office",
-        'name' => "electoral_districts_office",
-        'name' => "electoral_districts_office",
-        'in_selector' => 1,
-      ]);
-    }
-    return TRUE;
-  }
   /**
    * Example: Run an external SQL script when the module is installed.
    *
