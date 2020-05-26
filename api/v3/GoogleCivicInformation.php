@@ -354,10 +354,6 @@ function civicrm_api3_google_civic_information_reps($params) {
  * Function to create country level reps
  */
 function google_civic_information_country_reps($level, $roles) {
-
-  //Google API Key
-  $apiKey = civicrm_api3('Setting', 'getvalue', ['name' => 'googleCivicInformationAPIKey']);
-
   //Roles are equivalent to chambers
   $roles = explode(',', $roles);
 
@@ -375,7 +371,7 @@ function google_civic_information_country_reps($level, $roles) {
       $countryDivisionEncoded = urlencode($countryDivision);
 
       //Assemble the API URL
-      $countryUrl = "https://www.googleapis.com/civicinfo/v2/representatives/$countryDivisionEncoded?levels=$level&recursive=true&roles=$role&key=$apiKey";
+      $countryUrl = "https://www.googleapis.com/civicinfo/v2/representatives/$countryDivisionEncoded?levels=$level&recursive=true&roles=$role";
 
       //Do the lookup
       $countryReps = electoral_curl($countryUrl);
@@ -394,10 +390,6 @@ function google_civic_information_country_reps($level, $roles) {
  * Function to create state level reps
  */
 function google_civic_information_state_reps($level, $roles) {
-
-  //Google API Key
-  $apiKey = civicrm_api3('Setting', 'getvalue', ['name' => 'googleCivicInformationAPIKey']);
-
   //Roles are equivalent to chambers
   $roles = explode(',', $roles);
 
@@ -416,7 +408,7 @@ function google_civic_information_state_reps($level, $roles) {
       $stateDivisionEncoded = urlencode($stateDivision);
 
       //Assemble the API URL
-      $stateUrl = "https://www.googleapis.com/civicinfo/v2/representatives/$stateDivisionEncoded?levels=$level&recursive=true&roles=$role&key=$apiKey";
+      $stateUrl = "https://www.googleapis.com/civicinfo/v2/representatives/$stateDivisionEncoded?levels=$level&recursive=true&roles=$role";
 
       //Do the lookup
       $stateReps = electoral_curl($stateUrl);
@@ -435,10 +427,6 @@ function google_civic_information_state_reps($level, $roles) {
  * Function to get county reps
  */
 function google_civic_information_county_reps($level) {
-
-  //Google API Key
-  $apiKey = civicrm_api3('Setting', 'getvalue', ['name' => 'googleCivicInformationAPIKey']);
-
   //States
   $statesProvinces = array();
   $includedStatesProvinces = civicrm_api3('Setting', 'getvalue', ['name' => 'includedStatesProvinces']);
@@ -460,7 +448,7 @@ function google_civic_information_county_reps($level) {
       $countyDivisionEncoded = urlencode($countyDivision);
 
       //Assemble the API URL
-      $countyUrl = "https://www.googleapis.com/civicinfo/v2/representatives/$countyDivisionEncoded?recursive=true&key=$apiKey";
+      $countyUrl = "https://www.googleapis.com/civicinfo/v2/representatives/$countyDivisionEncoded?recursive=true";
 
       //Do the lookup
       $countyReps = electoral_curl($countyUrl);
@@ -479,10 +467,6 @@ function google_civic_information_county_reps($level) {
  * Function to get city reps
  */
 function google_civic_information_city_reps($level) {
-
-  //Google API Key
-  $apiKey = civicrm_api3('Setting', 'getvalue', ['name' => 'googleCivicInformationAPIKey']);
-
   //States
   $statesProvinces = array();
   $includedStatesProvinces = civicrm_api3('Setting', 'getvalue', ['name' => 'includedStatesProvinces']);
@@ -503,7 +487,7 @@ function google_civic_information_city_reps($level) {
       $cityDivisionEncoded = urlencode($cityDivision);
 
       //Assemble the API URL
-      $cityUrl = "https://www.googleapis.com/civicinfo/v2/representatives/$cityDivisionEncoded?recursive=true&key=$apiKey";
+      $cityUrl = "https://www.googleapis.com/civicinfo/v2/representatives/$cityDivisionEncoded?recursive=true";
 
       //Do the lookup
       $cityReps = electoral_curl($cityUrl);
@@ -888,8 +872,6 @@ function electoral_tag_party($contactId, $party) {
  * Helper function for curl requests
  */
 function electoral_curl($url) {
-  //CRM_Core_Error::debug_var('url', $url);
-
   $apikey = civicrm_api3('Setting', 'getvalue', ['name' => 'googleCivicInformationAPIKey']);
   $verifySSL = civicrm_api('Setting', 'getvalue', ['version' => 3, 'name' => 'verifySSL']);
 
