@@ -169,11 +169,18 @@ function electoral_district_addresses(int $limit, bool $update) {
 
   // Localities
   // Get the "includedCities" setting, trim out space around commas, and put quotation marks in where needed.
+  // Or unset if it's blank.
   $cities = explode(',', preg_replace('/\s*,\s*/', ',', civicrm_api3('Setting', 'getvalue', array('name' => 'includedCities'))));
   foreach ($cities as $cityKey => $city) {
     $cities[$cityKey] = CRM_Utils_Type::escape($city, 'String');
   }
-  $cities = "'" . implode("','", $cities) . "'";
+  if ($cities[0]) {
+    $cities = "'" . implode("','", $cities) . "'";
+  }
+  else {
+    unset($cities);
+  }
+
   //Location Types
   $addressLocationType = civicrm_api3('Setting', 'getvalue', ['name' => 'addressLocationType']);
 
