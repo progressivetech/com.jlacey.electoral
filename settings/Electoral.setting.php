@@ -3,8 +3,8 @@
 /*
  * Settings metadata file
  */
-return array(
-  'googleCivicInformationAPIKey' => array(
+return [
+  'googleCivicInformationAPIKey' => [
     'group_name' => 'Electoral API settings',
     'group' => 'electoral',
     'name' => 'googleCivicInformationAPIKey',
@@ -17,8 +17,8 @@ return array(
     'help_text' => 'Add your registered Google Civic Information API Key for Open Civic Data API calls',
     'html_type' => 'text',
     'title' => ts('Google Civic Information API Key'),
-  ),
-  'proPublicaCongressAPIKey' => array(
+  ],
+  'proPublicaCongressAPIKey' => [
     'group_name' => 'Electoral API settings',
     'group' => 'electoral',
     'name' => 'proPublicaCongressAPIKey',
@@ -31,8 +31,8 @@ return array(
     'help_text' => 'Add your registered ProPublica Congress API Key for API calls',
     'html_type' => 'text',
     'title' => ts('ProPublica Congress API Key'),
-  ),
-  'addressLocationType' => array(
+  ],
+  'addressLocationType' => [
     'group_name' => 'Electoral API settings',
     'group' => 'electoral',
     'name' => 'addressLocationType',
@@ -48,8 +48,8 @@ return array(
     'pseudoconstant' => [
       'callback' => 'CRM_Admin_Form_Setting_Electoral::getLocationTypes',
     ],
-  ),
-  'includedStatesProvinces' => array(
+  ],
+  'includedStatesProvinces' => [
     'group_name' => 'Electoral API settings',
     'group' => 'electoral',
     'name' => 'includedStatesProvinces',
@@ -69,8 +69,8 @@ return array(
     'pseudoconstant' => [
       'callback' => 'CRM_Core_PseudoConstant::stateProvince',
     ],
-  ),
-  'includedCounties' => array(
+  ],
+  'includedCounties' => [
     'group_name' => 'Electoral API settings',
     'group' => 'electoral',
     'name' => 'includedCounties',
@@ -87,7 +87,7 @@ return array(
       'class' => 'huge crm-select2',
     ],
     'title' => ts('Counties included in the API calls'),
-  ),
+  ],
   'allCounties' => [
     'group_name' => 'Electoral API settings',
     'group' => 'electoral',
@@ -102,7 +102,7 @@ return array(
     'html_type' => 'checkbox',
     'title' => ts('All Counties'),
   ],
-  'includedCities' => array(
+  'includedCities' => [
     'group_name' => 'Electoral API settings',
     'group' => 'electoral',
     'name' => 'includedCities',
@@ -115,5 +115,5 @@ return array(
     'help_text' => 'Add cities, comma separated, to include in API scheduled jobs',
     'html_type' => 'text',
     'title' => ts('Cities included in API Calls'),
-  ),
-);
+  ],
+];

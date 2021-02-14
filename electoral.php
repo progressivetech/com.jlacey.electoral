@@ -26,15 +26,15 @@ function electoral_civicrm_xmlMenu(&$files) {
  */
 function electoral_civicrm_navigationMenu(&$params) {
   $path = "Administer/System Settings";
-  $item = array(
-    'label' => ts('Electoral API', array('com.jlacey.electoral')),
+  $item = [
+    'label' => ts('Electoral API', ['com.jlacey.electoral']),
     'name' => 'Electoral API',
     'url' => 'civicrm/admin/setting/electoral',
     'permission' => 'administer CiviCRM',
     'operator' => '',
     'separator' => '',
     'active' => 1,
-  );
+  ];
 
   $navigation = _electoral_civix_insert_navigation_menu($params, $path, $item);
 }
@@ -107,11 +107,11 @@ function electoral_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_managed
  */
 function electoral_civicrm_managed(&$entities) {
-  $entities[] = array(
+  $entities[] = [
     'module' => 'com.jlacey.electoral',
     'name' => 'googlecivicinfo_country_districts',
     'entity' => 'Job',
-    'params' => array(
+    'params' => [
       'version' => 3,
       'name'          => 'Google Civic Information API - Country Districts',
       'description'   => 'Adds US legislative districts to contacts via the Google Civic Information API',
@@ -120,13 +120,13 @@ function electoral_civicrm_managed(&$entities) {
       'api_action'    => 'districts',
       'parameters'    => "level=country\nlimit=100\nupdate=0",
       'is_active'     => 0,
-    ),
-  );
-  $entities[] = array(
+    ],
+  ];
+  $entities[] = [
     'module' => 'com.jlacey.electoral',
     'name' => 'googlecivicinfo_state_province_districts',
     'entity' => 'Job',
-    'params' => array(
+    'params' => [
       'version' => 3,
       'name'          => 'Google Civic Information API - State and Province Districts',
       'description'   => 'Adds state and province districts to contacts via the Google Civic Information API',
@@ -135,13 +135,13 @@ function electoral_civicrm_managed(&$entities) {
       'api_action'    => 'districts',
       'parameters'    => "level=administrativeArea1\nlimit=100\nupdate=0",
       'is_active'     => 0,
-    ),
-  );
-  $entities[] = array(
+    ],
+  ];
+  $entities[] = [
     'module' => 'com.jlacey.electoral',
     'name' => 'googlecivicinfo_county_districts',
     'entity' => 'Job',
-    'params' => array(
+    'params' => [
       'version' => 3,
       'name'          => 'Google Civic Information API - County Districts',
       'description'   => 'Adds county legislative districts to contacts via the Google Civic Information API',
@@ -150,13 +150,13 @@ function electoral_civicrm_managed(&$entities) {
       'api_action'    => 'districts',
       'parameters'    => "level=administrativeArea2\nlimit=100\nupdate=0",
       'is_active'     => 0,
-    ),
-  );
-  $entities[] = array(
+    ],
+  ];
+  $entities[] = [
     'module' => 'com.jlacey.electoral',
     'name' => 'googlecivicinfo_city_districts',
     'entity' => 'Job',
-    'params' => array(
+    'params' => [
       'version' => 3,
       'name'          => 'Google Civic Information API - City Districts',
       'description'   => 'Adds city legislative districts to contacts via the Google Civic Information API',
@@ -165,13 +165,13 @@ function electoral_civicrm_managed(&$entities) {
       'api_action'    => 'districts',
       'parameters'    => "level=locality\nlimit=100\nupdate=0",
       'is_active'     => 0,
-    ),
-  );
-  $entities[] = array(
+    ],
+  ];
+  $entities[] = [
     'module' => 'com.jlacey.electoral',
     'name' => 'googlecivicinfo_country_reps',
     'entity' => 'Job',
-    'params' => array(
+    'params' => [
       'version' => 3,
       'name'          => 'Google Civic Information API - Country Representatives',
       'description'   => 'Adds US representative contacts via the Google Civic Information API',
@@ -180,13 +180,13 @@ function electoral_civicrm_managed(&$entities) {
       'api_action'    => 'reps',
       'parameters'    => "level=country\nroles=legislatorUpperBody,legislatorLowerBody",
       'is_active'     => 0,
-    ),
-  );
-  $entities[] = array(
+    ],
+  ];
+  $entities[] = [
     'module' => 'com.jlacey.electoral',
     'name' => 'googlecivicinfo_state_province_reps',
     'entity' => 'Job',
-    'params' => array(
+    'params' => [
       'version' => 3,
       'name'          => 'Google Civic Information API - State and Province Representatives',
       'description'   => 'Adds US state representive contacts via the Google Civic Information API',
@@ -195,13 +195,13 @@ function electoral_civicrm_managed(&$entities) {
       'api_action'    => 'reps',
       'parameters'    => "level=administrativeArea1\nroles=legislatorUpperBody,legislatorLowerBody",
       'is_active'     => 0,
-    ),
-  );
-  $entities[] = array(
+    ],
+  ];
+  $entities[] = [
     'module' => 'com.jlacey.electoral',
     'name' => 'googlecivicinfo_county_reps',
     'entity' => 'Job',
-    'params' => array(
+    'params' => [
       'version' => 3,
       'name'          => 'Google Civic Information API - County Representatives',
       'description'   => 'Adds US county represenative contacts via the Google Civic Information API',
@@ -210,13 +210,13 @@ function electoral_civicrm_managed(&$entities) {
       'api_action'    => 'reps',
       'parameters'    => "level=administrativeArea2",
       'is_active'     => 0,
-    ),
-  );
-  $entities[] = array(
+    ],
+  ];
+  $entities[] = [
     'module' => 'com.jlacey.electoral',
     'name' => 'googlecivicinfo_city_reps',
     'entity' => 'Job',
-    'params' => array(
+    'params' => [
       'version' => 3,
       'name'          => 'Google Civic Information API - City Representatives',
       'description'   => 'Adds US city representative contacts via the Google Civic Information API',
@@ -225,8 +225,8 @@ function electoral_civicrm_managed(&$entities) {
       'api_action'    => 'reps',
       'parameters'    => "level=locality",
       'is_active'     => 0,
-    ),
-  );
+    ],
+  ];
   $entities[] = [
     'module' => 'com.jlacey.electoral',
     'name' => 'googlecivicinfo_all_districts',

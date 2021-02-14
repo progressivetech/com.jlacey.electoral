@@ -20,7 +20,7 @@ function _electoral_civix_civicrm_config(&$config = NULL) {
   if ( is_array( $template->template_dir ) ) {
       array_unshift( $template->template_dir, $extDir );
   } else {
-      $template->template_dir = array( $extDir, $template->template_dir );
+      $template->template_dir = [ $extDir, $template->template_dir ];
   }
 
   $include_path = $extRoot . PATH_SEPARATOR . get_include_path( );
@@ -71,7 +71,7 @@ function _electoral_civix_civicrm_uninstall() {
 function _electoral_civix_civicrm_enable() {
   _electoral_civix_civicrm_config();
   if ($upgrader = _electoral_civix_upgrader()) {
-    if (is_callable(array($upgrader, 'onEnable'))) {
+    if (is_callable([$upgrader, 'onEnable'])) {
       $upgrader->onEnable();
     }
   }
@@ -86,7 +86,7 @@ function _electoral_civix_civicrm_enable() {
 function _electoral_civix_civicrm_disable() {
   _electoral_civix_civicrm_config();
   if ($upgrader = _electoral_civix_upgrader()) {
-    if (is_callable(array($upgrader, 'onDisable'))) {
+    if (is_callable([$upgrader, 'onDisable'])) {
       $upgrader->onDisable();
     }
   }
@@ -131,12 +131,12 @@ function _electoral_civix_upgrader() {
  * @return array(string)
  */
 function _electoral_civix_find_files($dir, $pattern) {
-  if (is_callable(array('CRM_Utils_File', 'findFiles'))) {
+  if (is_callable(['CRM_Utils_File', 'findFiles'])) {
     return CRM_Utils_File::findFiles($dir, $pattern);
   }
 
-  $todos = array($dir);
-  $result = array();
+  $todos = [$dir];
+  $result = [];
   while (!empty($todos)) {
     $subdir = array_shift($todos);
     foreach (_electoral_civix_glob("$subdir/$pattern") as $match) {
@@ -198,11 +198,11 @@ function _electoral_civix_civicrm_caseTypes(&$caseTypes) {
       CRM_Core_Error::fatal($errorMessage);
       // throw new CRM_Core_Exception($errorMessage);
     }
-    $caseTypes[$name] = array(
+    $caseTypes[$name] = [
       'module' => 'com.jlacey.electoral',
       'name' => $name,
       'file' => $file,
-    );
+    ];
   }
 }
 
@@ -220,7 +220,7 @@ function _electoral_civix_civicrm_caseTypes(&$caseTypes) {
  */
 function _electoral_civix_glob($pattern) {
   $result = glob($pattern);
-  return is_array($result) ? $result : array();
+  return is_array($result) ? $result : [];
 }
 
 /**
@@ -238,14 +238,14 @@ function _electoral_civix_insert_navigation_menu(&$menu, $path, $item, $parentId
   if (empty($path)) {
     if (!$navId) $navId = CRM_Core_DAO::singleValueQuery("SELECT max(id) FROM civicrm_navigation");
     $navId ++;
-    $menu[$navId] = array (
-      'attributes' => array_merge($item, array(
+    $menu[$navId] =  [
+      'attributes' => array_merge($item, [
         'label'      => CRM_Utils_Array::value('name', $item),
         'active'     => 1,
         'parentID'   => $parentId,
         'navID'      => $navId,
-      ))
-    );
+      ])
+    ];
     return true;
   } else {
     // Find an recurse into the next level down
@@ -254,7 +254,7 @@ function _electoral_civix_insert_navigation_menu(&$menu, $path, $item, $parentId
     $first = array_shift($path);
     foreach ($menu as $key => &$entry) {
       if ($entry['attributes']['name'] == $first) {
-        if (!$entry['child']) $entry['child'] = array();
+        if (!$entry['child']) $entry['child'] = [];
         $found = _electoral_civix_insert_navigation_menu($entry['child'], implode('/', $path), $item, $key);
       }
     }

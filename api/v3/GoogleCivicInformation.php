@@ -170,7 +170,7 @@ function electoral_district_addresses(int $limit, bool $update) {
   // Localities
   // Get the "includedCities" setting, trim out space around commas, and put quotation marks in where needed.
   // Or unset if it's blank.
-  $cities = explode(',', preg_replace('/\s*,\s*/', ',', civicrm_api3('Setting', 'getvalue', array('name' => 'includedCities'))));
+  $cities = explode(',', preg_replace('/\s*,\s*/', ',', civicrm_api3('Setting', 'getvalue', ['name' => 'includedCities'])));
   foreach ($cities as $cityKey => $city) {
     $cities[$cityKey] = CRM_Utils_Type::escape($city, 'String');
   }
@@ -278,7 +278,7 @@ function electoral_district_create_update($contactId, $level, $stateProvinceId =
     $edTableNameId = electoral_district_table_name_id();
     $edId = $contactEdExists['values'][$contactId][$edTableNameId];
     //Update
-    $contactEdUpdate = civicrm_api3('CustomValue', 'create', array(
+    $contactEdUpdate = civicrm_api3('CustomValue', 'create', [
       'entity_id' => $contactId,
       "custom_electoral_districts:Level:$edId" => "$level",
       "custom_electoral_districts:States/Provinces:$edId" => "$stateProvinceId",
@@ -288,11 +288,11 @@ function electoral_district_create_update($contactId, $level, $stateProvinceId =
       "custom_electoral_districts:District:$edId" => "$district",
       "custom_electoral_districts:In office?:$edId" => $inOffice,
       "custom_electoral_districts:Office:$edId" => $officeName,
-    ));
+    ]);
   }
   else {
     //Create
-    $contactEdCreate = civicrm_api3('CustomValue', 'create', array(
+    $contactEdCreate = civicrm_api3('CustomValue', 'create', [
       'entity_id' => $contactId,
       'custom_electoral_districts:Level' => "$level",
       'custom_electoral_districts:States/Provinces' => "$stateProvinceId",
@@ -302,7 +302,7 @@ function electoral_district_create_update($contactId, $level, $stateProvinceId =
       'custom_electoral_districts:District' => "$district",
       'custom_electoral_districts:In office?' => $inOffice,
       'custom_electoral_districts:Office' => $officeName,
-    ));
+    ]);
   }
 }
 
@@ -310,10 +310,10 @@ function electoral_district_create_update($contactId, $level, $stateProvinceId =
  * Helper function to check is Electoral Districts custom data already exists
  */
 function electoral_district_exists($contactId, $level, $chamber = NULL, $county = NULL, $city = NULL) {
-  $edExistsParams = array(
+  $edExistsParams = [
     'return' => "id",
     'id' => $contactId,
-  );
+  ];
   $edLevelId = civicrm_api3('CustomField', 'getvalue', ['return' => "id", 'custom_group_id' => "electoral_districts", 'name' => "electoral_level"]);
   $edLevelField = 'custom_' . $edLevelId;
   $edExistsParams[$edLevelField] = "$level";
@@ -381,7 +381,7 @@ function google_civic_information_country_reps($level, $roles) {
   $roles = explode(',', $roles);
 
   //States
-  $statesProvinces = array();
+  $statesProvinces = [];
   $includedStatesProvinces = civicrm_api3('Setting', 'getvalue', ['name' => 'includedStatesProvinces']);
   foreach ($includedStatesProvinces as $stateProvinceId) {
     $statesProvinces[$stateProvinceId] = strtolower(CRM_Core_PseudoConstant::stateProvinceAbbreviation($stateProvinceId));
@@ -417,7 +417,7 @@ function google_civic_information_state_reps($level, $roles) {
   $roles = explode(',', $roles);
 
   //States
-  $statesProvinces = array();
+  $statesProvinces = [];
   $includedStatesProvinces = civicrm_api3('Setting', 'getvalue', ['name' => 'includedStatesProvinces']);
   foreach ($includedStatesProvinces as $stateProvinceId) {
     $statesProvinces[$stateProvinceId] = strtolower(CRM_Core_PseudoConstant::stateProvinceAbbreviation($stateProvinceId));
@@ -451,14 +451,14 @@ function google_civic_information_state_reps($level, $roles) {
  */
 function google_civic_information_county_reps($level) {
   //States
-  $statesProvinces = array();
+  $statesProvinces = [];
   $includedStatesProvinces = civicrm_api3('Setting', 'getvalue', ['name' => 'includedStatesProvinces']);
   foreach ($includedStatesProvinces as $stateProvinceId) {
     $statesProvinces[$stateProvinceId] = strtolower(CRM_Core_PseudoConstant::stateProvinceAbbreviation($stateProvinceId));
   }
 
   //Counties
-  $includedCounties = civicrm_api3('Setting', 'getvalue', array('name' => 'includedCounties'));
+  $includedCounties = civicrm_api3('Setting', 'getvalue', ['name' => 'includedCounties']);
   foreach ($includedCounties as $countyId) {
     $counties[$countyId] = strtolower(CRM_Core_PseudoConstant::county($countyId));
   }
@@ -491,13 +491,13 @@ function google_civic_information_county_reps($level) {
  */
 function google_civic_information_city_reps($level) {
   //States
-  $statesProvinces = array();
+  $statesProvinces = [];
   $includedStatesProvinces = civicrm_api3('Setting', 'getvalue', ['name' => 'includedStatesProvinces']);
   foreach ($includedStatesProvinces as $stateProvinceId) {
     $statesProvinces[$stateProvinceId] = strtolower(CRM_Core_PseudoConstant::stateProvinceAbbreviation($stateProvinceId));
   }
   //Cities
-  $includedCities = explode(',', civicrm_api3('Setting', 'getvalue', array('name' => 'includedCities')));
+  $includedCities = explode(',', civicrm_api3('Setting', 'getvalue', ['name' => 'includedCities']));
   foreach ($includedCities as $city) {
     $cities[] = strtolower($city);
   }
@@ -533,7 +533,7 @@ function electoral_process_reps ($reps, $division, $level, $stateProvinceId, $co
 
   //Google doesn't include the Bioguide ID, which we need for deduping
   //Building it from the @unitedstates project
-  $repBioguideIds = array();
+  $repBioguideIds = [];
   $congressLegislatorsUrl = "https://theunitedstates.io/congress-legislators/legislators-current.json";
   $congressLegislators = electoral_curl($congressLegislatorsUrl);
   foreach ($congressLegislators as $legislator) {
@@ -564,7 +564,7 @@ function electoral_process_reps ($reps, $division, $level, $stateProvinceId, $co
       $repContactExists = $chamber = '';
 
       //Initialize contact params
-      $repParams = array('contact_type' => 'Individual', 'do_not_email' => 1);
+      $repParams = ['contact_type' => 'Individual', 'do_not_email' => 1];
 
       //Set official rep name for Bioguide lookup and name parsing
       $repName = $reps['officials'][$officialIndex]['name'];
@@ -673,7 +673,7 @@ function electoral_parse_name($name, $params) {
   if ($name == 'Vacant') {
     $params['last_name'] = $name;
   }
-  $suffixes = array();
+  $suffixes = [];
   $individualSuffixes = civicrm_api3('OptionValue', 'get', ['return' => ["label", "value"], 'option_group_id' => "individual_suffix"]);
   foreach ($individualSuffixes['values'] as $suffixId => $suffix) {
     $suffixes[$suffix['value']] = $suffix['label'];
@@ -754,12 +754,12 @@ function electoral_parse_name($name, $params) {
  */
 function electoral_create_email ($contactId, $email) {
   //Check if contact has an email address set, Main location type
-  $emailExist = civicrm_api3('Email', 'get', array(
+  $emailExist = civicrm_api3('Email', 'get', [
     'return' => "email",
     'contact_id' => $contactId,
     'is_primary' => 1,
     'location_type_id' => 3,
-  ));
+  ]);
   //If there is an existing email address, set the id for comparison
   if ($emailExist['count'] > 0) {
     $emailExistId = $emailExist['id'];
@@ -769,12 +769,12 @@ function electoral_create_email ($contactId, $email) {
   //and set it to primary
   if (($emailExist['count'] == 1 && $emailExist['values'][$emailExistId]['email'] != strtolower($email)) ||
        $emailExist['count'] == 0) {
-    $emailParams = array(
+    $emailParams = [
       'contact_id' => $contactId,
       'location_type_id' => 3,
       'is_primary' => 1,
       'email' => "$email",
-    );
+    ];
     $createdEmail = civicrm_api3('Email', 'create', $emailParams);
   }
 }
@@ -785,12 +785,12 @@ function electoral_create_email ($contactId, $email) {
  */
 function electoral_create_phone($contactId, $phone) {
   //Check if contact has a phone set, Main location type
-  $phoneExist = civicrm_api3('Phone', 'get', array(
+  $phoneExist = civicrm_api3('Phone', 'get', [
     'return' => "phone",
     'contact_id' => $contactId,
     'is_primary' => 1,
     'location_type_id' => 3,
-  ));
+  ]);
   //If there is an existing phone number, set the id for comparison
   if ($phoneExist['count'] > 0) {
     $phoneExistId = $phoneExist['id'];
@@ -800,13 +800,13 @@ function electoral_create_phone($contactId, $phone) {
   //and set it to primary
   if (($phoneExist['count'] == 1 && $phoneExist['values'][$phoneExistId]['phone'] != strtolower($phone)) ||
        $phoneExist['count'] == 0) {
-    $phoneParams = array(
+    $phoneParams = [
       'contact_id' => $contactId,
       'location_type_id' => 3,
       'phone_type_id' => 1,
       'is_primary' => 1,
       'phone' => "$phone",
-    );
+    ];
     $createdPhone = civicrm_api3('Phone', 'create', $phoneParams);
   }
 }
@@ -818,11 +818,11 @@ function electoral_create_phone($contactId, $phone) {
 function electoral_create_address($contactId, $address) {
   $streetAddress = $address['line1'];
   //Check if contact has an address set
-  $addressExist = civicrm_api3('Address', 'get', array(
+  $addressExist = civicrm_api3('Address', 'get', [
     'return' => "street_address",
     'contact_id' => $contactId,
     'is_primary' => 1,
-  ));
+  ]);
   //If there is an existing address address, set the id for comparison
   if ($addressExist['count'] > 0) {
     $addressExistId = $addressExist['id'];
@@ -833,7 +833,7 @@ function electoral_create_address($contactId, $address) {
   if (($addressExist['count'] == 1 && $addressExist['values'][$addressExistId]['street_address'] != $streetAddress) ||
        $addressExist['count'] == 0) {
     $usStates = array_flip(CRM_Core_PseudoConstant::stateProvinceForCountry(1228, 'abbreviation'));
-    $addressParams = array(
+    $addressParams = [
       'contact_id' => $contactId,
       'location_type_id' => 3,
       'is_primary' => 1,
@@ -842,7 +842,7 @@ function electoral_create_address($contactId, $address) {
       'city' => $address['city'],
       'state_province_id' => $usStates[$address['state']],
       'postal_code' => $address['zip'],
-    );
+    ];
     $createdAddress = civicrm_api3('Address', 'create', $addressParams);
   }
 }
@@ -853,11 +853,11 @@ function electoral_create_address($contactId, $address) {
  */
 function electoral_create_website($contactId, $website, $websiteType) {
   //Check if contact has a website set, Main location type
-  $websiteExist = civicrm_api3('Website', 'get', array(
+  $websiteExist = civicrm_api3('Website', 'get', [
     'return' => "url",
     'contact_id' => $contactId,
     'website_type_id' => $websiteType,
-  ));
+  ]);
   //If there is an existing website, set the id for comparison
   if ($websiteExist['count'] > 0) {
     $websiteExistId = $websiteExist['id'];
@@ -867,11 +867,11 @@ function electoral_create_website($contactId, $website, $websiteType) {
   //and set it to primary
   if (($websiteExist['count'] == 1 && $websiteExist['values'][$websiteExistId]['url'] != $website) ||
        $websiteExist['count'] == 0) {
-    $websiteParams = array(
+    $websiteParams = [
       'contact_id' => $contactId,
       'url' => "$website",
       'website_type_id' => $websiteType,
-    );
+    ];
     $website = civicrm_api3('Website', 'create', $websiteParams);
   }
 }
@@ -881,13 +881,13 @@ function electoral_create_website($contactId, $website, $websiteType) {
  */
 function electoral_tag_party($contactId, $party) {
   if ($party == 'Democratic') {
-    $partyTag = civicrm_api3('EntityTag', 'create', array('entity_id' => $contactId, 'tag_id' => "Democrat"));
+    $partyTag = civicrm_api3('EntityTag', 'create', ['entity_id' => $contactId, 'tag_id' => "Democrat"]);
   }
   if ($party == 'Independent') {
-    $partyTag = civicrm_api3('EntityTag', 'create', array('entity_id' => $contactId, 'tag_id' => "Independent"));
+    $partyTag = civicrm_api3('EntityTag', 'create', ['entity_id' => $contactId, 'tag_id' => "Independent"]);
   }
   if ($party == 'Republican') {
-    $partyTag = civicrm_api3('EntityTag', 'create', array('entity_id' => $contactId, 'tag_id' => "Republican"));
+    $partyTag = civicrm_api3('EntityTag', 'create', ['entity_id' => $contactId, 'tag_id' => "Republican"]);
   }
 }
 
