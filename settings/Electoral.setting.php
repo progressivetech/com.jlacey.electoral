@@ -81,7 +81,11 @@ return array(
     'is_contact' => 0,
     'description' => 'Counties included in API calls',
     'help_text' => 'Add counties to include in API scheduled jobs',
-    'html_type' => 'multiselect',
+    'html_type' => 'select',
+    'html_attributes' => [
+      'multiple' => 1,
+      'class' => 'huge crm-select2',
+    ],
     'title' => ts('Counties included in the API calls'),
   ),
   'allCounties' => [
