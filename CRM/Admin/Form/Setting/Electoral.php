@@ -1,7 +1,4 @@
 <?php
-
-//require_once 'CRM/Core/Form.php';
-
 /**
  * Form controller class
  *
@@ -20,17 +17,17 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
   ];
 
   public function buildQuickForm() {
+    parent::buildQuickForm();
     $this->addChainSelect('includedCounties', [
       'control_field' => 'includedStatesProvinces',
       'data-callback' => 'civicrm/ajax/jqCounty',
-      'label' => "Counties included in the API calls",
+      'label' => "Counties",
       'data-empty-prompt' => 'Choose state first',
       'data-none-prompt' => '- N/A -',
       'multiple' => TRUE,
       'required' => FALSE,
       'placeholder' => '- none -',
     ]);
-    parent::buildQuickForm();
   }
 
   /**

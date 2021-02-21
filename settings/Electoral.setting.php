@@ -85,6 +85,7 @@ return [
     'html_attributes' => [
       'multiple' => 1,
       'class' => 'huge crm-select2',
+      'data-callback' => 'civicrm/ajax/jqCounty',
     ],
     'title' => ts('Counties'),
   ],
