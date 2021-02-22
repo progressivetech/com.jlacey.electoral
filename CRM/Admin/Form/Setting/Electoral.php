@@ -10,12 +10,14 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
     'electoralApiProviders' => 'Electoral API settings',
     'ciceroAPIKey' => 'Electoral API settings',
     'googleCivicInformationAPIKey' => 'Electoral API settings',
-    'proPublicaCongressAPIKey' => 'Electoral API settings',
     'addressLocationType' => 'Electoral API settings',
     'includedStatesProvinces' => 'Electoral API settings',
     'includedCounties' => 'Electoral API settings',
     'includedCities' => 'Electoral API settings',
     'allCounties' => 'Electoral API settings',
+    'electoralApiAllStates' => 'Electoral API settings',
+    'electoralApiDistrictTypes' => 'Electoral API settings',
+    'electoralApiIncludeRedistricted' => 'Electoral API settings',
   ];
 
   public function buildQuickForm() {

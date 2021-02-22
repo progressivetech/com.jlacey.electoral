@@ -17,10 +17,11 @@
            <td>{$form.googleCivicInformationAPIKey.html|crmAddClass:huge}<br />
            <span class="description">{ts}Enter your Google Civic Information API Key.  <a href="https://developers.google.com/civic-information/docs/using_api#APIKey" target="_blank">Register at the Google Civic Information API</a> to obtain a key.{/ts}</span></td>
        </tr>
-       <tr class="crm-electroral-api-form-block-propublica-congress-api-key">
-           <td>{$form.proPublicaCongressAPIKey.label}</td>
-           <td>{$form.proPublicaCongressAPIKey.html|crmAddClass:huge}<br />
-           <span class="description">{ts}Enter your ProPublica Congress API Key.  <a href="https://www.propublica.org/datastore/api/propublica-congress-api" target="_blank">Register at the ProPublica Congress API</a> to obtain a key.{/ts}</span></td>
+        <tr class="crm-electroral-api-form-block-district-types">
+           <td>{$form.electoralApiDistrictTypes.label}</td>
+           <td>{$form.electoralApiDistrictTypes.html|crmAddClass:huge}&nbsp;&nbsp;{$form.electoralApiIncludeRedistricted.html}  {$form.electoralApiIncludeRedistricted.label}<br />
+           <span class="description">{ts}Select the district types you want district data for.{/ts}</span></td>
+           <span class="description">{ts}Cicero only: Include district info going into effect after the next election, if applicable.{/ts}</span></td>
        </tr>
        <tr class="crm-electoral-api-form-block-address-location-type">
            <td>{$form.addressLocationType.label}</td>
@@ -29,7 +30,7 @@
        </tr>
        <tr class="crm-electoral-api-form-block-state-province">
            <td>{$form.includedStatesProvinces.label}</td>
-           <td>{$form.includedStatesProvinces.html|crmAddClass:huge}<br />
+           <td>{$form.includedStatesProvinces.html|crmAddClass:huge}&nbsp;&nbsp;{$form.electoralApiAllStates.html}  {$form.electoralApiAllStates.label}<br />
            <span class="description">{ts}Select states and provinces to include in API scheduled jobs.{/ts}</span></td>
        </tr>
        <tr class="crm-electoral-api-form-block-county">
