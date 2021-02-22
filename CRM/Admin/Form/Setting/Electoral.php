@@ -7,6 +7,8 @@
 class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
 
   protected $_settings = [
+    'electoralApiProviders' => 'Electoral API settings',
+    'ciceroAPIKey' => 'Electoral API settings',
     'googleCivicInformationAPIKey' => 'Electoral API settings',
     'proPublicaCongressAPIKey' => 'Electoral API settings',
     'addressLocationType' => 'Electoral API settings',

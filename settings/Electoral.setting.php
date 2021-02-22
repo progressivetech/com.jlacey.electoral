@@ -4,6 +4,38 @@
  * Settings metadata file
  */
 return [
+  'electoralApiProviders' => [
+    'group_name' => 'Electoral API settings',
+    'group' => 'electoral',
+    'name' => 'electoralApiProviders',
+    'type' => 'Select',
+    'default' => NULL,
+    'add' => '5.0',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => 'Select the services you wish to use to provide data.',
+    'html_type' => 'select',
+    'html_attributes' => [
+      'multiple' => 1,
+      'class' => 'huge crm-select2',
+    ],
+    'pseudoconstant' => ['optionGroupName' => 'electoral_api_data_providers'],
+    'title' => ts('Data Provider(s)'),
+  ],
+  'ciceroAPIKey' => [
+    'group_name' => 'Electoral API settings',
+    'group' => 'electoral',
+    'name' => 'ciceroAPIKey',
+    'type' => 'Text',
+    'default' => '',
+    'add' => '5.0',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => 'Cicero API Key',
+    'help_text' => 'Add your registered Cicero API Key',
+    'html_type' => 'text',
+    'title' => ts('Cicero API Key'),
+  ],
   'googleCivicInformationAPIKey' => [
     'group_name' => 'Electoral API settings',
     'group' => 'electoral',

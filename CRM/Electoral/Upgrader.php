@@ -9,18 +9,47 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
   // upgrade tasks. They are executed in order (like Drupal's hook_update_N).
 
   /**
+   * Add the Electoral API Data Providers Option Group/Values.
+   */
+  public function upgrade_1000() {
+    $this->ctx->log->info('Adding Electoral API Option Group');
+
+    $results = \Civi\Api4\OptionGroup::create(FALSE)
+      ->addValue('name', 'electoral_api_data_providers')
+      ->addValue('title', 'Electoral API Data Providers')
+      ->addValue('data_type:name', 'String')
+      ->addValue('is_reserved', TRUE)
+      ->addChain('add_cicero', \Civi\Api4\OptionValue::create()
+        ->addValue('option_group_id', '$id')
+        ->addValue('label', 'Cicero')
+        ->addValue('name', '\Civi\Electoral\Api\Cicero')
+      )
+      ->addChain('add_google', \Civi\Api4\OptionValue::create()
+        ->addValue('option_group_id', '$id')
+        ->addValue('label', 'Google Civic')
+        ->addValue('name', '\Civi\Electoral\Api\GoogleCivicInformation')
+      )
+      ->execute();
+    $success = isset($results['error_message']) ? FALSE : TRUE;
+    return $success;
+  }
+
+  /**
+   * Remove the Data Providers option group.
+   */
+  public function uninstall() {
+    \Civi\Api4\OptionGroup::delete(FALSE)
+      ->addWhere('name', '=', 'electoral_api_data_providers')
+      ->execute();
+  }
+
+  /**
    * Example: Run an external SQL script when the module is installed.
    *
   public function install() {
     $this->executeSqlFile('sql/myinstall.sql');
   }
-
-  /**
-   * Example: Run an external SQL script when the module is uninstalled.
-   *
-  public function uninstall() {
-   $this->executeSqlFile('sql/myuninstall.sql');
-  }
+  */
 
   /**
    * Example: Run a simple query when a module is enabled.

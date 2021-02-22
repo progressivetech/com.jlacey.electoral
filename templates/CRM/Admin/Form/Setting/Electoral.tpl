@@ -2,6 +2,16 @@
 
 <div class="crm-block crm-form-block crm-electroal-api-form-block">
   <table class="form-layout-compressed">
+        <tr class="crm-electroral-api-form-block-data-providers">
+           <td>{$form.electoralApiProviders.label}</td>
+           <td>{$form.electoralApiProviders.html|crmAddClass:huge}<br />
+           <span class="description">{ts}Select your electoral data provider(s){/ts}</span></td>
+       </tr>
+       <tr class="crm-electroral-api-form-block-cicero-api-key">
+           <td>{$form.ciceroAPIKey.label}</td>
+           <td>{$form.ciceroAPIKey.html|crmAddClass:huge}<br />
+           <span class="description">{ts}Enter your Cicero API Key.  <a href="https://www.cicerodata.com/free-trial/" target="_blank">Register at Cicero</a> to obtain a key.{/ts}</span></td>
+       </tr>
        <tr class="crm-electroral-api-form-block-google-civic-information-api-key">
            <td>{$form.googleCivicInformationAPIKey.label}</td>
            <td>{$form.googleCivicInformationAPIKey.html|crmAddClass:huge}<br />
