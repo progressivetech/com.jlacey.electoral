@@ -62,11 +62,14 @@ abstract class AbstractApi {
   protected function getAddresses() {
     // Populate the settings.
     $settings = \Civi\Api4\Setting::get(FALSE)
-      ->addSelect('includedStatesProvinces', 'allCounties', 'includedCounties', 'includedCities', 'addressLocationType')
+      ->addSelect('includedStatesProvinces', 'allCounties', 'includedCounties', 'includedCities', 'addressLocationType', 'electoralApiAllStates')
       ->execute()
       ->indexBy('name');
 
-    $includedStatesProvinces = $settings['includedStatesProvinces']['value'];
+    $allStates = $settings['electoralApiAllStates']['value'];
+    if (!$allStates) {
+      $includedStatesProvinces = $settings['includedStatesProvinces']['value'];
+    }
     $allCounties = $settings['allCounties']['value'];
     if (!$allCounties) {
       $counties = $settings['includedCounties']['value'];
@@ -86,7 +89,6 @@ abstract class AbstractApi {
       ->addSelect('id', 'street_address', 'city', 'state_province_id:name', 'contact_id')
       ->setGroupBy(['id'])
       ->addWhere('street_address', 'IS NOT NULL')
-      ->addWhere('state_province_id', 'IN', $includedStatesProvinces)
       ->addWhere('country_id:name', '=', 'US')
       ->addWhere('contact.is_deceased', '!=', TRUE)
       ->addWhere('contact.is_deleted', '!=', TRUE)
@@ -96,6 +98,9 @@ abstract class AbstractApi {
     if ($cities) {
       // This is sanitized above.
       $addressQuery->addWhere('street_address', 'IN', $cities);
+    }
+    if ($includedStatesProvinces) {
+      $addressQuery->addWhere('state_province_id', 'IN', $includedStatesProvinces);
     }
     if ($counties) {
       $addressQuery->addWhere('county_id', 'IN', $counties);
