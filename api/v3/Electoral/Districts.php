@@ -10,8 +10,8 @@ use CRM_Electoral_ExtensionUtil as E;
  */
 function civicrm_api3_electoral_Districts(array $params) : array {
   try {
-    $limit = (int) $params['limit'] ?? 100;
-    $update = (int) $params['update'] ?? 0;
+    $limit = (int) ($params['limit'] ?? 100);
+    $update = (bool) ($params['update'] ?? FALSE);
     $EnabledProviders = \Civi::settings()->get('electoralApiProviders');
     foreach ($EnabledProviders as $enabledProvider) {
       $className = \Civi\Api4\OptionValue::get(FALSE)
