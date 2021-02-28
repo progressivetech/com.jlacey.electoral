@@ -17,11 +17,30 @@ abstract class AbstractApi {
   private $update;
 
   /**
+   * @var bool
+   * Search for all states and provinces.
+   */
+  protected $allStates;
+  protected $statesProvinces;
+  /**
+   * @var bool
+   * Search for all counties.
+   */
+  protected $allCounties;
+  protected $counties;
+  protected $cities;
+  protected $addressLocationType;
+  protected $districtTypes;
+  protected $nonlegislativeDistricts;
+  protected $apiKey;
+
+  /**
    * Constructor class.
    */
   public function __construct(int $limit, bool $update) {
     $this->limit = $limit;
     $this->update = $update;
+    $this->settingsToProperties();
     return $this;
   }
 
@@ -57,36 +76,66 @@ abstract class AbstractApi {
   abstract protected function addressDistrictLookup(array $address);
 
   /**
-   * Helper function to assemble address district query
+   * Get the API key of this data provider.
    */
-  protected function getAddresses() {
+  abstract protected function getApiKey() : string;
+
+  /**
+   * Take the values stored in `civicrm_setting` and populate the corresponding properties.
+   */
+  private function settingsToProperties() : void {
     // Populate the settings.
     $settings = \Civi\Api4\Setting::get(FALSE)
-      ->addSelect('includedStatesProvinces', 'allCounties', 'includedCounties', 'includedCities', 'addressLocationType', 'electoralApiAllStates')
+      ->addSelect('includedStatesProvinces', 'allCounties', 'includedCounties', 'includedCities', 'addressLocationType', 'electoralApiAllStates', 'electoralApiDistrictTypes', 'electoralApiNonlegislativeDistricts')
       ->execute()
       ->indexBy('name');
 
-    $allStates = $settings['electoralApiAllStates']['value'];
-    if (!$allStates) {
-      $includedStatesProvinces = $settings['includedStatesProvinces']['value'];
+    $this->allStates = $settings['electoralApiAllStates']['value'];
+    if (!$this->allStates) {
+      $this->statesProvinces = $settings['includedStatesProvinces']['value'];
     }
-    $allCounties = $settings['allCounties']['value'];
-    if (!$allCounties) {
-      $counties = $settings['includedCounties']['value'];
+    $this->allCounties = $settings['allCounties']['value'];
+    if (!$this->allCounties) {
+      $this->counties = $settings['includedCounties']['value'];
     }
 
     $cities = $settings['cities']['value'][0];
     // Get the "includedCities" setting, trim out space around commas, and put quotation marks in where needed.
     if ($cities) {
-      $cities = explode(',', preg_replace('/\s*,\s*/', ',', $settings['includedCities']['value']));
+      $this->cities = explode(',', preg_replace('/\s*,\s*/', ',', $settings['includedCities']['value']));
     }
 
-    //Location Types
-    $addressLocationType = $settings['addressLocationType']['value'][0];
+    $this->addressLocationType = $settings['addressLocationType']['value'][0];
+    $this->districtTypes = $settings['electoralApiDistrictTypes']['value'];
+    $this->nonlegislativeDistricts = $settings['electoralApiNonlegislativeDistricts']['value'][0];
+    
+    $this->apiKey = $this->getApiKey();
+  }
 
+  /**
+   * Write values (typically errors) to the electoral status fields.
+   * @param $error
+   *   An array consisting of up to three elements, keyed with "code", "reason", and "message".
+   * @param $addressId
+   *   The address ID.
+   */
+  protected function writeElectoralStatus(array $error, int $addressId) {
+    //Retain the error, so we can filter out the address on future runs until it's corrected
+    civicrm_api3('CustomValue', 'create', [
+      'entity_id' => $addressId,
+      'custom_electoral_status:Error Code' => substr($error['code'], 0, 11),
+      'custom_electoral_status:Error Reason' => substr($error['reason'], 0, 255),
+      'custom_electoral_status:Error Message' => substr($error['message'], 0, 255),
+    ]);
+  }
+
+  /**
+   * Helper function to assemble address district query
+   */
+  protected function getAddresses() {
     // Construct the API call to get the addresses.
     $addressQuery = \Civi\Api4\Address::get(FALSE)
-      ->addSelect('id', 'street_address', 'city', 'state_province_id:name', 'contact_id')
+      ->addSelect('id', 'street_address', 'city', 'state_province_id:name', 'contact_id', 'postal_code')
       ->setGroupBy(['id'])
       ->addWhere('street_address', 'IS NOT NULL')
       ->addWhere('country_id:name', '=', 'US')
@@ -95,21 +144,22 @@ abstract class AbstractApi {
       ->addOrderBy('id', 'DESC')
       ->setLimit($this->limit);
 
-    if ($cities) {
+    if ($this->cities) {
       // This is sanitized above.
-      $addressQuery->addWhere('street_address', 'IN', $cities);
+      $addressQuery->addWhere('street_address', 'IN', $this->cities);
     }
-    if ($includedStatesProvinces) {
-      $addressQuery->addWhere('state_province_id', 'IN', $includedStatesProvinces);
+    if ($this->statesProvinces) {
+      $addressQuery->addWhere('state_province_id', 'IN', $this->statesProvinces);
     }
-    if ($counties) {
-      $addressQuery->addWhere('county_id', 'IN', $counties);
+    if ($this->counties) {
+      $addressQuery->addWhere('county_id', 'IN', $this->counties);
     }
-    if ($addressLocationType == 0) {
+    // "9" means the location type is "primary".
+    if ($this->addressLocationType == 0) {
       $addressQuery->addWhere('is_primary', '=', TRUE);
     }
     else {
-      $addressQuery->addWhere('location_type_id', '=', $addressLocationType);
+      $addressQuery->addWhere('location_type_id', '=', $this->addressLocationType);
     }
     if (!$this->update) {
       $addressQuery->addWhere('electoral_status.electoral_status_error_code', 'IS NULL');
