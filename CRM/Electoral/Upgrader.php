@@ -12,8 +12,11 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
    * Add the Electoral API Data Providers Option Group/Values.
    */
   public function upgrade_1000() {
-    $this->ctx->log->info('Adding Electoral API Option Group');
+    $this->ctx->log->info('Adding Electoral API Option Group: Data Providers');
+    return $this->addDataProviders();
+  }
 
+  private function addDataProviders() {
     $results = \Civi\Api4\OptionGroup::create(FALSE)
       ->addValue('name', 'electoral_api_data_providers')
       ->addValue('title', 'Electoral API Data Providers')
@@ -35,6 +38,55 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
   }
 
   /**
+   * FIXME: This is unused, still using auto_install.xml.
+   */
+  private function addChamberOptions() {
+    $results = \Civi\Api4\OptionGroup::create(FALSE)
+      ->addValue('name', 'electoral_districts_chamber_options')
+      ->addValue('title', 'Chamber')
+      ->addValue('data_type:name', 'String')
+      ->addValue('is_reserved', TRUE)
+      ->addChain('add_upper', \Civi\Api4\OptionValue::create()
+        ->addValue('option_group_id', '$id')
+        ->addValue('label', 'Upper')
+        ->addValue('name', 'upper')
+      )
+      ->addChain('add_lower', \Civi\Api4\OptionValue::create()
+        ->addValue('option_group_id', '$id')
+        ->addValue('label', 'Lower')
+        ->addValue('name', 'lower')
+      )
+      ->execute();
+    $success = isset($results['error_message']) ? FALSE : TRUE;
+    return $success;
+  }
+
+  /**
+   * FIXME: This is unused, still using auto_install.xml.
+   */
+  private function addLevelOptions() {
+    $results = \Civi\Api4\OptionGroup::create(FALSE)
+      ->addValue('name', 'electoral_districts_level_options')
+      ->addValue('title', 'Level')
+      ->addValue('data_type:name', 'String')
+      ->addValue('is_reserved', TRUE)
+      ->addChain('add_upper', \Civi\Api4\OptionValue::create()
+        ->addValue('option_group_id', '$id')
+        ->addValue('label', 'Upper')
+        ->addValue('name', 'upper')
+      )
+      ->addChain('add_lower', \Civi\Api4\OptionValue::create()
+        ->addValue('option_group_id', '$id')
+        ->addValue('label', 'Lower')
+        ->addValue('name', 'lower')
+      )
+      ->execute();
+    $success = isset($results['error_message']) ? FALSE : TRUE;
+    return $success;
+  }
+
+
+  /**
    * Remove the Data Providers option group.
    */
   public function uninstall() {
@@ -45,11 +97,10 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
 
   /**
    * Example: Run an external SQL script when the module is installed.
-   *
+   */
   public function install() {
-    $this->executeSqlFile('sql/myinstall.sql');
+    return $this->addDataProviders();
   }
-  */
 
   /**
    * Example: Run a simple query when a module is enabled.
