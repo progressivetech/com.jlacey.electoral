@@ -23,6 +23,12 @@
            <span class="description">{ts}Select the district types you want district data for.{/ts}</span></td>
            <span class="description">{ts}Cicero only: Include district info going into effect after the next election, if applicable.{/ts}</span></td>
        </tr>
+        <tr class="crm-electroral-api-form-block-nonlegislative-districts">
+           <td>{$form.electoralApiNonlegislativeDistricts.label}</td>
+           <td>{$form.electoralApiNonlegislativeDistricts.html}<br />
+           <span class="description">{ts}Include non-legislative district data when available (e.g. school district, police district).{/ts}</span></td>
+           <span class="description">{ts}Nonlegislative data lookups cost a separate credit.{/ts}</span></td>
+       </tr>
        <tr class="crm-electoral-api-form-block-address-location-type">
            <td>{$form.addressLocationType.label}</td>
            <td>{$form.addressLocationType.html}<br />
