@@ -1,6 +1,7 @@
 <?php
 
 require_once 'electoral.civix.php';
+use CRM_Electoral_ExtensionUtil as E;
 
 /**
  * Implements hook_civicrm_config().
