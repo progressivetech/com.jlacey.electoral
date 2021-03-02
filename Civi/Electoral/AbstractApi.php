@@ -35,6 +35,13 @@ abstract class AbstractApi {
   protected $apiKey;
 
   /**
+   * @var array
+   * The address being operated on (for district lookups).
+   * Array contains the address id, street_address, city, state, and contact_id.
+   */
+  protected $address;
+
+  /**
    * Constructor class.
    */
   public function __construct(int $limit, bool $update) {
@@ -51,7 +58,9 @@ abstract class AbstractApi {
     $addresses = $this->getAddresses();
 
     foreach ($addresses as $address) {
-      $success = $this->addressDistrictLookup($address);
+      $this->address = $address;
+      $districtData = $this->addressDistrictLookup();
+      $success = $this->parseDistrictData($districtData);
       if ($success) {
         $addressesDistricted++;
       }
@@ -70,10 +79,14 @@ abstract class AbstractApi {
   abstract public function reps();
 
   /**
-   * Provider-specific lookup for a single address.  Give an address, the contact will get districts.
-   * Array contains the address id, street_address, city, state, and contact_id.
+   * Provider-specific lookup for a single address. The contact will get raw district data from the provider for $this->address.
    */
-  abstract protected function addressDistrictLookup(array $address);
+  abstract protected function addressDistrictLookup() : array;
+
+  /**
+   * Provider-specific function to parse the results of addressDistrictLookup, including writing to Civi.
+   */
+  abstract protected function parseDistrictData(array $districtData) : bool;
 
   /**
    * Get the API key of this data provider.
@@ -108,7 +121,6 @@ abstract class AbstractApi {
     $this->addressLocationType = $settings['addressLocationType']['value'][0];
     $this->districtTypes = $settings['electoralApiDistrictTypes']['value'];
     $this->nonlegislativeDistricts = $settings['electoralApiNonlegislativeDistricts']['value'][0];
-    
     $this->apiKey = $this->getApiKey();
   }
 
@@ -135,7 +147,7 @@ abstract class AbstractApi {
   protected function getAddresses() {
     // Construct the API call to get the addresses.
     $addressQuery = \Civi\Api4\Address::get(FALSE)
-      ->addSelect('id', 'street_address', 'city', 'state_province_id:name', 'contact_id', 'postal_code')
+      ->addSelect('id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'contact_id', 'postal_code')
       ->setGroupBy(['id'])
       ->addWhere('street_address', 'IS NOT NULL')
       ->addWhere('country_id:name', '=', 'US')
@@ -167,6 +179,85 @@ abstract class AbstractApi {
     // Let 'er rip.
     $addresses = $addressQuery->execute();
     return $addresses;
+  }
+
+  /**
+   * Helper function to create or update electoral districts custom data
+   */
+  protected function writeDistrictData($contactId, $level, $stateProvinceId = NULL, $countyId = NULL, $city = NULL, $chamber = NULL, $district = NULL, $inOffice = 0, $officeName = NULL) : void {
+    //Check if this level exists already
+    $contactEdExists = $this->districtDataExists($contactId, "$level", "$chamber", $countyId, $city);
+    if ($contactEdExists['count'] == 1) {
+      //Get the custom value set id
+      $edTableNameId = $this->getDistrictTableNameId();
+      $edId = $contactEdExists['values'][$contactId][$edTableNameId];
+      //Update
+      civicrm_api3('CustomValue', 'create', [
+        'entity_id' => $contactId,
+        "custom_electoral_districts:Level:$edId" => "$level",
+        "custom_electoral_districts:States/Provinces:$edId" => "$stateProvinceId",
+        "custom_electoral_districts:County:$edId" => "$countyId",
+        "custom_electoral_districts:City:$edId" => "$city",
+        "custom_electoral_districts:Chamber:$edId" => "$chamber",
+        "custom_electoral_districts:District:$edId" => "$district",
+        "custom_electoral_districts:In office?:$edId" => $inOffice,
+        "custom_electoral_districts:Office:$edId" => $officeName,
+      ]);
+    }
+    else {
+      //Create
+      civicrm_api3('CustomValue', 'create', [
+        'entity_id' => $contactId,
+        'custom_electoral_districts:Level' => "$level",
+        'custom_electoral_districts:States/Provinces' => "$stateProvinceId",
+        "custom_electoral_districts:County" => "$countyId",
+        "custom_electoral_districts:City" => "$city",
+        'custom_electoral_districts:Chamber' => "$chamber",
+        'custom_electoral_districts:District' => "$district",
+        'custom_electoral_districts:In office?' => $inOffice,
+        'custom_electoral_districts:Office' => $officeName,
+      ]);
+    }
+  }
+
+  /**
+   * Helper function to check is Electoral Districts custom data already exists
+   */
+  private function districtDataExists($contactId, $level, $chamber = NULL, $county = NULL, $city = NULL) {
+    $edExistsParams = [
+      'return' => "id",
+      'id' => $contactId,
+    ];
+    $edLevelId = civicrm_api3('CustomField', 'getvalue', ['return' => "id", 'custom_group_id' => "electoral_districts", 'name' => "electoral_level"]);
+    $edLevelField = 'custom_' . $edLevelId;
+    $edExistsParams[$edLevelField] = "$level";
+    if (!empty($chamber)) {
+      $edChamberId = civicrm_api3('CustomField', 'getvalue', ['return' => "id", 'custom_group_id' => "electoral_districts", 'name' => "electoral_chamber"]);
+      $edChamberField = 'custom_' . $edChamberId;
+      $edExistsParams[$edChamberField] = "$chamber";
+    }
+    if (!empty($county)) {
+      $edCountyId = civicrm_api3('CustomField', 'getvalue', ['return' => "id", 'custom_group_id' => "electoral_districts", 'name' => "electoral_counties"]);
+      $edCountyField = 'custom_' . $edCountyId;
+      $edExistsParams[$edCountyField] = "$county";
+    }
+    if (!empty($county)) {
+      $edCityId = civicrm_api3('CustomField', 'getvalue', ['return' => "id", 'custom_group_id' => "electoral_districts", 'name' => "electoral_cities"]);
+      $edCityField = 'custom_' . $edCityId;
+      $edExistsParams[$edCityField] = "$city";
+    }
+    $edExists = civicrm_api3('Contact', 'get', $edExistsParams);
+
+    return $edExists;
+  }
+
+  /**
+   * Helper function to get the table id
+   * of the Electoral Districts custom table
+   */
+  private function getDistrictTableNameId() : string {
+    $edTableName = civicrm_api3('CustomGroup', 'getvalue', ['return' => "table_name", 'name' => "electoral_districts"]);
+    return $edTableName . "_id";
   }
 
 }

@@ -14,25 +14,46 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   const CIVICRM_CICERO_LEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/legislative_district?';
   const CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/nonlegislative_district?';
 
-  public function districts() {
-    // Get the addresses.
-    $addresses = $this->getAddresses();
-    foreach ($addresses as $address) {
-      $this->addressDistrictLookup($address);
-    }
-    return 'hey';
-  }
-
   public function reps() {
     // Reps code here.
   }
 
   /**
    * @var array
-   * Map Cicero district types to Civi's.
-   * FIXME: Needs doing.
+   * Map Cicero district types to Civi's levels.
    */
-  private $districtMap = [];
+  private $levelMap = [
+    'LOCAL' => 'locality',
+    'JUDICIAL' => 'locality',
+    'LOCAL_EXEC' => 'locality',
+    'LOCAL_REDISTRICTED' => 'locality',
+    'NATIONAL_EXEC' => 'country',
+    'NATIONAL_LOWER' => 'country',
+    'NATIONAL_LOWER_REDISTRICTED' => 'country',
+    'NATIONAL_UPPER' => 'country',
+    'POLICE' => 'locality',
+    'SCHOOL' => 'locality',
+    'STATE_EXEC' => 'administrativeArea1',
+    'STATE_LOWER' => 'administrativeArea1',
+    'STATE_LOWER_REDISTRICTED' => 'administrativeArea1',
+    'STATE_UPPER' => 'administrativeArea1',
+    'STATE_UPPER_REDISTRICTED' => 'administrativeArea1',
+  ];
+
+
+  /**
+   * @var array
+   * Map Cicero district types to Civi's chamber types.
+   */
+  private $chamberMap = [
+    'NATIONAL_LOWER' => 'lower',
+    'NATIONAL_LOWER_REDISTRICTED' => 'lower',
+    'NATIONAL_UPPER' => 'upper',
+    'STATE_LOWER' => 'lower',
+    'STATE_LOWER_REDISTRICTED' => 'lower',
+    'STATE_UPPER' => 'upper',
+    'STATE_UPPER_REDISTRICTED' => 'upper',
+  ];
 
   /**
    * @inheritDoc
@@ -48,7 +69,8 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   /**
    * @inheritDoc
    */
-  protected function addressDistrictLookup(array $address) {
+  protected function addressDistrictLookup() : array {
+    $address = $this->address;
     if (!$this->addressIsCompleteEnough($address)) {
       // FIXME: Need to update the custom fields with an error message.
       $error = [
@@ -77,6 +99,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
     // }
 
     // Do a legislative lookup if we have district types.
+    $response = [];
     if ($this->districtTypes) {
       $url = self::CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString;
       $resp_obj = $this->civicrm_cicero_get_response($url);
@@ -84,7 +107,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
         \Civi::log()->debug("Failed to obtain legislative current response. Continuing...", ['cicero']);
       }
       else {
-        $response['legislative'][] = $resp_obj;
+        $response = array_merge($response, $resp_obj->response->results->candidates[0]->districts);
       }
     }
     if ($this->nonlegislativeDistricts) {
@@ -131,7 +154,8 @@ class Cicero extends \Civi\Electoral\AbstractApi {
     $searchLoc = str_replace(' ', '+', $streetAddress . '+' . $city . '+' . $stateProvince . '+' . $postalCode);
     // Get an official query response.
     $apiKey = $this->apiKey;
-    $query = rawurlencode('search_loc=' . $searchLoc . '&key=' . $apiKey . '&format=json');
+    //$query = rawurlencode('search_loc=' . $searchLoc . '&key=' . $apiKey . '&format=json');
+    $query = 'search_loc=' . $searchLoc . '&format=json&key=' . $apiKey;
     return $query;
   }
 
@@ -199,38 +223,23 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   }
 
   /**
-   * Helper function to setup curl calls Cicero API calls.
-   *
-   * @param $url
-   *   The url of the cicero page you are getting a response from.
-   *
-   * @param $postfields
-   *   The posfields to be passed to the page
-   *
-   * @return $json
-   *   JSON object returned by the Cicero API, or FALSE.
+   * Convert the Cicero raw data to the format writeDistrictData expects and write it.
    */
-  private function civicrm_cicero_get_response_curl_setup($url, $postfields) {
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-    curl_setopt($ch, CURLOPT_FAILONERROR, TRUE);
-    if ($postfields !== '') {
-      curl_setopt($ch, CURLOPT_POST, TRUE);
-      curl_setopt($ch, CURLOPT_POSTFIELDS, $postfields);
+  protected function parseDistrictData(array $districtData) : bool {
+    \CRM_Core_Error::debug_var('districtData', $districtData);
+    foreach ($districtData as $districtDatum) {
+      $contactId = $this->address['contact_id'];
+      $level = $this->levelMap[$districtDatum->district_type];
+      $stateProvinceId = $this->address['state_province_id'];
+      $county = NULL;
+      $city = $districtDatum->city;
+      $chamber = $this->chamberMap[$districtDatum->district_type] ?? NULL;
+      $district = $districtDatum->district_id;
+      $this->writeDistrictData($contactId, $level, $stateProvinceId, $county, $city, $chamber, $district);
     }
-    $json = curl_exec($ch);
-    if ($json === FALSE) {
-      // There was an error.
-      $error = curl_error($ch);
-      \Civi::log()->debug("curl_exec returned an error: $error.", ['cicero']);
-    }
-    curl_close($ch);
-    if (empty($json)) {
-      \Civi::log()->debug("curl_exec returned an empty string.", ['cicero']);
-      return FALSE;
-    }
-    return $json;
+
+    $success = TRUE;
+    return $success;
   }
 
 }
