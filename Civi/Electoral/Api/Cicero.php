@@ -104,7 +104,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       $url = self::CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString;
       $resp_obj = $this->civicrm_cicero_get_response($url);
       if (FALSE === $resp_obj) {
-        \Civi::log()->debug("Failed to obtain legislative current response. Continuing...", ['cicero']);
+        \Civi::log()->debug("Failed to obtain legislative current response. Continuing...", ['electoral']);
       }
       else {
         $response = array_merge($response, $resp_obj->response->results->candidates[0]->districts);
@@ -118,7 +118,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       $url = self::CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL . $queryString;
       $resp_obj = $this->civicrm_cicero_get_response($url);
       if (FALSE === $resp_obj) {
-        \Civi::log()->debug("Failed to obtain non-legislative response. Continuing...", ['cicero']);
+        \Civi::log()->debug("Failed to obtain non-legislative response. Continuing...", ['electoral']);
       }
       else {
         $response['nonlegislative'][] = $resp_obj;
@@ -187,17 +187,17 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    *   Decoded JSON PHP object object returned by the Cicero API or FALSE on error.
    */
   private function civicrm_cicero_get_response($url, $postfields = '') {
-    \Civi::log()->debug("Contacting cicero with url: {$url} and postfields: {$postfields}.", ['cicero']);
+    \Civi::log()->debug("Contacting cicero with url: {$url} and postfields: {$postfields}.", ['electoral']);
     $guzzleClient = new \GuzzleHttp\Client();
     $json = $guzzleClient->request('GET', $url)->getBody()->getContents();
     // $json = $this->civicrm_cicero_get_response_curl_setup($url, $postfields);
     if ($json) {
       $json_decoded = json_decode($json);
       if (!is_object($json_decoded)) {
-        \Civi::log()->debug("Cicero did not return an object.", ['cicero']);
+        \Civi::log()->debug("Cicero did not return an object.", ['electoral']);
         return FALSE;
       }
-      if (count($json_decoded->response->errors) > 0) {
+      if ($json_decoded->response->errors ?? FALSE) {
         $error = NULL;
         if (is_string($json_decoded->response->errors)) {
           $error = $json_decoded->response->errors;
@@ -210,14 +210,15 @@ class Cicero extends \Civi\Electoral\AbstractApi {
           // showing an embarrasing error to a user.
           \CRM_Core_Session::setStatus(E::ts("Out of credits for lookup of electoral info."), "Out of credits", 'alert');
         }
-        \Civi::log()->debug("Cicero error: $error", ['cicero']);
+        $errorArray['message'] = $error;
+        $this->writeElectoralStatus($errorArray, $this->address['id']);
         return FALSE;
       }
       // Success.
       return $json_decoded;
     }
     elseif ($json === FALSE) {
-      \Civi::log()->debug("cicero url: $url returned false. Giving up.", ['cicero']);
+      \Civi::log()->debug("cicero url: $url returned false. Giving up.", ['electoral']);
       return FALSE;
     }
   }
@@ -226,7 +227,6 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    * Convert the Cicero raw data to the format writeDistrictData expects and write it.
    */
   protected function parseDistrictData(array $districtData) : bool {
-    \CRM_Core_Error::debug_var('districtData', $districtData);
     foreach ($districtData as $districtDatum) {
       $contactId = $this->address['contact_id'];
       $level = $this->levelMap[$districtDatum->district_type];
