@@ -37,7 +37,8 @@ abstract class AbstractApi {
   /**
    * @var array
    * The address being operated on (for district lookups).
-   * Array contains the address id, street_address, city, state, and contact_id.
+   * Array contains the following address elements:
+   * 'id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'state_province.abbreviation', 'contact_id', 'postal_code'
    */
   protected $address;
 
@@ -147,7 +148,7 @@ abstract class AbstractApi {
   protected function getAddresses() {
     // Construct the API call to get the addresses.
     $addressQuery = \Civi\Api4\Address::get(FALSE)
-      ->addSelect('id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'contact_id', 'postal_code')
+      ->addSelect('id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'state_province.abbreviation', 'contact_id', 'postal_code')
       ->setGroupBy(['id'])
       ->addWhere('street_address', 'IS NOT NULL')
       ->addWhere('country_id:name', '=', 'US')
