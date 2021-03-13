@@ -34,6 +34,11 @@
            <td>{$form.addressLocationType.html}<br />
            <span class="description">{ts}Select the address location type to use when looking up a contact's districts.{/ts}</span></td>
        </tr>
+       <tr class="crm-electoral-api-form-block-country">
+           <td>{$form.electoralApiIncludedCountries.label}</td>
+           <td>{$form.electoralApiIncludedCountries.html|crmAddClass:huge}<br />
+           <span class="description">{ts}Select states and provinces to include in API scheduled jobs.{/ts}</span></td>
+       </tr>
        <tr class="crm-electoral-api-form-block-state-province">
            <td>{$form.includedStatesProvinces.label}</td>
            <td>{$form.includedStatesProvinces.html|crmAddClass:huge}&nbsp;&nbsp;{$form.electoralApiAllStates.html}  {$form.electoralApiAllStates.label}<br />
@@ -48,6 +53,11 @@
            <td>{$form.includedCities.label}</td>
            <td>{$form.includedCities.html|crmAddClass:huge}<br />
            <span class="description">{ts}Select cities to include in API scheduled jobs.{/ts}</span></td>
+       </tr>
+        <tr class="crm-electoral-api-form-block-lookup-on-address-update">
+           <td>{$form.electoralApiLookupOnAddressUpdate.label}</td>
+           <td>{$form.electoralApiLookupOnAddressUpdate.html}<br />
+           <span class="description">{ts}Get district data any time an address matching these criteria is added/changed.{/ts}</span></td>
        </tr>
   </table>
   <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>
