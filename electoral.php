@@ -9,6 +9,12 @@ use CRM_Electoral_ExtensionUtil as E;
 function electoral_civicrm_postCommit($op, $objectName, $objectId, $objectRef) {
   if (in_array($op, ['create', 'edit']) && $objectName == 'Address') {
     if (Civi::settings()->get('electoralApiLookupOnAddressUpdate') ?? FALSE) {
+      // Don't run during CiviCRM import. It will either overwhelm Cicero server
+      // or be deathly slow.
+      if (parse_url($_REQUEST['entryURL'])['path'] == '/civicrm/import/contact') {
+        return;
+      }
+
       $limit = 1;
       $update = FALSE;
       $enabledProviders = \Civi::settings()->get('electoralApiProviders');
