@@ -82,6 +82,7 @@
       }
     })
     CRM.$('.crm-electoral-api-form-block-cicero-api-key').toggle(ciceroVisible == true);
+    CRM.$('.crm-electoral-api-form-block-nonlegislative-districts').toggle(ciceroVisible == true);
     CRM.$('.crm-electoral-api-form-block-google-civic-information-api-key').toggle(gCivicVisible == true);
   }
   </script>

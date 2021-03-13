@@ -121,7 +121,7 @@ abstract class AbstractApi {
 
     $this->addressLocationType = $settings['addressLocationType']['value'][0];
     $this->districtTypes = $settings['electoralApiDistrictTypes']['value'];
-    $this->nonlegislativeDistricts = $settings['electoralApiNonlegislativeDistricts']['value'][0];
+    $this->nonlegislativeDistricts = $settings['electoralApiNonlegislativeDistricts']['value'];
     $this->apiKey = $this->getApiKey();
   }
 
