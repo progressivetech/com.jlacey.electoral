@@ -143,9 +143,23 @@ abstract class AbstractApi {
   }
 
   /**
-   * Helper function to assemble address district query
+   * A public function to get a single address' data.  Used for real-time update on postCommit.
    */
-  protected function getAddresses() {
+  public function singleAddressLookup(int $addressId) : void {
+    // This won't return an address if it wouldn't be found by Electoral API settings limiting the address.
+    $this->address = $this->getAddresses($addressId)[0] ?? NULL;
+    if ($this->address) {
+      $districtData = $this->addressDistrictLookup();
+      $this->parseDistrictData($districtData);
+    }
+  }
+
+  /**
+   * Helper function to assemble address district query
+   * @var int $addressId
+   *   If this is set, only consider this particular address ID.
+   */
+  protected function getAddresses(?int $addressId = NULL) {
     // Construct the API call to get the addresses.
     $addressQuery = \Civi\Api4\Address::get(FALSE)
       ->addSelect('id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'state_province.abbreviation', 'contact_id', 'postal_code')
@@ -173,6 +187,9 @@ abstract class AbstractApi {
     }
     else {
       $addressQuery->addWhere('location_type_id', '=', $this->addressLocationType);
+    }
+    if ($addressId) {
+      $addressQuery->addWhere('id', '=', $addressId);
     }
     if (!$this->update) {
       $addressQuery->addWhere('electoral_status.electoral_status_error_code', 'IS NULL');

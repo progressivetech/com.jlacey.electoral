@@ -4,6 +4,29 @@ require_once 'electoral.civix.php';
 use CRM_Electoral_ExtensionUtil as E;
 
 /**
+ * Look up a single address' districts, if the settings are correct.
+ */
+function electoral_civicrm_postCommit($op, $objectName, $objectId, $objectRef) {
+  if (in_array($op, ['create', 'edit']) && $objectName == 'Address') {
+    if (Civi::settings()->get('electoralApiLookupOnAddressUpdate') ?? FALSE) {
+      $limit = 1;
+      $update = FALSE;
+      $enabledProviders = \Civi::settings()->get('electoralApiProviders');
+      foreach ($enabledProviders as $enabledProvider) {
+        $className = \Civi\Api4\OptionValue::get(FALSE)
+          ->addSelect('name')
+          ->addWhere('option_group_id:name', '=', 'electoral_api_data_providers')
+          ->addWhere('value', '=', $enabledProvider)
+          ->execute()
+          ->column('name')[0];
+        $provider = new $className($limit, $update);
+        $provider->singleAddressLookup($objectId);
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_civicrm_config().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_config
