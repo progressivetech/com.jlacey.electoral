@@ -110,7 +110,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
 
       // Write to db.
       if ($level) {
-        $this->writeDistrictData($this->address['contact_id'], $level, $this->address['state_province_id'], $county, $cityName, $chamber, $district, 0);
+        $this->writeDistrictData($this->address['contact_id'], $level, $this->address['state_province_id'], $county, $cityName, $chamber, $district, FALSE);
       }
     }
     return TRUE;
