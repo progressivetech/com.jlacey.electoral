@@ -52,6 +52,56 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
     return TRUE;
   }
 
+  public function upgrade_1002() {
+    $this->ctx->log->info('Adding new Electoral District Levels');
+    \Civi\Api4\OptionValue::create(FALSE)
+      ->addValue('name', 'Legislative')
+      ->addValue('label', 'Legislative')
+      ->addValue('value', 'legislative')
+      ->addValue('weight', '4')
+      ->addValue('is_optgroup', '1')
+      ->addValue('is_reserved', '1')
+      ->addValue('option_group_id:name', 'electoral_districts_level_options')
+      ->execute();
+    \Civi\Api4\OptionValue::create(FALSE)
+      ->addValue('name', 'Judicial')
+      ->addValue('label', 'Judicial')
+      ->addValue('value', 'judicial')
+      ->addValue('weight', '5')
+      ->addValue('is_optgroup', '1')
+      ->addValue('is_reserved', '1')
+      ->addValue('option_group_id:name', 'electoral_districts_level_options')
+      ->execute();
+    \Civi\Api4\OptionValue::create(FALSE)
+      ->addValue('name', 'Police')
+      ->addValue('label', 'Police')
+      ->addValue('value', 'police')
+      ->addValue('weight', '6')
+      ->addValue('is_optgroup', '1')
+      ->addValue('is_reserved', '1')
+      ->addValue('option_group_id:name', 'electoral_districts_level_options')
+      ->execute();
+    \Civi\Api4\OptionValue::create(FALSE)
+      ->addValue('name', 'School')
+      ->addValue('label', 'School')
+      ->addValue('value', 'school')
+      ->addValue('weight', '7')
+      ->addValue('is_optgroup', '1')
+      ->addValue('is_reserved', '1')
+      ->addValue('option_group_id:name', 'electoral_districts_level_options')
+      ->execute();
+    \Civi\Api4\OptionValue::create(FALSE)
+      ->addValue('name', 'Voting')
+      ->addValue('label', 'Voting')
+      ->addValue('value', 'voting')
+      ->addValue('weight', '4')
+      ->addValue('is_optgroup', '1')
+      ->addValue('is_reserved', '1')
+      ->addValue('option_group_id:name', 'electoral_districts_level_options')
+      ->execute();
+    return TRUE;
+  }
+
   private function addDataProviders() {
     $results = \Civi\Api4\OptionGroup::create(FALSE)
       ->addValue('name', 'electoral_api_data_providers')
@@ -120,7 +170,6 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
     $success = isset($results['error_message']) ? FALSE : TRUE;
     return $success;
   }
-
 
   /**
    * Remove the Data Providers option group.

@@ -271,6 +271,56 @@
       <option_group_name>electoral_districts_level_options</option_group_name>
     </OptionValue>
     <OptionValue>
+      <name>Legislative</name>
+      <label>Legislative</label>
+      <value>legislative</value>
+      <weight>4</weight>
+      <is_optgroup>1</is_optgroup>
+      <is_reserved>1</is_reserved>
+      <is_active>1</is_active>
+      <option_group_name>electoral_districts_level_options</option_group_name>
+    </OptionValue>
+    <OptionValue>
+      <name>Judicial</name>
+      <label>Judicial</label>
+      <value>judicial</value>
+      <weight>5</weight>
+      <is_optgroup>1</is_optgroup>
+      <is_reserved>1</is_reserved>
+      <is_active>1</is_active>
+      <option_group_name>electoral_districts_level_options</option_group_name>
+    </OptionValue>
+    <OptionValue>
+      <name>Police</name>
+      <label>Police</label>
+      <value>police</value>
+      <weight>6</weight>
+      <is_optgroup>1</is_optgroup>
+      <is_reserved>1</is_reserved>
+      <is_active>1</is_active>
+      <option_group_name>electoral_districts_level_options</option_group_name>
+    </OptionValue>
+    <OptionValue>
+      <name>School</name>
+      <label>School</label>
+      <value>school</value>
+      <weight>7</weight>
+      <is_optgroup>1</is_optgroup>
+      <is_reserved>1</is_reserved>
+      <is_active>1</is_active>
+      <option_group_name>electoral_districts_level_options</option_group_name>
+    </OptionValue>
+    <OptionValue>
+      <name>Voting</name>
+      <label>Voting</label>
+      <value>voting</value>
+      <weight>4</weight>
+      <is_optgroup>1</is_optgroup>
+      <is_reserved>1</is_reserved>
+      <is_active>1</is_active>
+      <option_group_name>electoral_districts_level_options</option_group_name>
+    </OptionValue>  
+    <OptionValue>
       <name>Upper</name>
       <label>Upper</label>
       <value>upper</value>

@@ -20,14 +20,8 @@
         <tr class="crm-electoral-api-form-block-district-types">
            <td>{$form.electoralApiDistrictTypes.label}</td>
            <td>{$form.electoralApiDistrictTypes.html|crmAddClass:huge}&nbsp;&nbsp;{$form.electoralApiIncludeRedistricted.html}  {$form.electoralApiIncludeRedistricted.label}<br />
-           <span class="description">{ts}Select the district types you want district data for.{/ts}</span></td>
-           <span class="description">{ts}Cicero only: Include district info going into effect after the next election, if applicable.{/ts}</span></td>
-       </tr>
-        <tr class="crm-electoral-api-form-block-nonlegislative-districts">
-           <td>{$form.electoralApiNonlegislativeDistricts.label}</td>
-           <td>{$form.electoralApiNonlegislativeDistricts.html}<br />
-           <span class="description">{ts}Include non-legislative district data when available (e.g. school district, police district).{/ts}</span></td>
-           <span class="description">{ts}Nonlegislative data lookups cost a separate credit.{/ts}</span></td>
+           <span class="description">{ts}Select the district types you want district data for.{/ts}</span>
+           <span class="cicero-only description"><br />{ts}Nonlegislative data lookups cost a separate credit per type.{/ts}</span>
        </tr>
        <tr class="crm-electoral-api-form-block-address-location-type">
            <td>{$form.addressLocationType.label}</td>
@@ -80,10 +74,25 @@
       if (item.text == 'Google Civic') {
         gCivicVisible = true;
       }
-    })
-    CRM.$('.crm-electoral-api-form-block-cicero-api-key').toggle(ciceroVisible == true);
-    CRM.$('.crm-electoral-api-form-block-nonlegislative-districts').toggle(ciceroVisible == true);
-    CRM.$('.crm-electoral-api-form-block-google-civic-information-api-key').toggle(gCivicVisible == true);
+    });
+    CRM.$('.cicero-only').toggle(ciceroVisible);
+    CRM.$('.crm-electoral-api-form-block-cicero-api-key').toggle(ciceroVisible);
+    CRM.$('.crm-electoral-api-form-block-nonlegislative-districts').toggle(ciceroVisible);
+    CRM.$('.crm-electoral-api-form-block-google-civic-information-api-key').toggle(gCivicVisible);
+    CRM.$('#electoralApiDistrictTypes option').prop( 'disabled', 'disabled');
+
+    // Only show legislative options appropriate for this data provider.
+    ['legislative', 'voting', 'judicial', 'police', 'school'].forEach(function (item, index) {
+      CRM.$("#electoralApiDistrictTypes option[value='" + item + "']").prop( 'disabled', ciceroVisible ? '' : 'disabled').addClass('hidden');
+    });
+    ['country', 'administrativeArea1', 'administrativeArea2', 'locality'].forEach(function (item, index) {
+      CRM.$("#electoralApiDistrictTypes option[value='" + item + "']").prop( 'disabled', gCivicVisible ? '' : 'disabled').addClass('hidden');
+    });
+    var hideStyle = '#select2-drop .select2-results .select2-result-unselectable {display:none;}';
+    var styleSheet = document.createElement("style")
+    styleSheet.type = "text/css"
+    styleSheet.innerText = hideStyle
+    document.head.appendChild(styleSheet)
   }
   </script>
 {/literal}

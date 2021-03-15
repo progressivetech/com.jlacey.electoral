@@ -31,7 +31,6 @@ abstract class AbstractApi {
   protected $cities;
   protected $addressLocationType;
   protected $districtTypes;
-  protected $nonlegislativeDistricts;
   protected $apiKey;
 
   /**
@@ -100,7 +99,7 @@ abstract class AbstractApi {
   private function settingsToProperties() : void {
     // Populate the settings.
     $settings = \Civi\Api4\Setting::get(FALSE)
-      ->addSelect('includedStatesProvinces', 'allCounties', 'includedCounties', 'includedCities', 'addressLocationType', 'electoralApiAllStates', 'electoralApiDistrictTypes', 'electoralApiNonlegislativeDistricts')
+      ->addSelect('includedStatesProvinces', 'allCounties', 'includedCounties', 'includedCities', 'addressLocationType', 'electoralApiAllStates', 'electoralApiDistrictTypes')
       ->execute()
       ->indexBy('name');
 
@@ -121,7 +120,6 @@ abstract class AbstractApi {
 
     $this->addressLocationType = $settings['addressLocationType']['value'][0];
     $this->districtTypes = $settings['electoralApiDistrictTypes']['value'];
-    $this->nonlegislativeDistricts = $settings['electoralApiNonlegislativeDistricts']['value'];
     $this->apiKey = $this->getApiKey();
   }
 
