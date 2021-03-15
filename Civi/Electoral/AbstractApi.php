@@ -113,7 +113,7 @@ abstract class AbstractApi {
       $this->counties = $settings['includedCounties']['value'];
     }
 
-    $cities = $settings['cities']['value'][0];
+    $cities = $settings['cities']['value'][0] ?? NULL;
     // Get the "includedCities" setting, trim out space around commas, and put quotation marks in where needed.
     if ($cities) {
       $this->cities = explode(',', preg_replace('/\s*,\s*/', ',', $settings['includedCities']['value']));
@@ -202,44 +202,36 @@ abstract class AbstractApi {
   /**
    * Helper function to create or update electoral districts custom data
    */
-  protected function writeDistrictData($contactId, $level, $stateProvinceId = NULL, $countyId = NULL, $city = NULL, $chamber = NULL, $district = NULL, $inOffice = 0, $officeName = NULL) : void {
+  protected function writeDistrictData($contactId, $level, $stateProvinceId = NULL, $countyId = NULL, $city = NULL, $chamber = NULL, $district = NULL, $inOffice = FALSE, $officeName = NULL, $note = NULL) : void {
+    (new \DateTime('now'))->format('Y-m-d');
     //Check if this level exists already
     $contactEdExists = $this->districtDataExists($contactId, "$level", "$chamber", $countyId, $city);
     if ($contactEdExists['count'] == 1) {
-      //Get the custom value set id
       $edTableNameId = $this->getDistrictTableNameId();
       $edId = $contactEdExists['values'][$contactId][$edTableNameId];
-      //Update
-      civicrm_api3('CustomValue', 'create', [
-        'entity_id' => $contactId,
-        "custom_electoral_districts:Level:$edId" => "$level",
-        "custom_electoral_districts:States/Provinces:$edId" => "$stateProvinceId",
-        "custom_electoral_districts:County:$edId" => "$countyId",
-        "custom_electoral_districts:City:$edId" => "$city",
-        "custom_electoral_districts:Chamber:$edId" => "$chamber",
-        "custom_electoral_districts:District:$edId" => "$district",
-        "custom_electoral_districts:In office?:$edId" => $inOffice,
-        "custom_electoral_districts:Office:$edId" => $officeName,
-      ]);
+      $record = \Civi\Api4\CustomValue::update('electoral_districts', FALSE)->addWhere('id', '=', $edId);
     }
     else {
-      //Create
-      civicrm_api3('CustomValue', 'create', [
-        'entity_id' => $contactId,
-        'custom_electoral_districts:Level' => "$level",
-        'custom_electoral_districts:States/Provinces' => "$stateProvinceId",
-        "custom_electoral_districts:County" => "$countyId",
-        "custom_electoral_districts:City" => "$city",
-        'custom_electoral_districts:Chamber' => "$chamber",
-        'custom_electoral_districts:District' => "$district",
-        'custom_electoral_districts:In office?' => $inOffice,
-        'custom_electoral_districts:Office' => $officeName,
-      ]);
+      $record = \Civi\Api4\CustomValue::create('electoral_districts', FALSE);
     }
+
+    $record
+      ->addValue('entity_id', $contactId)
+      ->addValue('electoral_level', $level)
+      ->addValue('electoral_states_provinces', $stateProvinceId)
+      ->addValue('electoral_counties', $countyId)
+      ->addValue('electoral_cities', $city)
+      ->addValue('electoral_chamber', $chamber)
+      ->addValue('electoral_district', $district)
+      // This needs to be a string - see core #2461.
+      ->addValue('electoral_in_office', (string) $inOffice)
+      ->addValue('electoral_note', $note)
+      ->addValue('electoral_modified_date', (new \DateTime('now'))->format('Y-m-d H:i:s'))
+      ->execute();
   }
 
   /**
-   * Helper function to check is Electoral Districts custom data already exists
+   * Helper function to check if Electoral Districts custom data already exists
    */
   private function districtDataExists($contactId, $level, $chamber = NULL, $county = NULL, $city = NULL) {
     $edExistsParams = [
@@ -259,7 +251,7 @@ abstract class AbstractApi {
       $edCountyField = 'custom_' . $edCountyId;
       $edExistsParams[$edCountyField] = "$county";
     }
-    if (!empty($county)) {
+    if (!empty($city)) {
       $edCityId = civicrm_api3('CustomField', 'getvalue', ['return' => "id", 'custom_group_id' => "electoral_districts", 'name' => "electoral_cities"]);
       $edCityField = 'custom_' . $edCityId;
       $edExistsParams[$edCityField] = "$city";

@@ -83,7 +83,6 @@ class Cicero extends \Civi\Electoral\AbstractApi {
 
     $legislative_noncurrent = FALSE;
     $non_leg_types = [];
-    $this->mapCiceroDistrictTypes();
 
     $queryString = $this->buildAddressQueryString($address);
     // if ($legislative_noncurrent) {
@@ -110,6 +109,8 @@ class Cicero extends \Civi\Electoral\AbstractApi {
         $response = array_merge($response, $resp_obj->response->results->candidates[0]->districts);
       }
     }
+
+    // Get non-legislative data is applicable.
     if ($this->nonlegislativeDistricts) {
       // while (list(, $type) = each($non_leg_types)) {
       //   $url = self::CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL . $queryString .
@@ -129,34 +130,45 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   }
 
   /**
-   * Given the district types in Electoral API's settings, return the appropriate Cicero district types.
-   */
-  private function mapCiceroDistrictTypes() {
-    // $mapping = [
-    //   'country' = ['NATIONAL_EXEC', 'NATIONAL_UPPER', 'NATIONAL_LOWER'],
-    //   'administrativeArea1' = ['STATE_EXEC', 'STATE_UPPER', 'STATE_LOWER'],
-    //   'administrativeArea2' = ['LOCAL_EXEC', 'LOCAL'],
-    //   'locality' = ['LOCAL_EXEC', 'LOCAL'],
-    // ]
-    // if (array_search($this->));
-    // $temp = 1;
-  }
-
-  /**
    * Format address array into a query string.
    */
   private function buildAddressQueryString(array $address) : string {
+    $address = $this->civicrm_cicero_adjust_street_address($address);
     $streetAddress = $address['street_address'] ?? NULL;
     $city = $address['city'] ?? NULL;
     $stateProvince = $address['state_province_id:name'] ?? NULL;
     $postalCode = $address['postal_code'] ?? NULL;
-
     $searchLoc = str_replace(' ', '+', $streetAddress . '+' . $city . '+' . $stateProvince . '+' . $postalCode);
     // Get an official query response.
     $apiKey = $this->apiKey;
     //$query = rawurlencode('search_loc=' . $searchLoc . '&key=' . $apiKey . '&format=json');
     $query = 'search_loc=' . $searchLoc . '&format=json&key=' . $apiKey;
     return $query;
+  }
+
+  /**
+   * cicero sometimes fails to find a result simply because an apartment
+   * number was included. This functions adjusts the 'street_address' indexed
+   * value based on the parsed address. If civicrm could not parse the address
+   * we assume cicero won't be able to either.
+   *
+   * @param $values
+   *   The values array returned by the get Address civicrm_api call.
+   *
+   * @return array
+   *   The adjust values array after attempting to adjust the street_address
+   *   to increase the odds of matching in cicero.
+   */
+  private function civicrm_cicero_adjust_street_address($values) {
+    $parsed_values = \CRM_Core_BAO_Address::parseStreetAddress($values['street_address']);
+    $values['street_number'] = $parsed_values['street_number'];
+    $values['street_name'] = $parsed_values['street_name'];
+
+    // Used the parsed values if they are available
+    if (!empty($values['street_name'])) {
+      $values['street_address'] = $values['street_number'] . ' ' . $values['street_name'];
+    }
+    return $values;
   }
 
   /**
@@ -190,7 +202,6 @@ class Cicero extends \Civi\Electoral\AbstractApi {
     \Civi::log()->debug("Contacting cicero with url: {$url} and postfields: {$postfields}.", ['electoral']);
     $guzzleClient = new \GuzzleHttp\Client();
     $json = $guzzleClient->request('GET', $url)->getBody()->getContents();
-    // $json = $this->civicrm_cicero_get_response_curl_setup($url, $postfields);
     if ($json) {
       $json_decoded = json_decode($json);
       if (!is_object($json_decoded)) {
@@ -228,6 +239,10 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    */
   protected function parseDistrictData(array $districtData) : bool {
     foreach ($districtData as $districtDatum) {
+      // Don't need districts for executive positions, since it'll always be "NEW YORK" for NY, etc.
+      if (strpos($districtDatum->district_type, '_EXEC')) {
+        continue;
+      }
       $contactId = $this->address['contact_id'];
       $level = $this->levelMap[$districtDatum->district_type];
       $stateProvinceId = $this->address['state_province_id'];
@@ -235,7 +250,11 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       $city = $districtDatum->city;
       $chamber = $this->chamberMap[$districtDatum->district_type] ?? NULL;
       $district = $districtDatum->district_id;
-      $this->writeDistrictData($contactId, $level, $stateProvinceId, $county, $city, $chamber, $district);
+      $note = NULL;
+      if ($districtDatum->district_type == 'LOCAL') {
+        $note = str_replace(" $district", '', $districtDatum->label);
+      }
+      $this->writeDistrictData($contactId, $level, $stateProvinceId, $county, $city, $chamber, $district, FALSE, NULL, $note);
     }
 
     $success = TRUE;
