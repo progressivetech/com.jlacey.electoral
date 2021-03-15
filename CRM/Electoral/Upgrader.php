@@ -16,6 +16,42 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
     return $this->addDataProviders();
   }
 
+  public function upgrade_1001() {
+    $this->ctx->log->info('Adding new Electoral API Columns');
+    \Civi\Api4\CustomField::create(FALSE)
+      ->addValue('name', 'electoral_note')
+      ->addValue('label', 'Note')
+      ->addValue('data_type', 'String')
+      ->addValue('html_type', 'Text')
+      ->addValue('is_required', '0')
+      ->addValue('is_searchable', '1')
+      ->addValue('is_search_range', '0')
+      ->addValue('weight', '9')
+      ->addValue('is_active', '1')
+      ->addValue('is_view', '0')
+      ->addValue('text_length', '128')
+      ->addValue('column_name', 'electoral_districts_note')
+      ->addValue('in_selector', '1')
+      ->addValue('custom_group_id:name', 'electoral_districts')
+      ->execute();
+    \Civi\Api4\CustomField::create(FALSE)
+      ->addValue('name', 'electoral_modified_date')
+      ->addValue('label', 'Last Updated')
+      ->addValue('data_type', 'Date')
+      ->addValue('html_type', 'Select Date')
+      ->addValue('is_required', '0')
+      ->addValue('is_searchable', '1')
+      ->addValue('is_search_range', '0')
+      ->addValue('weight', '10')
+      ->addValue('is_active', '1')
+      ->addValue('is_view', '0')
+      ->addValue('column_name', 'electoral_modified_date')
+      ->addValue('in_selector', '1')
+      ->addValue('custom_group_id:name', 'electoral_districts')
+      ->execute();
+    return TRUE;
+  }
+
   private function addDataProviders() {
     $results = \Civi\Api4\OptionGroup::create(FALSE)
       ->addValue('name', 'electoral_api_data_providers')

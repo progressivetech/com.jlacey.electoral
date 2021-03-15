@@ -124,6 +124,22 @@
       <custom_group_name>electoral_districts</custom_group_name>
     </CustomField>
     <CustomField>
+      <name>electoral_note</name>
+      <label>Note</label>
+      <data_type>String</data_type>
+      <html_type>Text</html_type>
+      <is_required>0</is_required>
+      <is_searchable>1</is_searchable>
+      <is_search_range>0</is_search_range>
+      <weight>8</weight>
+      <is_active>1</is_active>
+      <is_view>0</is_view>
+      <text_length>128</text_length>
+      <column_name>electoral_districts_note</column_name>
+      <in_selector>1</in_selector>
+      <custom_group_name>electoral_districts</custom_group_name>
+    </CustomField>
+    <CustomField>
       <name>electoral_in_office</name>
       <label>In Office?</label>
       <data_type>Boolean</data_type>
@@ -131,10 +147,25 @@
       <is_required>0</is_required>
       <is_searchable>1</is_searchable>
       <is_search_range>0</is_search_range>
-      <weight>8</weight>
+      <weight>9</weight>
       <is_active>1</is_active>
       <is_view>0</is_view>
       <column_name>electoral_districts_in_office</column_name>
+      <in_selector>1</in_selector>
+      <custom_group_name>electoral_districts</custom_group_name>
+    </CustomField>
+    <CustomField>
+      <name>electoral_modified_date</name>
+      <label>Last Updated</label>
+      <data_type>Date</data_type>
+      <html_type>Select Date</html_type>
+      <is_required>0</is_required>
+      <is_searchable>1</is_searchable>
+      <is_search_range>0</is_search_range>
+      <weight>10</weight>
+      <is_active>1</is_active>
+      <is_view>0</is_view>
+      <column_name>electoral_modified_date</column_name>
       <in_selector>1</in_selector>
       <custom_group_name>electoral_districts</custom_group_name>
     </CustomField>
