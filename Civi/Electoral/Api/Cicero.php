@@ -24,20 +24,21 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    */
   private $levelMap = [
     'LOCAL' => 'locality',
-    'JUDICIAL' => 'locality',
     'LOCAL_EXEC' => 'locality',
     'LOCAL_REDISTRICTED' => 'locality',
     'NATIONAL_EXEC' => 'country',
     'NATIONAL_LOWER' => 'country',
     'NATIONAL_LOWER_REDISTRICTED' => 'country',
     'NATIONAL_UPPER' => 'country',
-    'POLICE' => 'locality',
-    'SCHOOL' => 'locality',
     'STATE_EXEC' => 'administrativeArea1',
     'STATE_LOWER' => 'administrativeArea1',
     'STATE_LOWER_REDISTRICTED' => 'administrativeArea1',
     'STATE_UPPER' => 'administrativeArea1',
     'STATE_UPPER_REDISTRICTED' => 'administrativeArea1',
+    'JUDICIAL' => 'judicial',
+    'POLICE' => 'police',
+    'SCHOOL' => 'school',
+    'VOTING' => 'voting',
   ];
 
 
@@ -81,50 +82,32 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       return FALSE;
     }
 
-    $legislative_noncurrent = FALSE;
-    $non_leg_types = [];
-
     $queryString = $this->buildAddressQueryString($address);
     // if ($legislative_noncurrent) {
     //   $url = $this->CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString .
     //     '&type=ALL_2010';
-    //   $resp_obj = civicrm_cicero_get_response($url);
-    //   if (FALSE === $resp_obj) {
-    //     civicrm_cicero_log(t("Failed to obtain legislative non-current response. Continuing..."));
-    //   }
-    //   else {
-    //     $response['legislative'][] = $resp_obj;
-    //   }
-    // }
 
     // Do a legislative lookup if we have district types.
     $response = [];
-    if ($this->districtTypes) {
-      $url = self::CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString;
-      $resp_obj = $this->civicrm_cicero_get_response($url);
-      if (FALSE === $resp_obj) {
-        \Civi::log()->debug("Failed to obtain legislative current response. Continuing...", ['electoral']);
+    foreach ($this->districtTypes as $districtType) {
+      try {
+        if ($districtType === 'legislative') {
+          $url = self::CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString;
+        }
+        else {
+          $url = self::CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL . "$queryString&type=$districtType";
+        }
+        $resp_obj = $this->civicrm_cicero_get_response($url);
       }
-      else {
-        $response = array_merge($response, $resp_obj->response->results->candidates[0]->districts);
+      catch (\GuzzleHttp\Exception\RequestException $e) {
+        \Civi::log()->debug("Failed to retrieve $districtType data from Cicero for contact {$this->address['contact_id']}", ['electoral']);
+        if ($e->hasResponse()) {
+          $statusCode = $e->getResponse()->getStatusCode();
+          \Civi::log()->debug("Got response code $statusCode");
+        }
       }
-    }
-
-    // Get non-legislative data is applicable.
-    if ($this->nonlegislativeDistricts) {
-      // while (list(, $type) = each($non_leg_types)) {
-      //   $url = self::CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL . $queryString .
-      //     '&type=' . $type;
-      // }
-      $url = self::CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL . $queryString;
-      $resp_obj = $this->civicrm_cicero_get_response($url);
-      if (FALSE === $resp_obj) {
-        \Civi::log()->debug("Failed to obtain non-legislative response. Continuing...", ['electoral']);
-      }
-      else {
-        $response['nonlegislative'][] = $resp_obj;
-      }
-
+      // successful lookup.
+      $response = array_merge($response, $resp_obj->response->results->candidates[0]->districts);
     }
     return $response;
   }
