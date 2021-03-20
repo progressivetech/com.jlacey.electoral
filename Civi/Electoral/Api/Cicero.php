@@ -84,16 +84,16 @@ class Cicero extends \Civi\Electoral\AbstractApi {
     }
 
     $queryString = $this->buildAddressQueryString($address);
-    // if ($legislative_noncurrent) {
-    //   $url = $this->CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString .
-    //     '&type=ALL_2010';
-
     // Do a legislative lookup if we have district types.
     $response = [];
     foreach ($this->districtTypes as $districtType) {
       try {
         if ($districtType === 'legislative') {
           $url = self::CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString;
+          if ($this->includeUpcoming) {
+            $today = (new \DateTime('now'))->format('Y-m-d');
+            $url .= "&valid_on_or_after=$today";
+          }
         }
         else {
           $url = self::CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL . "$queryString&type=$districtType";
@@ -255,10 +255,12 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       $chamber = $this->chamberMap[$districtDatum->district_type] ?? NULL;
       $district = $districtDatum->district_id;
       $note = NULL;
+      $valid_from = $districtDatum->valid_from ?? NULL;
+      $valid_to = $districtDatum->valid_to ?? NULL;
       if ($districtDatum->district_type == 'LOCAL') {
         $note = str_replace(" $district", '', $districtDatum->label);
       }
-      $this->writeDistrictData($contactId, $level, $stateProvinceId, $county, $city, $chamber, $district, FALSE, NULL, $note);
+      $this->writeDistrictData($contactId, $level, $stateProvinceId, $county, $city, $chamber, $district, FALSE, NULL, $note, $valid_from, $valid_to);
     }
     return TRUE;
   }

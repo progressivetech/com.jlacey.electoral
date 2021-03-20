@@ -30,7 +30,7 @@
        </tr>
        <tr class="crm-electoral-api-form-block-country">
            <td>{$form.electoralApiIncludedCountries.label}</td>
-           <td>{$form.electoralApiIncludedCountries.html|crmAddClass:huge}<br />
+           <td>{$form.electoralApiIncludedCountries.html|crmAddClass:huge}&nbsp;&nbsp;{$form.electoralApiAllCountries.html}  {$form.electoralApiAllCountries.label}<br />
            <span class="description">{ts}Select states and provinces to include in API scheduled jobs.{/ts}</span></td>
        </tr>
        <tr class="crm-electoral-api-form-block-state-province">
@@ -45,7 +45,7 @@
        </tr>
        <tr class="crm-electoral-api-form-block-city">
            <td>{$form.includedCities.label}</td>
-           <td>{$form.includedCities.html|crmAddClass:huge}<br />
+           <td>{$form.includedCities.html|crmAddClass:huge}&nbsp;&nbsp;{$form.electoralApiAllCities.html}  {$form.electoralApiAllCities.label}<br />
            <span class="description">{ts}Select cities to include in API scheduled jobs.{/ts}</span></td>
        </tr>
         <tr class="crm-electoral-api-form-block-lookup-on-address-update">

@@ -170,6 +170,36 @@
       <custom_group_name>electoral_districts</custom_group_name>
     </CustomField>
     <CustomField>
+      <name>electoral_valid_from</name>
+      <label>Valid From</label>
+      <data_type>Date</data_type>
+      <html_type>Select Date</html_type>
+      <is_required>0</is_required>
+      <is_searchable>1</is_searchable>
+      <is_search_range>0</is_search_range>
+      <weight>11</weight>
+      <is_active>1</is_active>
+      <is_view>0</is_view>
+      <column_name>electoral_valid_from</column_name>
+      <in_selector>1</in_selector>
+      <custom_group_name>electoral_districts</custom_group_name>
+    </CustomField>
+    <CustomField>
+      <name>electoral_valid_to</name>
+      <label>Valid To</label>
+      <data_type>Date</data_type>
+      <html_type>Select Date</html_type>
+      <is_required>0</is_required>
+      <is_searchable>1</is_searchable>
+      <is_search_range>0</is_search_range>
+      <weight>12</weight>
+      <is_active>1</is_active>
+      <is_view>0</is_view>
+      <column_name>electoral_valid_to</column_name>
+      <in_selector>1</in_selector>
+      <custom_group_name>electoral_districts</custom_group_name>
+    </CustomField>
+    <CustomField>
       <name>electoral_status_error_code</name>
       <label>Error Code</label>
       <data_type>Int</data_type>

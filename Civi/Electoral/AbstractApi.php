@@ -22,6 +22,7 @@ abstract class AbstractApi {
    */
   protected $allStates;
   protected $statesProvinces;
+  protected $allCountries;
   protected $countries;
   /**
    * @var bool
@@ -29,10 +30,17 @@ abstract class AbstractApi {
    */
   protected $allCounties;
   protected $counties;
+  protected $allCities;
   protected $cities;
   protected $addressLocationType;
   protected $districtTypes;
   protected $apiKey;
+
+  /**
+   * @var bool
+   * Get district data for upcoming redistricting where applicable.
+   */
+  protected $includeUpcoming;
 
   /**
    * @var array
@@ -100,11 +108,14 @@ abstract class AbstractApi {
   private function settingsToProperties() : void {
     // Populate the settings.
     $settings = \Civi\Api4\Setting::get(FALSE)
-      ->addSelect('includedStatesProvinces', 'allCounties', 'includedCounties', 'includedCities', 'addressLocationType', 'electoralApiAllStates', 'electoralApiDistrictTypes', 'electoralApiIncludedCountries')
+      ->addSelect('includedStatesProvinces', 'allCounties', 'includedCounties', 'includedCities', 'addressLocationType', 'electoralApiAllStates', 'electoralApiDistrictTypes', 'electoralApiIncludedCountries', 'electoralApiAllCities', 'electoralApiAllCountries', 'electoralApiIncludeRedistricted')
       ->execute()
       ->indexBy('name');
 
-    $this->countries = $settings['electoralApiIncludedCountries']['value'];
+    $this->allCountries = $settings['electoralApiAllCountries']['value'];
+    if (!$this->allCountries) {
+      $this->countries = $settings['electoralApiIncludedCountries']['value'];
+    }
     $this->allStates = $settings['electoralApiAllStates']['value'];
     if (!$this->allStates) {
       $this->statesProvinces = $settings['includedStatesProvinces']['value'];
@@ -113,15 +124,18 @@ abstract class AbstractApi {
     if (!$this->allCounties) {
       $this->counties = $settings['includedCounties']['value'];
     }
-
-    $cities = $settings['cities']['value'][0] ?? NULL;
-    // Get the "includedCities" setting, trim out space around commas, and put quotation marks in where needed.
-    if ($cities) {
-      $this->cities = explode(',', preg_replace('/\s*,\s*/', ',', $settings['includedCities']['value']));
+    $this->allCities = $settings['electoralApiAllCities']['value'];
+    if (!$this->allCities) {
+      $cities = $settings['cities']['value'][0] ?? NULL;
+      // Get the "includedCities" setting, trim out space around commas, and put quotation marks in where needed.
+      if ($cities) {
+        $this->cities = explode(',', preg_replace('/\s*,\s*/', ',', $settings['includedCities']['value']));
+      }
     }
 
     $this->addressLocationType = $settings['addressLocationType']['value'][0];
     $this->districtTypes = $settings['electoralApiDistrictTypes']['value'];
+    $this->includeUpcoming = $settings['electoralApiIncludeRedistricted']['value'];
     $this->apiKey = $this->getApiKey();
   }
 
@@ -165,15 +179,13 @@ abstract class AbstractApi {
       ->addSelect('id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'state_province.abbreviation', 'contact_id', 'postal_code', 'country_id:name')
       ->setGroupBy(['id'])
       ->addWhere('street_address', 'IS NOT NULL')
-      ->addWhere('country_id', 'IN', $this->countries)
       ->addWhere('contact.is_deceased', '!=', TRUE)
       ->addWhere('contact.is_deleted', '!=', TRUE)
       ->addOrderBy('id', 'DESC')
       ->setLimit($this->limit);
 
-    if ($this->cities) {
-      // This is sanitized above.
-      $addressQuery->addWhere('city', 'IN', $this->cities);
+    if ($this->countries) {
+      $addressQuery->addWhere('country_id', 'IN', $this->countries);
     }
     if ($this->statesProvinces) {
       $addressQuery->addWhere('state_province_id', 'IN', $this->statesProvinces);
@@ -181,7 +193,11 @@ abstract class AbstractApi {
     if ($this->counties) {
       $addressQuery->addWhere('county_id', 'IN', $this->counties);
     }
-    // "9" means the location type is "primary".
+    if ($this->cities) {
+      // This is sanitized above.
+      $addressQuery->addWhere('city', 'IN', $this->cities);
+    }
+    // "0" means the location type is "primary".
     if ($this->addressLocationType == 0) {
       $addressQuery->addWhere('is_primary', '=', TRUE);
     }
@@ -202,7 +218,7 @@ abstract class AbstractApi {
   /**
    * Helper function to create or update electoral districts custom data
    */
-  protected function writeDistrictData($contactId, $level, $stateProvinceId = '', $countyId = NULL, $city = NULL, $chamber = NULL, $district = NULL, $inOffice = FALSE, $officeName = NULL, $note = NULL) : void {
+  protected function writeDistrictData($contactId, $level, $stateProvinceId = '', $countyId = NULL, $city = NULL, $chamber = NULL, $district = NULL, $inOffice = FALSE, $officeName = NULL, $note = NULL, $valid_from = NULL, $valid_to = NULL) : void {
     (new \DateTime('now'))->format('Y-m-d');
     //Check if this level exists already
     $contactEdExists = $this->districtDataExists($contactId, "$level", "$chamber", $countyId, $city);

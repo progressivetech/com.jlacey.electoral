@@ -17,7 +17,7 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
   }
 
   public function upgrade_1001() {
-    $this->ctx->log->info('Adding new Electoral API Columns');
+    $this->ctx->log->info('Adding new Electoral API Columns: Note, Modified Date');
     \Civi\Api4\CustomField::create(FALSE)
       ->addValue('name', 'electoral_note')
       ->addValue('label', 'Note')
@@ -98,6 +98,41 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
       ->addValue('is_optgroup', '1')
       ->addValue('is_reserved', '1')
       ->addValue('option_group_id:name', 'electoral_districts_level_options')
+      ->execute();
+    return TRUE;
+  }
+
+  public function upgrade_1003() {
+    $this->ctx->log->info('Adding new Electoral API Columns: Valid From, Valid To');
+    \Civi\Api4\CustomField::create(FALSE)
+      ->addValue('name', 'electoral_valid_from')
+      ->addValue('label', 'Valid From')
+      ->addValue('data_type', 'Date')
+      ->addValue('html_type', 'Select Date')
+      ->addValue('is_required', '0')
+      ->addValue('is_searchable', '1')
+      ->addValue('is_search_range', '0')
+      ->addValue('weight', '11')
+      ->addValue('is_active', '1')
+      ->addValue('is_view', '0')
+      ->addValue('column_name', 'electoral_valid_from')
+      ->addValue('in_selector', '1')
+      ->addValue('custom_group_id:name', 'electoral_districts')
+      ->execute();
+    \Civi\Api4\CustomField::create(FALSE)
+      ->addValue('name', 'electoral_valid_to')
+      ->addValue('label', 'Valid From')
+      ->addValue('data_type', 'Date')
+      ->addValue('html_type', 'Select Date')
+      ->addValue('is_required', '0')
+      ->addValue('is_searchable', '1')
+      ->addValue('is_search_range', '0')
+      ->addValue('weight', '12')
+      ->addValue('is_active', '1')
+      ->addValue('is_view', '0')
+      ->addValue('column_name', 'electoral_valid_to')
+      ->addValue('in_selector', '1')
+      ->addValue('custom_group_id:name', 'electoral_districts')
       ->execute();
     return TRUE;
   }

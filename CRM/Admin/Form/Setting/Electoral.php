@@ -15,8 +15,10 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
     //'includedStatesProvinces' => 'Electoral API settings',
     //'includedCounties' => 'Electoral API settings',
     'includedCities' => 'Electoral API settings',
-    'allCounties' => 'Electoral API settings',
+    'electoralApiAllCountries' => 'Electoral API settings',
     'electoralApiAllStates' => 'Electoral API settings',
+    'allCounties' => 'Electoral API settings',
+    'electoralApiAllCities' => 'Electoral API settings',
     'electoralApiDistrictTypes' => 'Electoral API settings',
     'electoralApiIncludeRedistricted' => 'Electoral API settings',
     'electoralApiLookupOnAddressUpdate' => 'Electoral API settings',
@@ -74,6 +76,19 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
     $this->_settings['includedCounties'] = 'Electoral API settings';
     $this->settingsMetadata = \Civi\Core\SettingsMetadata::getMetadata(['name' => array_keys($this->_settings)], NULL, TRUE);
     parent::postProcess();
+    // This part is permanent, for now at least.
+    // Check if Cicero is active.  Enable or disable the "valid from/to" date custom fields accordingly.
+    $ciceroId = \Civi\Api4\OptionValue::get(FALSE)
+      ->addSelect('value')
+      ->addWhere('option_group_id:name', '=', 'electoral_api_data_providers')
+      ->addWhere('label', '=', 'Cicero')
+      ->execute()
+      ->column('value')[0];
+    $activeDates = in_array($ciceroId, $this->_submitValues['electoralApiProviders']);
+    \Civi\Api4\CustomField::update(FALSE)
+      ->addWhere('name', 'IN', ['electoral_valid_from', 'electoral_valid_to'])
+      ->addValue('is_active', $activeDates)
+      ->execute();
   }
 
 }
