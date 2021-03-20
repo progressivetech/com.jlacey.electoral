@@ -22,6 +22,7 @@ abstract class AbstractApi {
    */
   protected $allStates;
   protected $statesProvinces;
+  protected $countries;
   /**
    * @var bool
    * Search for all counties.
@@ -99,10 +100,11 @@ abstract class AbstractApi {
   private function settingsToProperties() : void {
     // Populate the settings.
     $settings = \Civi\Api4\Setting::get(FALSE)
-      ->addSelect('includedStatesProvinces', 'allCounties', 'includedCounties', 'includedCities', 'addressLocationType', 'electoralApiAllStates', 'electoralApiDistrictTypes')
+      ->addSelect('includedStatesProvinces', 'allCounties', 'includedCounties', 'includedCities', 'addressLocationType', 'electoralApiAllStates', 'electoralApiDistrictTypes', 'electoralApiIncludedCountries')
       ->execute()
       ->indexBy('name');
 
+    $this->countries = $settings['electoralApiIncludedCountries']['value'];
     $this->allStates = $settings['electoralApiAllStates']['value'];
     if (!$this->allStates) {
       $this->statesProvinces = $settings['includedStatesProvinces']['value'];
@@ -160,10 +162,10 @@ abstract class AbstractApi {
   protected function getAddresses(?int $addressId = NULL) {
     // Construct the API call to get the addresses.
     $addressQuery = \Civi\Api4\Address::get(FALSE)
-      ->addSelect('id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'state_province.abbreviation', 'contact_id', 'postal_code')
+      ->addSelect('id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'state_province.abbreviation', 'contact_id', 'postal_code', 'country_id:name')
       ->setGroupBy(['id'])
       ->addWhere('street_address', 'IS NOT NULL')
-      ->addWhere('country_id:name', '=', 'US')
+      ->addWhere('country_id', 'IN', $this->countries)
       ->addWhere('contact.is_deceased', '!=', TRUE)
       ->addWhere('contact.is_deleted', '!=', TRUE)
       ->addOrderBy('id', 'DESC')
@@ -171,7 +173,7 @@ abstract class AbstractApi {
 
     if ($this->cities) {
       // This is sanitized above.
-      $addressQuery->addWhere('street_address', 'IN', $this->cities);
+      $addressQuery->addWhere('city', 'IN', $this->cities);
     }
     if ($this->statesProvinces) {
       $addressQuery->addWhere('state_province_id', 'IN', $this->statesProvinces);
@@ -200,7 +202,7 @@ abstract class AbstractApi {
   /**
    * Helper function to create or update electoral districts custom data
    */
-  protected function writeDistrictData($contactId, $level, $stateProvinceId = NULL, $countyId = NULL, $city = NULL, $chamber = NULL, $district = NULL, $inOffice = FALSE, $officeName = NULL, $note = NULL) : void {
+  protected function writeDistrictData($contactId, $level, $stateProvinceId = '', $countyId = NULL, $city = NULL, $chamber = NULL, $district = NULL, $inOffice = FALSE, $officeName = NULL, $note = NULL) : void {
     (new \DateTime('now'))->format('Y-m-d');
     //Check if this level exists already
     $contactEdExists = $this->districtDataExists($contactId, "$level", "$chamber", $countyId, $city);

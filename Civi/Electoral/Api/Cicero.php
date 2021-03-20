@@ -77,9 +77,10 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       $error = [
         'reason' => 'Failed to find enough address parameters to justify a lookup.',
         'message' => 'Cicero lookup not attempted.',
+        'code' => '',
       ];
       $this->writeElectoralStatus($error, $address['id']);
-      return FALSE;
+      return [];
     }
 
     $queryString = $this->buildAddressQueryString($address);
@@ -107,7 +108,9 @@ class Cicero extends \Civi\Electoral\AbstractApi {
         }
       }
       // successful lookup.
-      $response = array_merge($response, $resp_obj->response->results->candidates[0]->districts);
+      if ($resp_obj) {
+        $response = array_merge($response, $resp_obj->response->results->candidates[0]->districts);
+      }
     }
     return $response;
   }
@@ -121,11 +124,15 @@ class Cicero extends \Civi\Electoral\AbstractApi {
     $city = $address['city'] ?? NULL;
     $stateProvince = $address['state_province_id:name'] ?? NULL;
     $postalCode = $address['postal_code'] ?? NULL;
-    $searchLoc = str_replace(' ', '+', $streetAddress . '+' . $city . '+' . $stateProvince . '+' . $postalCode);
-    // Get an official query response.
+    $country = $address['country_id:name'] ?? NULL;
     $apiKey = $this->apiKey;
-    //$query = rawurlencode('search_loc=' . $searchLoc . '&key=' . $apiKey . '&format=json');
-    $query = 'search_loc=' . $searchLoc . '&format=json&key=' . $apiKey;
+    // Alternate approach, requires more address parsing than I'd like to do on non-US addresses though.
+    // $query = "search_address={$streetAddress}&search_city={$city}&search_state={$stateProvince}&search_postal={$postalCode}&search_country={$country}";
+    // $query = str_replace(' ', '+', $query);
+    // $query .= '&format=json&key=' . $apiKey;
+    $searchLoc = str_replace(' ', '+', $streetAddress . '+' . $city . '+' . $stateProvince . '+' . $postalCode . '+' . $country);
+    $query = "search_loc={$searchLoc}&format=json&key={$apiKey}";
+
     return $query;
   }
 
@@ -143,13 +150,17 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    *   to increase the odds of matching in cicero.
    */
   private function civicrm_cicero_adjust_street_address($values) {
+    // Civi can't handle Spanish-language address parsing because it has both floor and door numbers
+    if (in_array($values['country_id:name'], ['MX', 'ES'])) {
+      $values['street_address'] = preg_replace('/ Puerta.*/i', '', $values['street_address']);
+    }
     $parsed_values = \CRM_Core_BAO_Address::parseStreetAddress($values['street_address']);
     $values['street_number'] = $parsed_values['street_number'];
     $values['street_name'] = $parsed_values['street_name'];
 
     // Used the parsed values if they are available
     if (!empty($values['street_name'])) {
-      $values['street_address'] = $values['street_number'] . ' ' . $values['street_name'];
+      $values['street_address'] = trim($values['street_number'] . ' ' . $values['street_name']);
     }
     return $values;
   }
@@ -160,7 +171,11 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    * cost money even if no matches are made.
    */
   private function addressIsCompleteEnough(array $address) : bool {
-    if ($address['street_address'] && $address['state_province_id:name'] && $address['city']) {
+    $stateProvinceNeeded = FALSE;
+    if (in_array($address['country_id:name'], ['US', 'CA'])) {
+      $stateProvinceNeeded = TRUE;
+    }
+    if ($address['street_address'] && ($address['state_province_id:name'] || !$stateProvinceNeeded) && $address['city']) {
       return TRUE;
     }
     return FALSE;
@@ -184,7 +199,8 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   private function civicrm_cicero_get_response($url, $postfields = '') {
     \Civi::log()->debug("Contacting cicero with url: {$url} and postfields: {$postfields}.", ['electoral']);
     $guzzleClient = new \GuzzleHttp\Client();
-    $json = $guzzleClient->request('GET', $url)->getBody()->getContents();
+    $response = $guzzleClient->request('GET', $url);
+    $json = $response->getBody()->getContents();
     if ($json) {
       $json_decoded = json_decode($json);
       if (!is_object($json_decoded)) {
@@ -192,7 +208,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
         return FALSE;
       }
       if ($json_decoded->response->errors ?? FALSE) {
-        $error = NULL;
+        $error = 'Unknown Error';
         if (is_string($json_decoded->response->errors)) {
           $error = $json_decoded->response->errors;
         }
@@ -204,6 +220,8 @@ class Cicero extends \Civi\Electoral\AbstractApi {
           // showing an embarrasing error to a user.
           \CRM_Core_Session::setStatus(E::ts("Out of credits for lookup of electoral info."), "Out of credits", 'alert');
         }
+        $errorArray['code'] = $response->getStatusCode();
+        $errorArray['reason'] = '';
         $errorArray['message'] = $error;
         $this->writeElectoralStatus($errorArray, $this->address['id']);
         return FALSE;
@@ -221,6 +239,9 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    * Convert the Cicero raw data to the format writeDistrictData expects and write it.
    */
   protected function parseDistrictData(array $districtData) : bool {
+    if (!$districtData) {
+      return FALSE;
+    }
     foreach ($districtData as $districtDatum) {
       // Don't need districts for executive positions, since it'll always be "NEW YORK" for NY, etc.
       if (strpos($districtDatum->district_type, '_EXEC')) {
@@ -228,7 +249,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       }
       $contactId = $this->address['contact_id'];
       $level = $this->levelMap[$districtDatum->district_type];
-      $stateProvinceId = $this->address['state_province_id'];
+      $stateProvinceId = $this->address['state_province_id'] ?? '';
       $county = NULL;
       $city = $districtDatum->city;
       $chamber = $this->chamberMap[$districtDatum->district_type] ?? NULL;
@@ -239,9 +260,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       }
       $this->writeDistrictData($contactId, $level, $stateProvinceId, $county, $city, $chamber, $district, FALSE, NULL, $note);
     }
-
-    $success = TRUE;
-    return $success;
+    return TRUE;
   }
 
 }
