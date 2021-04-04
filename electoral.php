@@ -41,17 +41,6 @@ function electoral_civicrm_postCommit($op, $objectName, $objectId, $objectRef) {
   }
 }
 
-function electoral_civicrm_pageRun(&$page) {
-  if (get_class($page) == 'CRM_Contact_Page_View_CustomData') {
-    if (CRM_Core_BAO_CustomGroup::getTitle($page->_groupId) == 'Electoral Districts') {
-      CRM_Core_Resources::singleton()->addScriptFile('com.jlacey.electoral', 'js/districts.js');
-    }
-  }
-
-  $temp = $page;
-  $page->get('_name');
-}
-
 /**
  * Implements hook_civicrm_config().
  *

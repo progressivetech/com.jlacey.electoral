@@ -137,6 +137,121 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
     return TRUE;
   }
 
+  public function upgrade_1004() {
+    return true;
+    $this->ctx->log->info('Adding Custom Fields for Officials');
+    \Civi\Api4\CustomField::create(FALSE)
+      ->addValue('name', 'electoral_ocd_id_district')
+      ->addValue('label', 'Open Civic Data ID')
+      ->addValue('data_type', 'String')
+      ->addValue('html_type', 'Text')
+      ->addValue('is_required', '0')
+      ->addValue('is_searchable', '1')
+      ->addValue('is_search_range', '0')
+      ->addValue('weight', '13')
+      ->addValue('is_active', '1')
+      ->addValue('is_view', '0')
+      ->addValue('column_name', 'electoral_ocd_id_district')
+      ->addValue('in_selector', '0')
+      ->addValue('custom_group_id:name', 'electoral_districts')
+      ->execute();
+    $this->addOfficialData();
+    return TRUE;
+  }
+
+  private function addOfficialData() {
+    \Civi\Api4\ContactType::create(FALSE)
+      ->addValue('name', 'Official')
+      ->addValue('label', 'Official')
+      ->addValue('parent_id:name', 'Individual')
+      ->execute();
+    \Civi\Api4\CustomGroup::create(FALSE)
+      ->addValue('name', 'official_info')
+      ->addValue('title', 'Official Info')
+      ->addValue('style', 'Tab')
+      ->addValue('extends', 'Individual')
+      ->addValue('extends_entity_column_value', ['Official'])
+      ->addValue('is_reserved', TRUE)
+      ->execute();
+    \Civi\Api4\CustomField::create(FALSE)
+      ->addValue('name', 'electoral_office')
+      ->addValue('label', 'Office')
+      ->addValue('data_type', 'String')
+      ->addValue('html_type', 'Text')
+      ->addValue('is_required', '0')
+      ->addValue('is_searchable', '1')
+      ->addValue('is_search_range', '0')
+      ->addValue('weight', '1')
+      ->addValue('is_active', '1')
+      ->addValue('is_view', '0')
+      ->addValue('text_length', '255')
+      ->addValue('column_name', 'electoral_office')
+      ->addValue('in_selector', '1')
+      ->addValue('custom_group_id:name', 'official_info')
+      ->execute();
+    \Civi\Api4\CustomField::create(FALSE)
+      ->addValue('name', 'electoral_party')
+      ->addValue('label', 'Party')
+      ->addValue('data_type', 'String')
+      ->addValue('html_type', 'Text')
+      ->addValue('is_required', '0')
+      ->addValue('is_searchable', '1')
+      ->addValue('is_search_range', '0')
+      ->addValue('weight', '2')
+      ->addValue('is_active', '1')
+      ->addValue('is_view', '0')
+      ->addValue('text_length', '255')
+      ->addValue('column_name', 'electoral_party')
+      ->addValue('in_selector', '1')
+      ->addValue('custom_group_id:name', 'official_info')
+      ->execute();
+    \Civi\Api4\CustomField::create(FALSE)
+      ->addValue('name', 'electoral_ocd_id_official')
+      ->addValue('label', 'Open Civic Data ID')
+      ->addValue('data_type', 'String')
+      ->addValue('html_type', 'Text')
+      ->addValue('is_required', '0')
+      ->addValue('is_searchable', '1')
+      ->addValue('is_search_range', '0')
+      ->addValue('weight', '3')
+      ->addValue('is_active', '1')
+      ->addValue('is_view', '1')
+      ->addValue('text_length', '255')
+      ->addValue('column_name', 'electoral_ocd_id_official')
+      ->addValue('in_selector', '0')
+      ->addValue('custom_group_id:name', 'official_info')
+      ->addValue('help_post', 'This is a unique identifier for the district represented.')
+      ->execute();
+    \Civi\Api4\CustomField::create(FALSE)
+      ->addValue('name', 'electoral_current_term_start_date')
+      ->addValue('label', 'Current Term Start Date')
+      ->addValue('data_type', 'Date')
+      ->addValue('html_type', 'Select Date')
+      ->addValue('is_required', '0')
+      ->addValue('is_searchable', '1')
+      ->addValue('is_search_range', '0')
+      ->addValue('weight', '4')
+      ->addValue('is_active', '1')
+      ->addValue('is_view', '0')
+      ->addValue('column_name', 'electoral_current_term_start_date')
+      ->addValue('custom_group_id:name', 'official_info')
+      ->execute();
+    \Civi\Api4\CustomField::create(FALSE)
+      ->addValue('name', 'electoral_term_end_date')
+      ->addValue('label', 'Term End Date')
+      ->addValue('data_type', 'Date')
+      ->addValue('html_type', 'Select Date')
+      ->addValue('is_required', '0')
+      ->addValue('is_searchable', '1')
+      ->addValue('is_search_range', '0')
+      ->addValue('weight', '5')
+      ->addValue('is_active', '1')
+      ->addValue('is_view', '0')
+      ->addValue('column_name', 'electoral_term_end_date')
+      ->addValue('custom_group_id:name', 'official_info')
+      ->execute();
+  }
+
   private function addDataProviders() {
     $results = \Civi\Api4\OptionGroup::create(FALSE)
       ->addValue('name', 'electoral_api_data_providers')
@@ -220,6 +335,7 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
    */
   public function install() {
     return $this->addDataProviders();
+    return $this->addOfficialData();
   }
 
   /**
