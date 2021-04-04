@@ -13,6 +13,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
 
   const CIVICRM_CICERO_LEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/legislative_district?';
   const CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/nonlegislative_district?';
+  const CIVICRM_CICERO_OFFICIALS_QUERY_URL = 'https://cicero.azavea.com/v3.1/official?';
 
   public function reps() {
     // Reps code here.

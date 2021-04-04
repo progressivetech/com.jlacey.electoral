@@ -2,6 +2,8 @@
 
 namespace Civi\Electoral;
 
+use CRM_Electoral_Official;
+
 abstract class AbstractApi {
 
   /**
