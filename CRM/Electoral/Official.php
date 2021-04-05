@@ -8,11 +8,14 @@ class CRM_Electoral_Official {
   private $prefix;
   private $suffix;
   private $externalIdentifier;
-  private $office;
   private $ocdId;
   private $title;
   private $currentTermStartDate;
   private $termEndDate;
+  /**
+   * The next three are arrays, they can contain more than one of themselves.
+   * @var array
+   */
   private $address;
   private $emailAddress;
   private $phone;
@@ -26,23 +29,10 @@ class CRM_Electoral_Official {
   /**
    * Create an official from the Official class.
    */
-  protected function createOfficial() {
-    //Initialize contact params
-    $contact = [
-      'contact_type' => 'Individual',
-      'contact_sub_type' => 'Official',
-      'do_not_email' => 1,
-      'first_name' => $this->firstName,
-      'middle_name' => $this->middleName,
-      'last_name' => $this->lastName,
-      'nick_name' => $this->nickName,
-      'external_identifier' => $this->externalIdentifier,
-      'image_URL' => $this->imageUrl,
-    ];
-
+  public function createOfficial() {
     //Check if rep already exists, create or update accordingly
     $exists = \Civi\Api4\Contact::get(FALSE)
-      ->addWhere('external_identifier', $this->externalIdentifier)
+      ->addWhere('external_identifier', '=', $this->externalIdentifier)
       ->execute()
       ->count();
     if (!$exists) {
@@ -53,7 +43,7 @@ class CRM_Electoral_Official {
       $official = \Civi\Api4\Contact::update(FALSE)
         ->addWhere('external_identifier', '=', $this->externalIdentifier);
     }
-    $official
+    $result = $official
       ->addValue('contact_type', 'Individual')
       ->addValue('contact_sub_type', 'Official')
       ->addValue('do_not_email', TRUE)
@@ -62,51 +52,40 @@ class CRM_Electoral_Official {
       ->addValue('last_name', $this->lastName)
       ->addValue('nick_name', $this->nickName)
       ->addValue('image_URL', $this->imageUrl)
-      ->execute();
-    $cid = $official->id;
+      ->addValue('official_info.electoral_party', $this->politicalParty)
+      ->addValue('official_info.electoral_office', $this->title)
+      ->addValue('job_title', $this->title)
+      ->addValue('official_info.electoral_ocd_id_official', $this->ocdId)
+      ->addValue('official_info.electoral_current_term_start_date', $this->currentTermStartDate)
+      ->addValue('official_info.electoral_term_end_date', $this->termEndDate)
+      ->execute()
+      ->first();
+    $cid = $result['id'];
 
     // Create the email, phone, address.
-    if ($this->emailAddress) {
-      $this->createEmail($cid, $this->emailAddress);
+    foreach ($this->emailAddress as $locationType => $email) {
+      $this->createEmail($cid, $email, $locationType);
     };
 
-    if ($this->phone) {
-      $this->createPhone($cid, $this->phone);
+    foreach ($this->phone as $locationType => $phone) {
+      $this->createPhone($cid, $phone, $locationType);
     };
 
-    if ($this->address) {
-      $this->createAddress($cid, $this->address);
+    foreach ($this->address as $locationType => $address) {
+      $this->createAddress($cid, $address, $locationType);
     };
 
-    //Create website
-    if (isset($reps['officials'][$officialIndex]['urls'][0])) {
-      electoral_create_website($contactId, $reps['officials'][$officialIndex]['urls'][0], 2);
-    }
+    $websiteList = [
+      'Website' => $this->website,
+      'Twitter' => $this->twitter,
+      'Facebook' => $this->facebook,
+      'Instagram' => $this->instagram,
+    ];
 
-    
-    if (isset($reps['officials'][$officialIndex]['channels'])) {
-      foreach ($reps['officials'][$officialIndex]['channels'] as $channel) {
-        if ($channel['type'] == 'Facebook') {
-          //Create Facebook
-          if ($channel['id'] != NULL) {
-            $repFacebook = 'https://facebook.com/' . $channel['id'];
-            electoral_create_website($contactId, $repFacebook, 3);
-          }
-        }
-        if ($channel['type'] == 'Twitter') {
-          //Create Twitter
-          if ($channel['id'] != NULL) {
-            $repTwitter = 'https://twitter.com/' . $channel['id'];
-            electoral_create_website($contactId, $repTwitter, 11);
-          }
-        }
+    foreach ($websiteList as $websiteType => $url) {
+      if ($url) {
+        $this->createWebsite($cid, $url, $websiteType);
       }
-    }
-
-    //Tag the legislator with their party
-    if ($repExistContact['count'] == 0 &&
-        isset($reps['officials'][$officialIndex]['party'])) {
-      electoral_tag_party($contactId, $reps['officials'][$officialIndex]['party']);
     }
   }
 
@@ -114,28 +93,22 @@ class CRM_Electoral_Official {
    * Helper function to check if website exists
    * and if not, create it
    */
-  function createWebsite($contactId, $website, $websiteType) {
+  private function createWebsite($contactId, $website, $websiteType) {
     //Check if contact has a website set, Main location type
-    $websiteExist = civicrm_api3('Website', 'get', [
-      'return' => "url",
-      'contact_id' => $contactId,
-      'website_type_id' => $websiteType,
-    ]);
-    //If there is an existing website, set the id for comparison
-    if ($websiteExist['count'] > 0) {
-      $websiteExistId = $websiteExist['id'];
-    }
-
+    $websiteExist = \Civi\Api4\Website::get(FALSE)
+      ->addSelect('id', 'url')
+      ->addWhere('contact_id', '=', $contactId)
+      ->addWhere('website_type_id:name', '=', $websiteType)
+      ->execute()
+      ->first();
     //Add an updated website or a new one if none exist,
     //and set it to primary
-    if (($websiteExist['count'] == 1 && $websiteExist['values'][$websiteExistId]['url'] != $website) ||
-        $websiteExist['count'] == 0) {
-      $websiteParams = [
-        'contact_id' => $contactId,
-        'url' => "$website",
-        'website_type_id' => $websiteType,
-      ];
-      $website = civicrm_api3('Website', 'create', $websiteParams);
+    if (!isset($websiteExist) || $websiteExist['url'] != strtolower($website)) {
+      \Civi\Api4\Website::create(FALSE)
+        ->addValue('website_type_id:name', $websiteType)
+        ->addValue('url', $website)
+        ->addValue('contact_id', $contactId)
+        ->execute();
     }
   }
 
@@ -143,30 +116,23 @@ class CRM_Electoral_Official {
    * Helper function to check if email exists
    * and if not, create it
    */
-  private function createEmail($contactId, $email) {
+  private function createEmail($contactId, $email, $locationType) {
     //Check if contact has an email address set, Main location type
-    $emailExist = civicrm_api3('Email', 'get', [
-      'return' => "email",
-      'contact_id' => $contactId,
-      'is_primary' => 1,
-      'location_type_id' => 3,
-    ]);
-    //If there is an existing email address, set the id for comparison
-    if ($emailExist['count'] > 0) {
-      $emailExistId = $emailExist['id'];
-    }
-
+    $emailExist = \Civi\Api4\Email::get(FALSE)
+      ->addSelect('id', 'email')
+      ->addWhere('contact_id', '=', $contactId)
+      ->addWhere('location_type_id:name', '=', $locationType)
+      ->execute()
+      ->first();
     //Add an updated email address or a new one if none exist,
     //and set it to primary
-    if (($emailExist['count'] == 1 && $emailExist['values'][$emailExistId]['email'] != strtolower($email)) ||
-         $emailExist['count'] == 0) {
-      $emailParams = [
-        'contact_id' => $contactId,
-        'location_type_id' => 3,
-        'is_primary' => 1,
-        'email' => "$email",
-      ];
-      civicrm_api3('Email', 'create', $emailParams);
+    if (!isset($emailExist) || $emailExist['email'] != strtolower($email)) {
+      \Civi\Api4\Email::create(FALSE)
+        ->addValue('location_type_id:name', $locationType)
+        ->addValue('email', $email)
+        ->addValue('contact_id', $contactId)
+        ->addValue('is_primary', 1)
+        ->execute();
     }
   }
 
@@ -174,31 +140,24 @@ class CRM_Electoral_Official {
    * Helper function to check if phone exists
    * and if not, create it
    */
-  private function createPhone($contactId, $phone) {
+  private function createPhone($contactId, $phone, $locationType) {
     //Check if contact has a phone set, Main location type
-    $phoneExist = civicrm_api3('Phone', 'get', [
-      'return' => "phone",
-      'contact_id' => $contactId,
-      'is_primary' => 1,
-      'location_type_id' => 3,
-    ]);
-    //If there is an existing phone number, set the id for comparison
-    if ($phoneExist['count'] > 0) {
-      $phoneExistId = $phoneExist['id'];
-    }
-
+    $phoneExist = \Civi\Api4\Phone::get(FALSE)
+      ->addSelect('id', 'phone')
+      ->addWhere('contact_id', '=', $contactId)
+      ->addWhere('location_type_id:name', '=', $locationType)
+      ->execute()
+      ->first();
     //Add an updated phone number or a new one if none exist,
     //and set it to primary
-    if (($phoneExist['count'] == 1 && $phoneExist['values'][$phoneExistId]['phone'] != strtolower($phone)) ||
-        $phoneExist['count'] == 0) {
-      $phoneParams = [
-        'contact_id' => $contactId,
-        'location_type_id' => 3,
-        'phone_type_id' => 1,
-        'is_primary' => 1,
-        'phone' => "$phone",
-      ];
-      $createdPhone = civicrm_api3('Phone', 'create', $phoneParams);
+    if (!isset($phoneExist) || $phoneExist['phone'] != $phone) {
+      \Civi\Api4\Phone::create(FALSE)
+        ->addValue('location_type_id:name', $locationType)
+        ->addValue('phone_type_id:name', 'Phone')
+        ->addValue('phone', $phone)
+        ->addValue('contact_id', $contactId)
+        ->addValue('is_primary', 1)
+        ->execute();
     }
   }
 
@@ -206,35 +165,37 @@ class CRM_Electoral_Official {
    * Helper function to check if address exists
    * and if not, create it
    */
-  private function createAddress($contactId, $address) {
-    $streetAddress = $address['line1'];
+  private function createAddress($contactId, $address, $locationType) {
     //Check if contact has an address set
-    $addressExist = civicrm_api3('Address', 'get', [
-      'return' => "street_address",
-      'contact_id' => $contactId,
-      'is_primary' => 1,
-    ]);
-    //If there is an existing address address, set the id for comparison
-    if ($addressExist['count'] > 0) {
-      $addressExistId = $addressExist['id'];
-    }
+    $addressExist = \Civi\Api4\Address::get(FALSE)
+      ->addSelect('id', 'street_address')
+      ->addWhere('contact_id', '=', $contactId)
+      ->addWhere('location_type_id:name', '=', $locationType)
+      ->execute()
+      ->first();
 
-    //Add an updated address address or a new one if none exist,
+    //Add an updated address or a new one if none exist,
     //and set it to primary
-    if (($addressExist['count'] == 1 && $addressExist['values'][$addressExistId]['street_address'] != $streetAddress) ||
-        $addressExist['count'] == 0) {
-      $usStates = array_flip(CRM_Core_PseudoConstant::stateProvinceForCountry(1228, 'abbreviation'));
-      $addressParams = [
-        'contact_id' => $contactId,
-        'location_type_id' => 3,
-        'is_primary' => 1,
-        'street_address' => $streetAddress,
-        'supplemental_address_1' => $address['line2'],
-        'city' => $address['city'],
-        'state_province_id' => $usStates[$address['state']],
-        'postal_code' => $address['zip'],
-      ];
-      $createdAddress = civicrm_api3('Address', 'create', $addressParams);
+    if (!isset($addressExist) || $addressExist['street_address'] != $address['street_address']) {
+      // Ugh, can't do state by abbreviation in APIv4.
+      $stateProvinceId = \Civi\Api4\StateProvince::get(FALSE)
+        ->addSelect('id')
+        ->addWhere('abbreviation', '=', $address['state_province'])
+        ->addWhere('country.name', '=', $address['country'])
+        ->execute()
+        ->column('id')[0] ?? NULL;
+      \Civi\Api4\Address::create(FALSE)
+        ->addValue('location_type_id:name', $locationType)
+        ->addValue('contact_id', $contactId)
+        ->addValue('street_address', $address['street_address'])
+        ->addValue('supplemental_address_1', $address['supplemental_address_1'])
+        ->addValue('supplemental_address_2', $address['supplemental_address_2'])
+        ->addValue('city', $address['city'])
+        ->addValue('state_province_id', $stateProvinceId)
+        ->addValue('country:name', $address['country'])
+        ->addValue('county:name', $address['county'])
+        ->addValue('postal_code', $address['postal_code'])
+        ->execute();
     }
   }
 
@@ -309,16 +270,6 @@ class CRM_Electoral_Official {
   }
 
   /**
-   * Set the value of office
-   *
-   * @return  self
-   */
-  public function setOffice($office) {
-    $this->office = $office;
-    return $this;
-  }
-
-  /**
    * Set the value of ocdId
    *
    * @return  self
@@ -359,12 +310,20 @@ class CRM_Electoral_Official {
   }
 
   /**
-   * Set the value of addresses
+   * Set the value of address.
+   * Acceptable array values are: street_address, supplemental_address_1,
+   * supplemental_address_2, city, state_province, postal_code, country, county.
+   * Note that all these fields are by name not id - e.g. country name, not country_id.
    *
    * @return  self
    */
-  public function setAddress($address) {
-    $this->address = $address;
+  public function setAddress(array $address, $locationType = 'Main') {
+    if ($address) {
+      if (!isset($address['street_address'])) {
+        throw new CRM_Core_Exception("street_address is a required array element.");
+      }
+      $this->address[$locationType] = $address;
+    }
     return $this;
   }
 
@@ -373,8 +332,10 @@ class CRM_Electoral_Official {
    *
    * @return  self
    */
-  public function setEmailAddress($emailAddress) {
-    $this->emailAddress = $emailAddress;
+  public function setEmailAddress($emailAddress, $locationType = 'Main') {
+    if ($emailAddress) {
+      $this->emailAddress[$locationType] = $emailAddress;
+    }
     return $this;
   }
 
@@ -383,8 +344,10 @@ class CRM_Electoral_Official {
    *
    * @return  self
    */
-  public function setPhone($phone) {
-    $this->phone = $phone;
+  public function setPhone($phone, $locationType = 'Main') {
+    if ($phone) {
+      $this->phone[$locationType] = $phone;
+    }
     return $this;
   }
 
@@ -394,7 +357,9 @@ class CRM_Electoral_Official {
    * @return  self
    */
   public function setWebsite($website) {
-    $this->website = $website;
+    if ($website) {
+      $this->website = $website;
+    }
     return $this;
   }
 
@@ -414,6 +379,9 @@ class CRM_Electoral_Official {
    * @return  self
    */
   public function setTwitter($twitter) {
+    if (strpos($twitter, 'twitter.com') === FALSE) {
+      $twitter = 'https://twitter.com/' . $twitter;
+    }
     $this->twitter = $twitter;
     return $this;
   }
@@ -424,6 +392,9 @@ class CRM_Electoral_Official {
    * @return  self
    */
   public function setFacebook($facebook) {
+    if (strpos($facebook, 'facebook.com') === FALSE) {
+      $facebook = 'https://facebook.com/' . $facebook;
+    }
     $this->facebook = $facebook;
     return $this;
   }
@@ -434,6 +405,9 @@ class CRM_Electoral_Official {
    * @return  self
    */
   public function setInstagram($instagram) {
+    if (strpos($instagram, 'instagram.com') === FALSE) {
+      $instagram = 'https://instagram.com/' . $instagram;
+    }
     $this->instagram = $instagram;
     return $this;
   }
