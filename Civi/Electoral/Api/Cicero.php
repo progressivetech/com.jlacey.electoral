@@ -3,6 +3,7 @@
 namespace Civi\Electoral\Api;
 
 use CRM_Electoral_ExtensionUtil as E;
+use CRM_Electoral_Official;
 
 // use \GuzzleHttp\Client;
 
@@ -15,8 +16,16 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   const CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/nonlegislative_district?';
   const CIVICRM_CICERO_OFFICIALS_QUERY_URL = 'https://cicero.azavea.com/v3.1/official?';
 
-  public function reps() {
-    // Reps code here.
+  public function reps() : array {
+    // $queryString = $this->buildAddressQueryString($this->address);
+    // FIXME: Temporary line
+    $rawOfficialData = file_get_contents('/home/jon/local/civicrm-buildkit/build/dmaster/web/sites/all/modules/civicrm/tools/extensions/official.json');
+    $officials = $this->parseOfficialData($rawOfficialData);
+    // FIXME: Temporary line
+    foreach ($officials as $official) {
+      $official->createOfficial();
+    }
+    return $officials;
   }
 
   /**
@@ -264,6 +273,69 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       $this->writeDistrictData($contactId, $level, $stateProvinceId, $county, $city, $chamber, $district, FALSE, NULL, $note, $valid_from, $valid_to);
     }
     return TRUE;
+  }
+
+  private function parseOfficialData($rawOfficialData) : array {
+    $data = json_decode($rawOfficialData, TRUE)['response']['results']['candidates'][0]['officials'];
+    foreach ($data as $officialInfo) {
+      // This is for readability.
+      $office = $officialInfo['office'] ?? NULL;
+
+      // Get the basic info.
+      $official = new CRM_Electoral_Official();
+      $official
+        ->setFirstName($officialInfo['first_name'])
+        ->setMiddleName($officialInfo['middle_initial'])
+        ->setLastName($officialInfo['last_name'])
+        ->setNickName($officialInfo['nickname'])
+        ->setPrefix($officialInfo['salutation'])
+        ->setSuffix($officialInfo['name_suffix'])
+        ->setExternalIdentifier('cicero_' . $officialInfo['id'])
+        ->setOcdId($office['district']['ocd_id'])
+        ->setTitle($office['title'])
+        ->setCurrentTermStartDate($officialInfo['current_term_start_date'])
+        ->setTermEndDate($officialInfo['term_end_date'])
+        ->setPoliticalParty($officialInfo['party'])
+        ->setImageUrl($officialInfo['photo_origin_url']);
+      // We're only supporting two addresses/phones/emails at this time due to how Civi handles location types.
+      foreach ($officialInfo['addresses'] as $key => $addressData) {
+        if ($key === 0) {
+          $locationType = 'Main';
+        }
+        if ($key === 1) {
+          $locationType = 'Other';
+        }
+        if ($key > 1) {
+          break;
+        }
+        $address[$key] = [
+          'street_address' => $addressData['address_1'],
+          'supplemental_address_1' => $addressData['address_2'],
+          'supplemental_address_2' => $addressData['address_3'],
+          'city' => $addressData['city'],
+          'state_province' => $addressData['state'],
+          'country' => $office['representing_country']['name_short_iso'],
+          'county' => $addressData['county'],
+          'postal_code' => $addressData['postal_code'],
+        ];
+        $official->setAddress($address[$key], $locationType);
+        $official->setPhone($addressData['phone_1'], $locationType);
+      }
+      foreach ($officialInfo['email_addresses'] as $key => $email) {
+        if ($key === 0) {
+          $locationType = 'Main';
+        }
+        if ($key === 1) {
+          $locationType = 'Other';
+        }
+        if ($key > 1) {
+          break;
+        }
+        $official->setEmailAddress($email, $locationType);
+      }
+      $officials[] = $official;
+    }
+    return $officials;
   }
 
 }
