@@ -138,7 +138,6 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
   }
 
   public function upgrade_1004() {
-    return true;
     $this->ctx->log->info('Adding Custom Fields for Officials');
     \Civi\Api4\CustomField::create(FALSE)
       ->addValue('name', 'electoral_ocd_id_district')
@@ -250,6 +249,7 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
       ->addValue('column_name', 'electoral_term_end_date')
       ->addValue('custom_group_id:name', 'official_info')
       ->execute();
+      return TRUE;
   }
 
   private function addDataProviders() {
@@ -326,7 +326,13 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
    */
   public function uninstall() {
     \Civi\Api4\OptionGroup::delete(FALSE)
-      ->addWhere('name', '=', 'electoral_api_data_providers')
+      ->addWhere('name', 'IN', ['electoral_districts_level_options', 'electoral_districts_chamber_options', 'electoral_api_data_providers'])
+      ->execute();
+    \Civi\Api4\CustomGroup::delete(FALSE)
+      ->addWhere('name', 'IN', ['electoral_districts', 'electoral_status', 'official_info'])
+      ->execute();
+    \Civi\Api4\ContactType::delete(FALSE)
+      ->addWhere('name', '=', 'official')
       ->execute();
   }
 
@@ -334,8 +340,9 @@ class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
    * Example: Run an external SQL script when the module is installed.
    */
   public function install() {
-    return $this->addDataProviders();
-    return $this->addOfficialData();
+    $success = $this->addDataProviders();
+    $success &= $this->addOfficialData();
+    return $success;
   }
 
   /**
