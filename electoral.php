@@ -17,7 +17,6 @@ function electoral_civicrm_postCommit($op, $objectName, $objectId, $objectRef) {
       // Make sure this person doesn't have data already.
       $hasDistrictData = \Civi\Api4\CustomValue::get('electoral_districts', FALSE)
         ->addWhere('entity_id', '=', $objectRef->contact_id)
-        ->setLimit(25)
         ->execute()
         ->count();
       if ($hasDistrictData) {
