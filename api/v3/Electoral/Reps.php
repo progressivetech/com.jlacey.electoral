@@ -2,18 +2,6 @@
 use CRM_Electoral_ExtensionUtil as E;
 
 /**
- * Electoral.Reps API specification (optional)
- * This is used for documentation and validation.
- *
- * @param array $spec description of fields supported by this API call
- *
- * @see https://docs.civicrm.org/dev/en/latest/framework/api-architecture/
- */
-function _civicrm_api3_electoral_Reps_spec(&$spec) {
-  $spec['magicword']['api.required'] = 1;
-}
-
-/**
  * Electoral.Reps API
  *
  * @param array $params
@@ -26,20 +14,23 @@ function _civicrm_api3_electoral_Reps_spec(&$spec) {
  * @throws API_Exception
  */
 function civicrm_api3_electoral_Reps($params) {
-  if (array_key_exists('magicword', $params) && $params['magicword'] == 'sesame') {
-    $returnValues = array(
-      // OK, return several data rows
-      12 => ['id' => 12, 'name' => 'Twelve'],
-      34 => ['id' => 34, 'name' => 'Thirty four'],
-      56 => ['id' => 56, 'name' => 'Fifty six'],
-    );
-    // ALTERNATIVE: $returnValues = []; // OK, success
-    // ALTERNATIVE: $returnValues = ["Some value"]; // OK, return a single value
+  try {
+    $EnabledProviders = \Civi::settings()->get('electoralApiProviders');
+    foreach ($EnabledProviders as $enabledProvider) {
+      $className = \Civi\Api4\OptionValue::get(FALSE)
+        ->addSelect('name')
+        ->addWhere('option_group_id:name', '=', 'electoral_api_data_providers')
+        ->addWhere('value', '=', $enabledProvider)
+        ->execute()
+        ->column('name')[0];
+      $provider = new $className();
+      $returnValues = $provider->reps();
+      $returnValues = "hey";
+    }
 
-    // Spec: civicrm_api3_create_success($values = 1, $params = [], $entity = NULL, $action = NULL)
-    return civicrm_api3_create_success($returnValues, $params, 'Electoral', 'Reps');
+    return civicrm_api3_create_success($returnValues, $params, 'Electoral', 'Districts');
   }
-  else {
-    throw new API_Exception(/*error_message*/ 'Everyone knows that the magicword is "sesame"', /*error_code*/ 'magicword_incorrect');
+  catch (API_Exception $e) {
+    throw $e;
   }
 }
