@@ -1,9 +1,6 @@
 <?php
 
 namespace Civi\Electoral;
-
-use CRM_Electoral_Official;
-
 abstract class AbstractApi {
 
   /**
@@ -55,13 +52,16 @@ abstract class AbstractApi {
   /**
    * Constructor class.
    */
-  public function __construct(int $limit, bool $update) {
+  public function __construct(int $limit = 0, bool $update = FALSE) {
     $this->limit = $limit;
     $this->update = $update;
     $this->settingsToProperties();
     return $this;
   }
 
+  /**
+   * Starting point for the Electoral.districts API.  Given a number of addresses to look up, finds those without district data
+   */
   public function districts() {
     // Set variables.
     $addressesDistricted = $addressesWithErrors = 0;
@@ -87,7 +87,16 @@ abstract class AbstractApi {
     return $edDistrictReturn;
   }
 
-  abstract public function reps();
+  /**
+   * Returns a set of representatives, each represented by a CRM_Electoral_Official object.
+   */
+  public function reps() : array {
+    // Find districts present in Civi that don't have corresponding officials.
+    // Get the associated addresses.
+    $addresses = $this->getAddressesWithNoAssociatedOfficials();
+    // Pass those to an abstract function that's provider-specific.  Get back a list of officials.
+    // Write those officials to the database with createOfficial.
+  }
 
   /**
    * Provider-specific lookup for a single address. The contact will get raw district data from the provider for $this->address.
@@ -210,6 +219,7 @@ abstract class AbstractApi {
       $addressQuery->addWhere('id', '=', $addressId);
     }
     if (!$this->update) {
+      // FIXME: This is incorrect, we should be looking up district data, yeah?
       $addressQuery->addWhere('electoral_status.electoral_status_error_code', 'IS NULL');
     }
     // Let 'er rip.
@@ -220,7 +230,7 @@ abstract class AbstractApi {
   /**
    * Helper function to create or update electoral districts custom data
    */
-  protected function writeDistrictData($contactId, $level, $stateProvinceId = '', $countyId = NULL, $city = NULL, $chamber = NULL, $district = NULL, $inOffice = FALSE, $officeName = NULL, $note = NULL, $valid_from = NULL, $valid_to = NULL) : void {
+  protected function writeDistrictData($contactId, $level, $stateProvinceId = '', $countyId = NULL, $city = NULL, $chamber = NULL, $district = NULL, $inOffice = FALSE, $officeName = NULL, $note = NULL, $valid_from = NULL, $valid_to = NULL, $ocd_id) : void {
     (new \DateTime('now'))->format('Y-m-d');
     //Check if this level exists already
     $contactEdExists = $this->districtDataExists($contactId, "$level", "$chamber", $countyId, $city, $valid_to);
@@ -244,7 +254,8 @@ abstract class AbstractApi {
       // This needs to be a string - see core #2461.
       ->addValue('electoral_in_office', (string) $inOffice)
       ->addValue('electoral_note', $note)
-      ->addValue('electoral_modified_date', (new \DateTime('now'))->format('Y-m-d H:i:s'));
+      ->addValue('electoral_modified_date', (new \DateTime('now'))->format('Y-m-d H:i:s'))
+      ->addValue('electoral_ocd_id_district', $ocd_id);
     if ($valid_from) {
       $record->addValue('electoral_valid_from', $valid_from);
     }
@@ -282,9 +293,9 @@ abstract class AbstractApi {
       $edExistsParams[$edCityField] = "$city";
     }
     if (!empty($valid_to)) {
-      $edCityId = civicrm_api3('CustomField', 'getvalue', ['return' => "id", 'custom_group_id' => "electoral_districts", 'name' => "electoral_valid_to"]);
-      $edCityField = 'custom_' . $edCityId;
-      $edExistsParams[$edCityField] = "$city";
+      $edValidToId = civicrm_api3('CustomField', 'getvalue', ['return' => "id", 'custom_group_id' => "electoral_districts", 'name' => "electoral_valid_to"]);
+      $edValidToField = 'custom_' . $edValidToId;
+      $edExistsParams[$edValidToField] = "$valid_to";
     }
     $edExists = civicrm_api3('Contact', 'get', $edExistsParams);
 
@@ -298,6 +309,11 @@ abstract class AbstractApi {
   private function getDistrictTableNameId() : string {
     $edTableName = civicrm_api3('CustomGroup', 'getvalue', ['return' => "table_name", 'name' => "electoral_districts"]);
     return $edTableName . "_id";
+  }
+
+  private function getAddressesWithNoAssociatedOfficials() {
+    \Civi\Api4\CustomField::get(FALSE)
+      ->addWhere('name', 'IN', ['electoral_ocd_id_district', 'electoral_ocd_id_official']);
   }
 
 }
