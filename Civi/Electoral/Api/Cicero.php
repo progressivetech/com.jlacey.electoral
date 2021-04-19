@@ -14,12 +14,8 @@ class Cicero extends \Civi\Electoral\AbstractApi {
 
   const CIVICRM_CICERO_LEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/legislative_district?';
   const CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/nonlegislative_district?';
-  const CIVICRM_CICERO_OFFICIALS_QUERY_URL = 'https://cicero.azavea.com/v3.1/official?';
 
   public function reps() : array {
-    // $queryString = $this->buildAddressQueryString($this->address);
-    // FIXME: Temporary line
-    $rawOfficialData = file_get_contents('/home/jon/local/civicrm-buildkit/build/dmaster/web/sites/all/modules/civicrm/tools/extensions/official.json');
     $officials = $this->parseOfficialData($rawOfficialData);
     // FIXME: Temporary line
     foreach ($officials as $official) {
@@ -267,14 +263,18 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       $note = NULL;
       $valid_from = $districtDatum->valid_from ?? NULL;
       $valid_to = $districtDatum->valid_to ?? NULL;
+      $ocd_id = $districtDatum->ocd_id;
       if ($districtDatum->district_type == 'LOCAL') {
         $note = str_replace(" $district", '', $districtDatum->label);
       }
-      $this->writeDistrictData($contactId, $level, $stateProvinceId, $county, $city, $chamber, $district, FALSE, NULL, $note, $valid_from, $valid_to);
+      $this->writeDistrictData($contactId, $level, $stateProvinceId, $county, $city, $chamber, $district, FALSE, NULL, $note, $valid_from, $valid_to, $ocd_id);
     }
     return TRUE;
   }
 
+  /**
+   * Given raw API return data, returns an array where all elements are of type CRM_Electoral_Official.
+   */
   private function parseOfficialData($rawOfficialData) : array {
     $data = json_decode($rawOfficialData, TRUE)['response']['results']['candidates'][0]['officials'];
     foreach ($data as $officialInfo) {
