@@ -117,11 +117,12 @@ class Cicero extends \Civi\Electoral\AbstractApi {
         // We previously used the district API endpoint to get legislative district info, but now we use the "officials" endpoint to get both district and official in one lookup.
         if ($districtType == 'legislative') {
           foreach ($resp_obj->response->results->candidates[0]->officials as $official) {
-            $response[] = $official->office->district;
+            $response['district'][] = $official->office->district;
+            $response['officiail'][] = $official;
           }
         }
         else {
-          $response = array_merge($response, $resp_obj->response->results->candidates[0]->districts);
+          $response['district'] = array_merge($response['district'], $resp_obj->response->results->candidates[0]->districts);
         }
       }
     }
@@ -252,10 +253,10 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    * Convert the Cicero raw data to the format writeDistrictData expects and write it.
    */
   protected function parseDistrictData(array $districtData) : bool {
-    if (!$districtData) {
+    if (!$districtData['district']) {
       return FALSE;
     }
-    foreach ($districtData as $districtDatum) {
+    foreach ($districtData['district'] as $districtDatum) {
       // Don't need districts for executive positions, since it'll always be "NEW YORK" for NY, etc.
       if (strpos($districtDatum->district_type, '_EXEC')) {
         continue;
