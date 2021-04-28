@@ -118,7 +118,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
         if ($districtType == 'legislative') {
           foreach ($resp_obj->response->results->candidates[0]->officials as $official) {
             $response['district'][] = $official->office->district;
-            $response['officiail'][] = $official;
+            $response['official'][] = $official;
           }
         }
         else {
@@ -277,15 +277,31 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       }
       $this->writeDistrictData($contactId, $level, $stateProvinceId, $county, $city, $chamber, $district, FALSE, NULL, $note, $valid_from, $valid_to, $ocd_id);
     }
+    if (\Civi::settings()->get('electoralApiCreateOfficialOnDistrictLookup')) {
+      $officials = $this->parseOfficialData($districtData['official']);
+      foreach ($officials as $official) {
+        $official->createOfficial();
+      }
+    }
     return TRUE;
   }
 
   /**
-   * Given raw API return data, returns an array where all elements are of type CRM_Electoral_Official.
+   * Given an array of officials from Cicero's API, returns an array where all elements are of type CRM_Electoral_Official.
    */
-  private function parseOfficialData($rawOfficialData) : array {
-    $data = json_decode($rawOfficialData, TRUE)['response']['results']['candidates'][0]['officials'];
-    foreach ($data as $officialInfo) {
+  private function parseOfficialData($officialData) : array {
+    // $data = json_decode($rawOfficialData, TRUE)['response']['results']['candidates'][0]['officials'];
+    foreach ($officialData as $officialInfoObject) {
+      $officialInfo = json_decode(json_encode($officialInfoObject), TRUE);
+      // Check if we already have this contact in the database.
+      $externalIdentifier = 'cicero_' . $officialInfo['id'];
+      $contactExists = \Civi\Api4\Contact::get(FALSE)
+        ->addWhere('external_identifier', '=', $externalIdentifier)
+        ->execute()
+        ->count();
+      if ($contactExists) {
+        continue;
+      }
       // This is for readability.
       $office = $officialInfo['office'] ?? NULL;
 
@@ -298,7 +314,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
         ->setNickName($officialInfo['nickname'])
         ->setPrefix($officialInfo['salutation'])
         ->setSuffix($officialInfo['name_suffix'])
-        ->setExternalIdentifier('cicero_' . $officialInfo['id'])
+        ->setExternalIdentifier($externalIdentifier)
         ->setOcdId($office['district']['ocd_id'])
         ->setTitle($office['title'])
         ->setCurrentTermStartDate($officialInfo['current_term_start_date'])
