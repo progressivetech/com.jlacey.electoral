@@ -12,7 +12,7 @@ use CRM_Electoral_Official;
  */
 class Cicero extends \Civi\Electoral\AbstractApi {
 
-  const CIVICRM_CICERO_LEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/legislative_district?';
+  const CIVICRM_CICERO_LEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/official?';
   const CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/nonlegislative_district?';
 
   public function reps() : array {
@@ -79,7 +79,6 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   protected function addressDistrictLookup() : array {
     $address = $this->address;
     if (!$this->addressIsCompleteEnough($address)) {
-      // FIXME: Need to update the custom fields with an error message.
       $error = [
         'reason' => 'Failed to find enough address parameters to justify a lookup.',
         'message' => 'Cicero lookup not attempted.',
@@ -115,7 +114,15 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       }
       // successful lookup.
       if ($resp_obj) {
-        $response = array_merge($response, $resp_obj->response->results->candidates[0]->districts);
+        // We previously used the district API endpoint to get legislative district info, but now we use the "officials" endpoint to get both district and official in one lookup.
+        if ($districtType == 'legislative') {
+          foreach ($resp_obj->response->results->candidates[0]->officials as $official) {
+            $response[] = $official->office->district;
+          }
+        }
+        else {
+          $response = array_merge($response, $resp_obj->response->results->candidates[0]->districts);
+        }
       }
     }
     return $response;
