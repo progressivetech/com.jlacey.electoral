@@ -10,12 +10,12 @@
        <tr class="crm-electoral-api-form-block-cicero-api-key">
            <td>{$form.ciceroAPIKey.label}</td>
            <td>{$form.ciceroAPIKey.html|crmAddClass:huge}<br />
-           <span class="description">{ts}Enter your Cicero API Key.  <a href="https://www.cicerodata.com/free-trial/" target="_blank">Register at Cicero</a> to obtain a key.{/ts}</span></td>
+           <span class="description">{ts}Add your registered Cicero API Key.  <a href="https://www.cicerodata.com/free-trial/" target="_blank">Register at Cicero</a> to obtain a key.{/ts}</span></td>
        </tr>
        <tr class="crm-electoral-api-form-block-google-civic-information-api-key">
            <td>{$form.googleCivicInformationAPIKey.label}</td>
            <td>{$form.googleCivicInformationAPIKey.html|crmAddClass:huge}<br />
-           <span class="description">{ts}Enter your Google Civic Information API Key.  <a href="https://developers.google.com/civic-information/docs/using_api#APIKey" target="_blank">Register at the Google Civic Information API</a> to obtain a key.{/ts}</span></td>
+           <span class="description">{ts}Add your registered Google Civic Information API Key.  <a href="https://developers.google.com/civic-information/docs/using_api#APIKey" target="_blank">Register at the Google Civic Information API</a> to obtain a key.{/ts}</span></td>
        </tr>
         <tr class="crm-electoral-api-form-block-district-types">
            <td>{$form.electoralApiDistrictTypes.label}</td>
@@ -31,27 +31,32 @@
        <tr class="crm-electoral-api-form-block-country">
            <td>{$form.electoralApiIncludedCountries.label}</td>
            <td>{$form.electoralApiIncludedCountries.html|crmAddClass:huge}&nbsp;&nbsp;{$form.electoralApiAllCountries.html}  {$form.electoralApiAllCountries.label}<br />
-           <span class="description">{ts}Select states and provinces to include in API scheduled jobs.{/ts}</span></td>
+           <span class="description">{ts}Countries to include in electoral district lookups.{/ts}</span></td>
        </tr>
        <tr class="crm-electoral-api-form-block-state-province">
            <td>{$form.includedStatesProvinces.label}</td>
            <td>{$form.includedStatesProvinces.html|crmAddClass:huge}&nbsp;&nbsp;{$form.electoralApiAllStates.html}  {$form.electoralApiAllStates.label}<br />
-           <span class="description">{ts}Select states and provinces to include in API scheduled jobs.{/ts}</span></td>
+           <span class="description">{ts}States and Provinces included in electoral district lookups.{/ts}</span></td>
        </tr>
        <tr class="crm-electoral-api-form-block-county">
            <td>{$form.includedCounties.label}</td>
            <td>{$form.includedCounties.html|crmAddClass:huge}&nbsp;&nbsp;{$form.allCounties.html}  {$form.allCounties.label}<br />
-           <span class="description">{ts}Select counties to include in API scheduled jobs.{/ts}</span></td>
+           <span class="description">{ts}Counties included in electoral district lookups.{/ts}</span></td>
        </tr>
        <tr class="crm-electoral-api-form-block-city">
            <td>{$form.includedCities.label}</td>
            <td>{$form.includedCities.html|crmAddClass:huge}&nbsp;&nbsp;{$form.electoralApiAllCities.html}  {$form.electoralApiAllCities.label}<br />
-           <span class="description">{ts}Select cities to include in API scheduled jobs.{/ts}</span></td>
+           <span class="description">{ts}Cities included in electoral district lookups.{/ts}</span></td>
        </tr>
         <tr class="crm-electoral-api-form-block-lookup-on-address-update">
            <td>{$form.electoralApiLookupOnAddressUpdate.label}</td>
            <td>{$form.electoralApiLookupOnAddressUpdate.html}<br />
            <span class="description">{ts}Get district data any time an address matching these criteria is added/changed.{/ts}</span></td>
+       </tr>
+        <tr class="crm-electoral-api-form-block-create-official-on-district-lookup cicero-only">
+           <td>{$form.electoralApiCreateOfficialOnDistrictLookup.label}</td>
+           <td>{$form.electoralApiCreateOfficialOnDistrictLookup.html}<br />
+           <span class="description">{ts}Create a contact for the matching elected official when performing district lookups.{/ts}</span></td>
        </tr>
   </table>
   <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>
