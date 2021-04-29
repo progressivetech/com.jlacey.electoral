@@ -28,7 +28,7 @@ cv dl eventonbehalfof@https://github.com/FIXME/eventonbehalfof/archive/master.zi
 ### Settings page
 After installation, configure the extension at **Administer » System Settings » Electoral API**.  See screenshot below, with an explanation of each option:
 
-![Screenshot](/images/settings_ui.png)
+![Screenshot of Electoral API Settings page](/images/settings_ui.png)
 
 * **Data Provider(s)**:  Electoral API ships with support for Azavea Cicero and Google Civic Information.  Select the provider(s) you want to use.
 * **Cicero API Key**/**Google Civic Information API Key**: When you [register with Cicero](https://www.cicerodata.com/free-trial/) or [register with Google Developers](https://developers.google.com/civic-information/docs/using_api#APIKey) you will receive an "API key", which gives you access to information using your registered account.  Put the API key in this field.
@@ -57,21 +57,20 @@ It is not recommended to enable both **District Lookup on Address Update** and *
 ### Districts
 After installation, you will see a new tab on all contacts called *Electoral Districts*, see screenshot below:
 
-![Screenshot](/images/districts.png)
+![Screenshot of 'Electoral Districts' tab](/images/districts.png)
 
 This displays the *level* of government, the *state or province* of the district, the *county* and *city* if applicable, the *chamber*, the *district number*, a *note* if one is available, and a *Last Updated* field showing when the data was added.  Cicero users will also have a *Valid From* and *Valid To* field indicating when redistricting may invalidate the information.
 
 CiviCRM sees district data as a multi-record custom field, and is available in searches, reports, etc. as such.
 
-![Screenshot](/images/districts.png)
 
 ### Officials
 
 A new contact subtype "Official" is created upon installation.  Contacts of type Official have an additional tab *Official Info*, which contains the name of the office they hold, their political party, the start and end date of their term, and a unique identifier for their region ("Open Civic Data ID") for integration with other tools.  Additionally, all available information (name, contact info, photo) will be added to the contact's *Summary* tab.  See below.
 
-![Screenshot](/images/official_summary.png)
+![Screenshot of Summary tab for an elected official](/images/official_summary.png)
 
-![Screenshot](/images/official_info.png)
+![Screenshot of Official Info tab for an elected official](/images/official_info.png)
 
 ## Known Issues
 
