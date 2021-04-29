@@ -147,76 +147,15 @@ function electoral_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
 function electoral_civicrm_managed(&$entities) {
   $entities[] = [
     'module' => 'com.jlacey.electoral',
-    'name' => 'googlecivicinfo_country_reps',
+    'name' => 'electoral_all_districts',
     'entity' => 'Job',
     'params' => [
       'version' => 3,
-      'name'          => 'Google Civic Information API - Country Representatives',
-      'description'   => 'Adds US representative contacts via the Google Civic Information API',
+      'name'          => 'Electoral API - Districts Lookup',
+      'description'   => 'Adds district information via the Electoral API',
       'run_frequency' => 'Daily',
-      'api_entity'    => 'GoogleCivicInformation',
-      'api_action'    => 'reps',
-      'parameters'    => "level=country\nroles=legislatorUpperBody,legislatorLowerBody",
-      'is_active'     => 0,
-    ],
-  ];
-  $entities[] = [
-    'module' => 'com.jlacey.electoral',
-    'name' => 'googlecivicinfo_state_province_reps',
-    'entity' => 'Job',
-    'params' => [
-      'version' => 3,
-      'name'          => 'Google Civic Information API - State and Province Representatives',
-      'description'   => 'Adds US state representive contacts via the Google Civic Information API',
-      'run_frequency' => 'Daily',
-      'api_entity'    => 'GoogleCivicInformation',
-      'api_action'    => 'reps',
-      'parameters'    => "level=administrativeArea1\nroles=legislatorUpperBody,legislatorLowerBody",
-      'is_active'     => 0,
-    ],
-  ];
-  $entities[] = [
-    'module' => 'com.jlacey.electoral',
-    'name' => 'googlecivicinfo_county_reps',
-    'entity' => 'Job',
-    'params' => [
-      'version' => 3,
-      'name'          => 'Google Civic Information API - County Representatives',
-      'description'   => 'Adds US county represenative contacts via the Google Civic Information API',
-      'run_frequency' => 'Daily',
-      'api_entity'    => 'GoogleCivicInformation',
-      'api_action'    => 'reps',
-      'parameters'    => "level=administrativeArea2",
-      'is_active'     => 0,
-    ],
-  ];
-  $entities[] = [
-    'module' => 'com.jlacey.electoral',
-    'name' => 'googlecivicinfo_city_reps',
-    'entity' => 'Job',
-    'params' => [
-      'version' => 3,
-      'name'          => 'Google Civic Information API - City Representatives',
-      'description'   => 'Adds US city representative contacts via the Google Civic Information API',
-      'run_frequency' => 'Daily',
-      'api_entity'    => 'GoogleCivicInformation',
-      'api_action'    => 'reps',
-      'parameters'    => "level=locality",
-      'is_active'     => 0,
-    ],
-  ];
-  $entities[] = [
-    'module' => 'com.jlacey.electoral',
-    'name' => 'googlecivicinfo_all_districts',
-    'entity' => 'Job',
-    'params' => [
-      'version' => 3,
-      'name'          => 'Google Civic Information API - Districts Lookup',
-      'description'   => 'Adds US city representative contacts via the Google Civic Information API',
-      'run_frequency' => 'Daily',
-      'api_entity'    => 'GoogleCivicInformation',
-      'api_action'    => 'reps',
-      'parameters'    => "level=all",
+      'api_entity'    => 'Electoral',
+      'api_action'    => 'districts',
       'is_active'     => 0,
     ],
   ];
