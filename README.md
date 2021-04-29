@@ -28,7 +28,7 @@ cv dl eventonbehalfof@https://github.com/FIXME/eventonbehalfof/archive/master.zi
 ### Settings page
 After installation, configure the extension at **Administer » System Settings » Electoral API**.  See screenshot below, with an explanation of each option:
 
-![Screenshot of Electoral API Settings page](/images/settings_ui.png)
+![Screenshot of Electoral API Settings page](/images/settings_screen.png)
 
 * **Data Provider(s)**:  Electoral API ships with support for Azavea Cicero and Google Civic Information.  Select the provider(s) you want to use.
 * **Cicero API Key**/**Google Civic Information API Key**: When you [register with Cicero](https://www.cicerodata.com/free-trial/) or [register with Google Developers](https://developers.google.com/civic-information/docs/using_api#APIKey) you will receive an "API key", which gives you access to information using your registered account.  Put the API key in this field.
