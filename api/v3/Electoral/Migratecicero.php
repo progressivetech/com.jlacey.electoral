@@ -73,6 +73,7 @@ function civicrm_api3_electoral_Migratecicero($params) {
   if ($contact_id) {
     $params['id'] = $contact_id;
   }
+  $params['options'] = ['limit' => 0];
 
   $results = civicrm_api3('Contact', 'get', $params);
 
