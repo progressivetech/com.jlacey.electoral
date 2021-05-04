@@ -22,10 +22,26 @@ function civicrm_api3_electoral_Migratecicero($params) {
     throw new \API_Exception(E::ts("variable_get does not seem to be a function. Is this a Drupal site?"));
   }
 
-  $mapping = variable_get('civicrm_cicero_contact_field_map');
+  // We are only migrating the following cicero fields:
+  $migrate = [
+    'LOCAL',
+    'NATIONAL_LOWER',
+    'STATE_LOWER',
+    'STATE_UPPER',
+  ];
+  // Get the mapping of cicero fields to CiviCRM custom fields.
+  $original_cicero_map = variable_get('civicrm_cicero_contact_field_map');
 
-  if (empty($mapping)) {
+  if (empty($original_cicero_map)) {
     throw new \API_Exception(E::ts("Failed to retrieve the cicero contact field map. Is civicrm_cicero Drupal module in use on this site?"));
+  }
+
+  // Make a new array of only the fields we will migrate.
+  $cicero_map = [];
+  foreach ($original_cicero_map as $key => $value) {
+    if (in_array($key, $migrate)) {
+      $cicero_map[$key] = $value;
+    }
   }
 
   // Optionally, limit to just one contact.
@@ -40,57 +56,31 @@ function civicrm_api3_electoral_Migratecicero($params) {
     $limit = $params['limit'];
   }
 
-  // Get the last modified field id and convert to field name for use with Api4.
+  // Get the last modified field id.
   $last_modified_field = variable_get('civicrm_cicero_last_updated_field');
-  $last_modified_field_id = str_replace('custom_', '', $last_modified_field);
-  $last_modified = \Civi\Api4\CustomField::get()
-      ->addSelect('name')
-      ->addSelect('custom_group.name')
-      ->addWhere('id', '=', $last_modified_field_id)
-      ->execute()
-      ->first();
-  $last_modified_field_name = $last_modified['custom_group.name'] . "." . $last_modified['name'];
 
-  // The mapping variable references the Cicero field to the custom CiviCRM
-  // field using the custom_NNN syntax. However, we need to the field name so
-  // we can use apiv4.
-  $api4_mapping = [];
-  foreach ($mapping as $cicero_name => $custom_field) {
-    // For each field mapping, get the field name.
-    $field_id = str_replace('custom_', '', $custom_field);
-    $field = \Civi\Api4\CustomField::get()
-      ->addSelect('name')
-      ->addSelect('custom_group.name')
-      ->addWhere('id', '=', $field_id)
-      ->execute()
-      ->first();
-    $api4_mapping[$cicero_name] = $field['custom_group.name'] . '.' . $field['name'];
-  }
+  // Build an API3 query to get all results. I've found sites in which the custom voter fields
+  // don't have names, so we can't use Apiv4.
+  $params = [];
+  // Return all cicero fields plus the last modified field.
+  $return = array_values($cicero_map);
+  $return[] = $last_modified_field;
+  $params["return"] = $return;
 
-  // Build the query to find old cicero data in the database.
-  $contacts = \Civi\Api4\Contact::get();
-  $contacts->setJoin([
-    ['Address AS address', TRUE, NULL],
-  ]);
-  $contacts->addWhere('address.location_type_id:name', '=', 'Home' );
-  $contacts->addSelect('address.state_province_id')
-    ->addSelect('address.city')
-    ->addSelect($last_modified_field_name);
-
-  // Add each field that we are currently configured to use.
-  foreach ($api4_mapping as $cicero_name => $field_name) {
-    $contacts->addSelect($field_name);
-  }
+  // Only return records with a last modified date.
+  $params[$last_modified_field] = ["IS NOT NULL" => 1];
 
   if ($contact_id) {
-    $contacts->addWhere('id', '=', 24683);
+    $params['id'] = $contact_id;
   }
+
+  $results = civicrm_api3('Contact', 'get', $params);
+
+
   $contacts_updated = 0;
   $contacts_skipped = 0;
 
-  // Iterate over all records in the database with a value.
-  $results = $contacts->execute();
-  foreach($results as $contact) {
+  foreach($results['values'] as $contact) {
     // We try to be indempotent. If a record already has the new style cicero
     // fields, then we skip to avoid adding duplicate fields.
     $existing = \Civi\Api4\CustomValue::get('electoral_districts')
@@ -101,10 +91,21 @@ function civicrm_api3_electoral_Migratecicero($params) {
       continue;
     }
 
+    // We need the city. One more query.
+    $address = \Civi\Api4\Address::get()
+      ->addSelect("city")
+      ->addSelect("state_province_id")
+      ->addWhere('contact_id', '=', $contact['id'])
+      ->addWhere('location_type_id:name', '=', 'Home')
+      ->execute()->first();
+
+    $state_province_id = $address['state_province_id'];
+    $city = $address['city'];
+
     // The new data is stored in a multiple values custom field, so we run an separate
     // update process for each field for this record.
     $update_contact = NULL;
-    foreach ($api4_mapping as $cicero_name => $field_name) {
+    foreach ($cicero_map as $cicero_name => $field_name) {
       if (empty($contact[$field_name])) {
         // If the field is empty, move on.
         continue;
@@ -112,12 +113,12 @@ function civicrm_api3_electoral_Migratecicero($params) {
       $update_contact = \Civi\Api4\Contact::update()
         ->addWhere('id', '=', $contact['id'])
         ->addValue('electoral_districts.electoral_district', $contact[$field_name])
-        ->addValue('electoral_districts.electoral_modified_date', $contact[$last_modified_field_name])
-        ->addValue('electoral_districts.electoral_states_provinces', $contact['address.state_province_id']);
+        ->addValue('electoral_districts.electoral_modified_date', $contact[$last_modified_field])
+        ->addValue('electoral_districts.electoral_states_provinces', $state_province_id);
       switch($cicero_name) {
         case 'LOCAL':
           $update_contact->addValue('electoral_districts.electoral_level', 'locality')
-            ->addValue('electoral_districts.electoral_cities', $contact['address.city']);
+            ->addValue('electoral_districts.electoral_cities', $city);
           break;
         case 'NATIONAL_LOWER':
           $update_contact->addValue('electoral_districts.electoral_level', 'country');
