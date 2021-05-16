@@ -4,8 +4,6 @@ namespace Civi\Electoral\Api;
 
 use CRM_Electoral_ExtensionUtil as E;
 
-// use \GuzzleHttp\Client;
-
 /**
  * Cicero Data Provider class.
  */
@@ -24,6 +22,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
 
   public function reps() : array {
     // Reps code here.
+    return [];
   }
 
   /**
@@ -58,7 +57,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
 
     // Sort the divisions by length.  Shortest is country, second-shortest is administrativeArea1 (state/province).
     $divisions = array_keys($districts['divisions']);
-    usort($divisions, 'electoral_division_sort');
+    usort($divisions, 'self::electoral_division_sort');
     $administrativeArea1DivisionId = $divisions[1];
 
     // Ideally we could break this out into a subextension to better handle non-US locations
@@ -91,6 +90,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
           break;
         }
       }
+
       // Sub-state divisions
       if (!$level && strpos($divisionKey, "$administrativeArea1DivisionId/") === 0) {
         $subdivisionId = str_replace("$administrativeArea1DivisionId/", '', $divisionKey);
@@ -107,9 +107,8 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
           $cityName = $division['name'];
         }
       }
-
-      // Write to db.
-      if ($level) {
+      // Write to db, if we care about this district type.
+      if ($level && in_array($level, $this->districtTypes)) {
         $this->writeDistrictData($this->address['contact_id'], $level, $this->address['state_province_id'], $county, $cityName, $chamber, $district, FALSE);
       }
     }
@@ -119,7 +118,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
   /**
    * Function to sort divisions by length to determine their level.
    */
-  private function electoral_division_sort(string $a, string $b) {
+  private static function electoral_division_sort(string $a, string $b) {
     return strlen($a) - strlen($b);
   }
 
