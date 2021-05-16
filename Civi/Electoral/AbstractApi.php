@@ -230,7 +230,7 @@ abstract class AbstractApi {
   /**
    * Helper function to create or update electoral districts custom data
    */
-  protected function writeDistrictData($contactId, $level, $stateProvinceId = '', $countyId = NULL, $city = NULL, $chamber = NULL, $district = NULL, $inOffice = FALSE, $officeName = NULL, $note = NULL, $valid_from = NULL, $valid_to = NULL, $ocd_id) : void {
+  protected function writeDistrictData($contactId, $level, $stateProvinceId = '', $countyId = NULL, $city = NULL, $chamber = NULL, $district = NULL, $inOffice = FALSE, $officeName = NULL, $note = NULL, $valid_from = NULL, $valid_to = NULL, $ocd_id = NULL) : void {
     (new \DateTime('now'))->format('Y-m-d');
     //Check if this level exists already
     $contactEdExists = $this->districtDataExists($contactId, "$level", "$chamber", $countyId, $city, $valid_to);

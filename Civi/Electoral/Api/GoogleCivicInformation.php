@@ -22,7 +22,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
     return $key;
   }
 
-  public function reps() {
+  public function reps() : array {
     // Reps code here.
   }
 
