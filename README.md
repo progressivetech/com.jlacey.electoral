@@ -72,6 +72,27 @@ A new contact subtype "Official" is created upon installation.  Contacts of type
 
 ![Screenshot of Official Info tab for an elected official](/images/official_info.png)
 
+## Migrate
+
+An api is provided for migrating from the [Drupal civicrm_cicero
+module](https://www.drupal.org/project/civicrm_cicero) to this extension. Only the following will be migrated:
+
+ * National House District
+ * State Lower
+ * State Upper
+ * City Council
+
+To run the migration, first test with one contact (replace NNN with the contact
+id of the record you want to test):
+    
+`cv api Electoral.Ciceromigrate contact_id=NNN`
+
+When you are satisfied that it works with your configuration, run for multiple contacts, with a limit:
+
+`cv api Electoral.Ciceromigrate limit=10`
+
+When you are really sure it is all working, remove the limit.
+
 ## Known Issues
 
 * Officials lookup from Google Civic Data is not currently supported.  The previous version of this extension (2.0) supports this.  If you need this functionality, please do not upgrade at this time.
