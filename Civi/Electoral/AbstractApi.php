@@ -185,14 +185,18 @@ abstract class AbstractApi {
    *   If this is set, only consider this particular address ID.
    */
   protected function getAddresses(?int $addressId = NULL) {
+    // Use legacy method until is_multiple is supported in APIv4
+    // https://lab.civicrm.org/dev/core/-/issues/2842
+    return $this->getAddressesLegacy($addressId);
+
     // Construct the API call to get the addresses.
     $addressQuery = \Civi\Api4\Address::get(FALSE)
       ->addSelect('id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'state_province.abbreviation', 'contact_id', 'postal_code', 'country_id:name')
-      ->setGroupBy(['id'])
+      ->setGroupBy(['contact_id'])
       ->addWhere('street_address', 'IS NOT NULL')
       ->addWhere('contact.is_deceased', '!=', TRUE)
       ->addWhere('contact.is_deleted', '!=', TRUE)
-      ->addOrderBy('id', 'DESC')
+      ->addOrderBy('contact_id', 'DESC')
       ->setLimit($this->limit);
 
     if ($this->countries) {
@@ -219,14 +223,114 @@ abstract class AbstractApi {
       $addressQuery->addWhere('id', '=', $addressId);
     }
     if (!$this->update) {
-      // FIXME: This is incorrect, we should be looking up district data, yeah?
       $addressQuery->addWhere('electoral_status.electoral_status_error_code', 'IS NULL');
+      $addressQuery->addWhere('electoral_districts.electoral_level', 'IS NULL');
     }
     // Let 'er rip.
     $addresses = $addressQuery->execute();
     return $addresses;
   }
 
+  /**
+   * Legacy helper for versions of CiviCRM prior to fixing
+   * this issue: https://lab.civicrm.org/dev/core/-/issues/2842
+   */
+  protected function getAddressesLegacy(?int $addressId = NULL) {
+    $sql =  '
+      SELECT
+        `a`.`id` AS `id`, `a`.`street_address` AS `street_address`,
+        `a`.`city` AS `city`, `a`.`state_province_id` AS `state_province_id`,
+        `state_province`.`name` AS `state_province_name`,
+        `state_province`.`abbreviation` AS `state_province_abbreviation`,
+        `a`.`contact_id` AS `contact_id`, `a`.`postal_code` AS `postal_code`,
+        `country`.`iso_code` AS `country_id_name`
+      FROM
+        civicrm_address a
+          INNER JOIN `civicrm_contact` `contact`
+            ON `a`.`contact_id` = `contact`.`id`
+          LEFT JOIN `civicrm_state_province` `state_province`
+            ON a.state_province_id =  state_province.id
+          LEFT JOIN `civicrm_country` `country`
+            ON a.country_id =  country.id
+          LEFT JOIN `civicrm_value_electoral_status_27` `electoral_status`
+            ON a.id =  electoral_status.entity_id
+          LEFT JOIN `civicrm_value_electoral_districts_26` `electoral_districts`
+            ON contact.id =  electoral_districts.entity_id
+      WHERE
+        ( `a`.`street_address` IS NOT NULL)
+        AND
+        (`contact`.`is_deceased` != "1")
+        AND
+        (`contact`.`is_deleted` != "1")
+    ';
+
+    $whereClauses = [];
+    if ($this->countries) {
+      $countries = $this->countries;
+      array_walk($countries, 'intval');
+      $countries = implode(',', $countries);
+      $whereClauses[] = '(`a`.`country_id` IN (' . $countries . '))';
+    }
+    if ($this->statesProvinces) {
+      $statesProvinces = $this->statesProvinces;
+      array_walk($statesProvinces, 'intval');
+      $statesProvinces = implode(',', $statesProvinces);
+      $whereClauses[] = '(`a`.`state_province_id` IN (' . $statesProvinces . '))';
+    }
+    if ($this->counties) {
+      $counties = $this->counties;
+      array_walk($counties, 'intval');
+      $counties = implode(',', $counties);
+      $whereClauses[] = '(`a`.`county_id` IN (' . $counties . '))';
+    }
+    if ($this->cities) {
+      $cities = $this->cities;
+      array_walk($cities, 'addslashes');
+      $cities = '"' . implode('","', $cities) . '"';
+      $whereClauses[] = '(`a`.`city` IN (' . $cities . '))';
+    }
+    // "0" means the location type is "primary".
+    if ($this->addressLocationType == 0) {
+      $whereClauses[] = '(`a`.`is_primary` = "1")';
+    }
+    else {
+      $whereClauses[] = '(`a`.`location_type_id` = ' . intval($this->addressLocationType). ')';
+    }
+    if ($addressId) {
+      $whereClauses[] = '(`a`.`id` = ' . intval($addressId) . ')';
+    }
+    if (!$this->update) {
+      $whereClauses[] = '(`electoral_status`.`electoral_status_error_code` IS NULL)';
+      $whereClauses[] = '(`electoral_districts`.`electoral_districts_level` IS NULL)';
+    }
+
+    if (count($whereClauses) > 0) {
+      $sql .= ' AND ' . implode(' AND ', $whereClauses);
+
+    }
+    $sql .= ' GROUP BY `a`.`contact_id` ORDER BY `a`.`contact_id` DESC';
+
+    if ($this->limit) {
+      $sql .= ' LIMIT 1500 OFFSET 0';
+    }
+
+    $dao = \CRM_Core_DAO::executeQuery($sql);
+    $addresses = [];
+    while($dao->fetch()) {
+      $addresses[] = [
+        'id' => $dao->id,
+        'street_address' => $dao->street_address,
+        'city' => $dao->city,
+        'state_province_id' => $dao->state_province_id,
+        'state_province_id:name' => $dao->state_province_name,
+        'state_province_id:abbreviation' => $dao->state_province_abbreviation,
+        'contact_id' => $dao->contact_id,
+        'postal_code' => $dao->postal_code,
+        'country_id:name' => $dao->country_id_name,
+      ];
+    }
+    return $addresses;
+  }
   /**
    * Helper function to create or update electoral districts custom data
    */
