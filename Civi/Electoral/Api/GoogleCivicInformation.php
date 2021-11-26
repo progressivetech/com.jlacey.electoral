@@ -32,7 +32,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
     // Assemble the API URL.
     $streetAddress = rawurlencode($this->address['street_address']);
     $city = rawurlencode($this->address['city']);
-    $stateProvinceAbbrev = $this->address['state_province.abbreviation'];
+    $stateProvinceAbbrev = $this->address['state_province_id.abbreviation'];
     $apiKey = $this->getApiKey();
     $url = "https://www.googleapis.com/civicinfo/v2/representatives?address=$streetAddress%20$city%20$stateProvinceAbbrev&key=$apiKey";
 

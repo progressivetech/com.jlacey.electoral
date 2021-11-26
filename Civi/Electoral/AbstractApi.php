@@ -45,7 +45,7 @@ abstract class AbstractApi {
    * @var array
    * The address being operated on (for district lookups).
    * Array contains the following address elements:
-   * 'id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'state_province.abbreviation', 'contact_id', 'postal_code'
+   * 'id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'state_province_id.abbreviation', 'contact_id', 'postal_code'
    */
   protected $address;
 
@@ -187,12 +187,12 @@ abstract class AbstractApi {
   protected function getAddresses(?int $addressId = NULL) {
     // Construct the API call to get the addresses.
     $addressQuery = \Civi\Api4\Address::get(FALSE)
-      ->addSelect('id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'state_province.abbreviation', 'contact_id', 'postal_code', 'country_id:name')
+      ->addSelect('id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'state_province_id.abbreviation', 'contact_id', 'postal_code', 'country_id:name')
       ->addJoin('Custom_electoral_districts AS custom_electoral_districts', 'LEFT', ['custom_electoral_districts.entity_id', '=', 'contact_id'])
       ->setGroupBy(['contact_id'])
       ->addWhere('street_address', 'IS NOT NULL')
-      ->addWhere('contact.is_deceased', '!=', TRUE)
-      ->addWhere('contact.is_deleted', '!=', TRUE)
+      ->addWhere('contact_id.is_deceased', '!=', TRUE)
+      ->addWhere('contact_id.is_deleted', '!=', TRUE)
       ->addOrderBy('contact_id', 'DESC')
 
       ->setLimit($this->limit);
