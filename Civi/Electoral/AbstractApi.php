@@ -188,6 +188,7 @@ abstract class AbstractApi {
     // Construct the API call to get the addresses.
     $addressQuery = \Civi\Api4\Address::get(FALSE)
       ->addSelect('id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'state_province.abbreviation', 'contact_id', 'postal_code', 'country_id:name')
+      ->addJoin('Custom_electoral_districts AS custom_electoral_districts', 'LEFT', ['custom_electoral_districts.entity_id', '=', 'contact_id'])
       ->setGroupBy(['contact_id'])
       ->addWhere('street_address', 'IS NOT NULL')
       ->addWhere('contact.is_deceased', '!=', TRUE)
@@ -221,7 +222,7 @@ abstract class AbstractApi {
     }
     if (!$this->update) {
       $addressQuery->addWhere('electoral_status.electoral_status_error_code', 'IS NULL');
-      $addressQuery->addWhere('electoral_districts.electoral_level', 'IS NULL');
+      $addressQuery->addWhere('custom_electoral_districts.electoral_level', 'IS NULL');
     }
     // Let 'er rip.
     $addresses = $addressQuery->execute();
