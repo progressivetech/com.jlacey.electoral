@@ -44,60 +44,74 @@ function civicrm_api3_electoral_Migratecicero($params) {
     }
   }
 
-  // Optionally, limit to just one contact.
-  $contact_id = NULL;
-  if (isset($params['contact_id'])) {
-    $contact_id = $params['contact_id'];
-  }
-
-  // Optioanlly, limit to a fixed number of contacts.
-  $limit = NULL;
-  if (isset($params['limit'])) {
-    $limit = $params['limit'];
-  }
+  $contacts_updated = 0;
+  $contacts_skipped = 0;
 
   // Get the last modified field id.
   $last_modified_field = variable_get('civicrm_cicero_last_updated_field');
 
   // Build an API3 query to get all results. I've found sites in which the custom voter fields
   // don't have names, so we can't use Apiv4.
-  $params = [];
+  $contact_params = [];
   // Return all cicero fields plus the last modified field.
   $return = array_values($cicero_map);
   $return[] = $last_modified_field;
-  $params["return"] = $return;
+  $contact_params["return"] = $return;
+
+  // We try to be indempotent. Collect a list of contacts that already
+  // have the new cicero fields and we will exclude them.
+  $converted = \Civi\Api4\CustomValue::get('electoral_districts')
+    ->addSelect('entity_id')
+    ->execute();
+
+  $converted_contact_ids = [];
+  foreach($converted as $converted_contact_id) {
+    $converted_contact_ids[] = $converted_contact_id['entity_id'];
+  }
+
+  // Optionally, limit to just one contact.
+  $contact_id = NULL;
+  if (isset($params['contact_id'])) {
+    $contact_id = $params['contact_id'];
+    if (in_array($contact_id, $converted_contact_ids)) {
+      $contacts_skipped++;
+      $returnValues['contacts_skipped'] = $contacts_skipped; 
+      return civicrm_api3_create_success($returnValues, $params, 'Electoral', 'Districts');
+    }
+  }
+
+  // Here we exclude already converted contacts.
+  if (count($converted_contact_ids) > 0) {
+    $contact_params['id'] = ['NOT IN' => $converted_contact_ids ];
+  }
 
   // Only return records with a last modified date.
-  $params[$last_modified_field] = ["IS NOT NULL" => 1];
+  $contact_params[$last_modified_field] = ["IS NOT NULL" => 1];
 
   if ($contact_id) {
-    $params['id'] = $contact_id;
+    $contact_params['id'] = $contact_id;
   }
-  $params['options'] = ['limit' => 0];
+  $contact_params['options'] = ['limit' => 0];
 
-  $results = civicrm_api3('Contact', 'get', $params);
+  $results = civicrm_api3('Contact', 'get', $contact_params);
+ 
+  // Optioanlly, limit to a fixed number of contacts.
+  $limit = NULL;
+  if (isset($params['limit'])) {
+    $limit = $params['limit'];
+  }
 
-
-  $contacts_updated = 0;
-  $contacts_skipped = 0;
+  $addressLocationTypeId = \Civi\Api4\Setting::get()
+    ->addSelect('addressLocationType')
+    ->execute()->first()['value'];
 
   foreach($results['values'] as $contact) {
-    // We try to be indempotent. If a record already has the new style cicero
-    // fields, then we skip to avoid adding duplicate fields.
-    $existing = \Civi\Api4\CustomValue::get('electoral_districts')
-      ->addWhere('entity_id', '=', $contact['id'])
-      ->execute();
-    if ($existing->count() > 0) {
-      $contacts_skipped++;
-      continue;
-    }
-
-    // We need the city. One more query.
+    // We need the city and state. One more query.
     $address = \Civi\Api4\Address::get()
       ->addSelect("city")
       ->addSelect("state_province_id")
       ->addWhere('contact_id', '=', $contact['id'])
-      ->addWhere('location_type_id:name', '=', 'Home')
+      ->addWhere('location_type_id', '=', $addressLocationTypeId)
       ->execute()->first();
 
     $state_province_id = $address['state_province_id'];
