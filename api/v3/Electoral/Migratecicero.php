@@ -22,6 +22,43 @@ function civicrm_api3_electoral_Migratecicero($params) {
     throw new \API_Exception(E::ts("variable_get does not seem to be a function. Is this a Drupal site?"));
   }
 
+  // Add cicero as a provider if it's not already set.
+  $electoralApiProviders = \Civi\Api4\Setting::get()
+    ->addSelect('electoralApiProviders:name')
+    ->execute()->first()['value'];
+
+  if (!in_array('\Civi\Electoral\Api\Cicero', $electoralApiProviders)) {
+    $electoralApiProviders[] = '\Civi\Electoral\Api\Cicero';
+    \Civi\Api4\Setting::set()
+      ->addValue('electoralApiProviders:name', $electoralApiProviders)
+      ->execute();
+  }
+
+  // Migrate the cicero key if it's not already set.
+  $electoralCiceroKey = \Civi\Api4\Setting::get()
+    ->addSelect('ciceroAPIKey')
+    ->execute()->first()['ciceroApiKey'];
+
+  if (empty($electoralCiceroKey)) {
+    // Check for Drupal module settings.
+    $drupalCiceroKey = variable_get('civicrm_cicero_api_key');
+    if ($drupalCiceroKey) {
+      \Civi\Api4\Setting::set()
+        ->addValue('ciceroAPIKey', $drupalCiceroKey)
+        ->execute();
+    }
+
+  }
+  $drupalLocationTypes = variable_get('civicrm_cicero_location_types', civicrm_cicero_get_default_location_types());
+  $drupalFirstLocationType = array_shift(explode("\n", $drupalLocationTypes));
+
+  if ($drupalFirstLocationType != 'Home') {
+    // Set to alternative location type
+    \Civi\Api4\Setting::set()
+      ->addValue('addressLocationType:name', trim($drupalFirstLocationType))
+      ->execute();
+  }
+
   // We are only migrating the following cicero fields:
   $migrate = [
     'LOCAL',
