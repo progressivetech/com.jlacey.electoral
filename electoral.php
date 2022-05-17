@@ -145,21 +145,6 @@ function electoral_civicrm_upgrade($op, CRM_Queue_Queue $queue = NULL) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_managed
  */
 function electoral_civicrm_managed(&$entities) {
-  $entities[] = [
-    'module' => 'com.jlacey.electoral',
-    'name' => 'electoral_all_districts',
-    'entity' => 'Job',
-    'params' => [
-      'version' => 3,
-      'name'          => 'Electoral API - Districts Lookup',
-      'description'   => 'Adds district information via the Electoral API',
-      'run_frequency' => 'Daily',
-      'api_entity'    => 'Electoral',
-      'api_action'    => 'districts',
-      'is_active'     => 0,
-    ],
-  ];
-
   _electoral_civix_civicrm_managed($entities);
 }
 
