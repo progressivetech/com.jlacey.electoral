@@ -1,0 +1,93 @@
+{
+  "results": [
+    {
+      "id": "ocd-person/e924a3ec-c7c0-4094-8504-7611bcf8979f",
+      "name": "Monique Limón",
+      "party": "Democratic",
+      "current_role": {
+        "title": "Senator",
+        "org_classification": "upper",
+        "district": "19",
+        "division_id": "ocd-division/country:us/state:ca/sldu:19"
+      },
+      "jurisdiction": {
+        "id": "ocd-jurisdiction/country:us/state:ca/government",
+        "name": "California",
+        "classification": "state"
+      },
+      "given_name": "Monique",
+      "family_name": "Limón",
+      "image": "https://www.senate.ca.gov/sites/senate.ca.gov/files/senator_photos/limon_monique_d-19_2.jpg",
+      "email": "",
+      "gender": "Female",
+      "birth_date": "",
+      "death_date": "",
+      "extras": {},
+      "created_at": "2018-10-18T14:35:27.073567+00:00",
+      "updated_at": "2022-02-02T09:00:49.000225+00:00",
+      "openstates_url": "https://openstates.org/person/monique-limon-75vxKC1syP4Km0kgWdlDzj/"
+    },
+    {
+      "id": "ocd-person/a106e70c-7857-5d7c-8252-5f4768818ef2",
+      "name": "Salud O. Carbajal",
+      "party": "Democratic",
+      "current_role": {
+        "title": "Representative",
+        "org_classification": "lower",
+        "district": "CA-24",
+        "division_id": "ocd-division/country:us/state:ca/cd:24"
+      },
+      "jurisdiction": {
+        "id": "ocd-jurisdiction/country:us/government",
+        "name": "United States",
+        "classification": "country"
+      },
+      "given_name": "Salud",
+      "family_name": "Carbajal",
+      "image": "https://theunitedstates.io/images/congress/450x550/C001112.jpg",
+      "email": "",
+      "gender": "M",
+      "birth_date": "1964-11-18",
+      "death_date": "",
+      "extras": {},
+      "created_at": "2021-05-10T15:10:27.803759+00:00",
+      "updated_at": "2022-01-04T03:03:40.772746+00:00",
+      "openstates_url": "https://openstates.org/person/salud-o-carbajal-4tquz43cHCUChROZGSqU2U/"
+    },
+    {
+      "id": "ocd-person/1e0ccfc0-2d57-4e57-8d16-589d07c1bc72",
+      "name": "Steve Bennett",
+      "party": "Democratic",
+      "current_role": {
+        "title": "Assemblymember",
+        "org_classification": "lower",
+        "district": "37",
+        "division_id": "ocd-division/country:us/state:ca/sldl:37"
+      },
+      "jurisdiction": {
+        "id": "ocd-jurisdiction/country:us/state:ca/government",
+        "name": "California",
+        "classification": "state"
+      },
+      "given_name": "Steve",
+      "family_name": "Bennett",
+      "image": "https://www.assembly.ca.gov/sites/assembly.ca.gov/files/memberphotos/official_portrait_0.jpg",
+      "email": "",
+      "gender": "",
+      "birth_date": "",
+      "death_date": "",
+      "extras": {
+        "P.O. Box": "P.O. Box 942849  Sacramento, CA 94249-0037"
+      },
+      "created_at": "2020-12-16T06:02:50.911172+00:00",
+      "updated_at": "2022-06-24T18:36:37.714691+00:00",
+      "openstates_url": "https://openstates.org/person/steve-bennett-uhcjJviyv1mz9zIMu0Ox8/"
+    }
+  ],
+  "pagination": {
+    "per_page": 10,
+    "page": 1,
+    "max_page": 1,
+    "total_items": 3
+  }
+}

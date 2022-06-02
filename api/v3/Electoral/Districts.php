@@ -21,7 +21,7 @@ function civicrm_api3_electoral_Districts(array $params) : array {
         ->execute()
         ->column('name')[0];
       $provider = new $className($limit, $update);
-      $returnValues[] = $provider->districts($limit, $update);
+      $returnValues[] = $provider->processBatch();
     }
 
     return civicrm_api3_create_success($returnValues, $params, 'Electoral', 'Districts');

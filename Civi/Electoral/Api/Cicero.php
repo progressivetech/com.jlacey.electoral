@@ -15,15 +15,6 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   const CIVICRM_CICERO_LEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/official?max=200&';
   const CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/nonlegislative_district?';
 
-  public function reps() : array {
-    $officials = $this->parseOfficialData($rawOfficialData);
-    // FIXME: Temporary line
-    foreach ($officials as $official) {
-      $official->createOfficial();
-    }
-    return $officials;
-  }
-
   /**
    * @var array
    * Map Cicero district types to Civi's levels.
@@ -76,19 +67,19 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   /**
    * @inheritDoc
    */
-  protected function addressDistrictLookup() : array {
-    $address = $this->address;
-    if (!$this->addressIsCompleteEnough($address)) {
+  public function lookup() : array {
+    $this->normalizeAddress();
+    if (!$this->addressIsCompleteEnough()) {
       $error = [
         'reason' => 'Failed to find enough address parameters to justify a lookup.',
         'message' => 'Cicero lookup not attempted.',
         'code' => '',
       ];
-      $this->writeElectoralStatus($error, $address['id']);
+      $this->writeElectoralStatus($error);
       return [];
     }
 
-    $queryString = $this->buildAddressQueryString($address);
+    $queryString = $this->buildAddressQueryString();
     // Do a legislative lookup if we have district types.
     $response = [
       'district' => [],
@@ -130,15 +121,22 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       }
       // successful lookup.
       if ($resp_obj) {
-        // We previously used the district API endpoint to get legislative district info, but now we use the "officials" endpoint to get both district and official in one lookup.
+        // We previously used the district API endpoint to get legislative
+        // district info, but now we use the "officials" endpoint to get both
+        // district and official in one lookup.
         if (in_array($districtType, $legislativeDistrictTypes)) {
           foreach ($resp_obj->response->results->candidates[0]->officials as $official) {
-            $response['district'][] = $official->office->district;
-            $response['official'][] = $official;
+            $districtInfo = $official->office->district;
+            // Don't need districts for exec positions, since it'll always be "NEW YORK" for NY, etc.
+            if (strpos($districtInfo->district_type, '_EXEC')) {
+              continue;
+            }
+            $response['district'][] = $this->parseDistrictData($districtInfo);
+            $response['official'][] = $this->parseOfficialData($official);
           }
         }
         else {
-          $response['district'] = array_merge($response['district'], $resp_obj->response->results->candidates[0]->districts);
+          $response['district'] = array_merge($response['district'], $this->parseDistrictData($resp_obj->response->results->candidates[0]->districts));
         }
       }
     }
@@ -148,13 +146,12 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   /**
    * Format address array into a query string.
    */
-  private function buildAddressQueryString(array $address) : string {
-    $address = $this->civicrm_cicero_adjust_street_address($address);
-    $streetAddress = $address['street_address'] ?? NULL;
-    $city = $address['city'] ?? NULL;
-    $stateProvince = $address['state_province_id:name'] ?? NULL;
-    $postalCode = $address['postal_code'] ?? NULL;
-    $country = $address['country_id:name'] ?? NULL;
+  private function buildAddressQueryString() : string {
+    $streetAddress = $this->civicrm_cicero_adjust_street_address();
+    $city = $this->address['city'] ?? NULL;
+    $stateProvince = $this->address['state_province_id.name'] ?? NULL;
+    $postalCode = $this->address['postal_code'] ?? NULL;
+    $country = $this->address['country_id.name'] ?? NULL;
     $apiKey = $this->apiKey;
     // Alternate approach, requires more address parsing than I'd like to do on non-US addresses though.
     // $query = "search_address={$streetAddress}&search_city={$city}&search_state={$stateProvince}&search_postal={$postalCode}&search_country={$country}";
@@ -175,24 +172,25 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    * @param $values
    *   The values array returned by the get Address civicrm_api call.
    *
-   * @return array
-   *   The adjust values array after attempting to adjust the street_address
+   * @return string 
+   *   The adjusted street _address after attempting to adjust the street_address
    *   to increase the odds of matching in cicero.
    */
-  private function civicrm_cicero_adjust_street_address($values) {
+  private function civicrm_cicero_adjust_street_address() {
     // Civi can't handle Spanish-language address parsing because it has both floor and door numbers
-    if (in_array($values['country_id:name'], ['MX', 'ES'])) {
-      $values['street_address'] = preg_replace('/ Puerta.*/i', '', $values['street_address']);
+    $streetAddress = $this->address['street_address'];
+    if (in_array($this->address['country_id.name'], ['MX', 'ES'])) {
+      $streetAddress = preg_replace('/ Puerta.*/i', '', $streetAddress);
     }
-    $parsed_values = \CRM_Core_BAO_Address::parseStreetAddress($values['street_address']);
-    $values['street_number'] = $parsed_values['street_number'];
-    $values['street_name'] = $parsed_values['street_name'];
+    $parsed_values = \CRM_Core_BAO_Address::parseStreetAddress($streetAddress);
+    $streetNumber = $parsed_values['street_number'];
+    $streetName = $parsed_values['street_name'];
 
     // Used the parsed values if they are available
-    if (!empty($values['street_name'])) {
-      $values['street_address'] = trim($values['street_number'] . ' ' . $values['street_name']);
+    if ($streetName) {
+      $streetAddress = trim($streetNumber . ' ' . $streetName);
     }
-    return $values;
+    return $streetAddress;
   }
 
   /**
@@ -200,12 +198,12 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    * enough to justify attempting a cicero lookup, which will
    * cost money even if no matches are made.
    */
-  private function addressIsCompleteEnough(array $address) : bool {
+  private function addressIsCompleteEnough() : bool {
     $stateProvinceNeeded = FALSE;
-    if (in_array($address['country_id:name'], ['US', 'CA'])) {
+    if (in_array($this->address['country_id.name'], ['US', 'CA'])) {
       $stateProvinceNeeded = TRUE;
     }
-    if ($address['street_address'] && ($address['state_province_id:name'] || !$stateProvinceNeeded) && $address['city']) {
+    if ($this->address['street_address'] && ($this->address['state_province_id.name'] || !$stateProvinceNeeded) && $this->address['city']) {
       return TRUE;
     }
     return FALSE;
@@ -220,14 +218,11 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    *   The url of the cicero page you are getting aresponse from. Defaults to
    *   'http://cicero.azavea.com/token/new.json'.
    *
-   * @param $postfields
-   *   The posfields to be passed to the page.
-   *
    * @return $json
    *   Decoded JSON PHP object object returned by the Cicero API or FALSE on error.
    */
-  private function civicrm_cicero_get_response($url, $postfields = '') {
-    \Civi::log()->debug("Contacting cicero with url: {$url} and postfields: {$postfields}.", ['electoral']);
+  private function civicrm_cicero_get_response($url) {
+    \Civi::log()->debug("Contacting cicero with url: {$url}.", ['electoral']);
     $guzzleClient = $this->getGuzzleClient();
     $response = $guzzleClient->request('GET', $url);
     $json = $response->getBody()->getContents();
@@ -253,7 +248,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
         $errorArray['code'] = $response->getStatusCode();
         $errorArray['reason'] = '';
         $errorArray['message'] = $error;
-        $this->writeElectoralStatus($errorArray, $this->address['id']);
+        $this->writeElectoralStatus($errorArray);
         return FALSE;
       }
       // Success.
@@ -268,114 +263,88 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   /**
    * Convert the Cicero raw data to the format writeDistrictData expects and write it.
    */
-  protected function parseDistrictData(array $districtData) : bool {
-    if (!$districtData['district']) {
-      return FALSE;
+  protected function parseDistrictData($districtDatum) : array {
+    $data['contactId'] = $this->address['contact_id'];
+    $data['level'] = $this->levelMap[$districtDatum->district_type];
+    $data['stateProvinceId'] = $this->address['state_province_id'] ?? '';
+    $data['county'] = NULL;
+    $data['city'] = $districtDatum->city;
+    $data['chamber'] = $this->chamberMap[$districtDatum->district_type] ?? NULL;
+    $data['district'] = $districtDatum->district_id;
+    $data['note'] = NULL;
+    $data['inOffice'] = NULL;
+    $data['valid_from'] = $districtDatum->valid_from ?? NULL;
+    $data['valid_to'] = $districtDatum->valid_to ?? NULL;
+    $data['ocd_id'] = $districtDatum->ocd_id;
+    if ($districtDatum->district_type == 'LOCAL') {
+      $data['note'] = str_replace(" " . $districtDatum->district_id, '', $districtDatum->label);
     }
-    foreach ($districtData['district'] as $districtDatum) {
-      // Don't need districts for executive positions, since it'll always be "NEW YORK" for NY, etc.
-      if (strpos($districtDatum->district_type, '_EXEC')) {
-        continue;
-      }
-      $contactId = $this->address['contact_id'];
-      $level = $this->levelMap[$districtDatum->district_type];
-      $stateProvinceId = $this->address['state_province_id'] ?? '';
-      $county = NULL;
-      $city = $districtDatum->city;
-      $chamber = $this->chamberMap[$districtDatum->district_type] ?? NULL;
-      $district = $districtDatum->district_id;
-      $note = NULL;
-      $valid_from = $districtDatum->valid_from ?? NULL;
-      $valid_to = $districtDatum->valid_to ?? NULL;
-      $ocd_id = $districtDatum->ocd_id;
-      if ($districtDatum->district_type == 'LOCAL') {
-        $note = str_replace(" $district", '', $districtDatum->label);
-      }
-      $this->writeDistrictData($contactId, $level, $stateProvinceId, $county, $city, $chamber, $district, FALSE, NULL, $note, $valid_from, $valid_to, $ocd_id);
-    }
-    if (\Civi::settings()->get('electoralApiCreateOfficialOnDistrictLookup')) {
-      $officials = $this->parseOfficialData($districtData['official']);
-      foreach ($officials as $official) {
-        $official->createOfficial();
-      }
-    }
-    return TRUE;
+    return $data;
   }
 
   /**
    * Given an array of officials from Cicero's API, returns an array where all elements are of type CRM_Electoral_Official.
    */
-  private function parseOfficialData($officialData) : array {
-    // $data = json_decode($rawOfficialData, TRUE)['response']['results']['candidates'][0]['officials'];
-    foreach ($officialData as $officialInfoObject) {
-      $officialInfo = json_decode(json_encode($officialInfoObject), TRUE);
-      // Check if we already have this contact in the database.
-      $externalIdentifier = 'cicero_' . $officialInfo['id'];
-      $contactExists = \Civi\Api4\Contact::get(FALSE)
-        ->addWhere('external_identifier', '=', $externalIdentifier)
-        ->execute()
-        ->count();
-      if ($contactExists) {
-        continue;
-      }
-      // This is for readability.
-      $office = $officialInfo['office'] ?? NULL;
+  private function parseOfficialData($officialInfoObject) : \CRM_Electoral_Official {
+    $officialInfo = json_decode(json_encode($officialInfoObject), TRUE);
+    $externalIdentifier = 'cicero_' . $officialInfo['id'];
 
-      // Get the basic info.
-      $official = new CRM_Electoral_Official();
-      $official
-        ->setFirstName($officialInfo['first_name'])
-        ->setMiddleName($officialInfo['middle_initial'])
-        ->setLastName($officialInfo['last_name'])
-        ->setNickName($officialInfo['nickname'])
-        ->setPrefix($officialInfo['salutation'])
-        ->setSuffix($officialInfo['name_suffix'])
-        ->setExternalIdentifier($externalIdentifier)
-        ->setOcdId($office['district']['ocd_id'])
-        ->setTitle($office['title'])
-        ->setCurrentTermStartDate($officialInfo['current_term_start_date'])
-        ->setTermEndDate($officialInfo['term_end_date'])
-        ->setPoliticalParty($officialInfo['party'])
-        ->setImageUrl($officialInfo['photo_origin_url']);
-      // We're only supporting two addresses/phones/emails at this time due to how Civi handles location types.
-      foreach ($officialInfo['addresses'] as $key => $addressData) {
-        if ($key === 0) {
-          $locationType = 'Main';
-        }
-        if ($key === 1) {
-          $locationType = 'Other';
-        }
-        if ($key > 1) {
-          break;
-        }
-        $address[$key] = [
-          'street_address' => $addressData['address_1'],
-          'supplemental_address_1' => $addressData['address_2'],
-          'supplemental_address_2' => $addressData['address_3'],
-          'city' => $addressData['city'],
-          'state_province' => $addressData['state'],
-          'country' => $office['representing_country']['name_short_iso'],
-          'county' => $addressData['county'],
-          'postal_code' => $addressData['postal_code'],
-        ];
-        $official->setAddress($address[$key], $locationType);
-        $official->setPhone($addressData['phone_1'], $locationType);
+    // This is for readability.
+    $office = $officialInfo['office'] ?? NULL;
+
+    // Get the basic info.
+    $official = new CRM_Electoral_Official();
+    $official
+      ->setFirstName($officialInfo['first_name'])
+      ->setMiddleName($officialInfo['middle_initial'])
+      ->setLastName($officialInfo['last_name'])
+      ->setNickName($officialInfo['nickname'])
+      ->setPrefix($officialInfo['salutation'])
+      ->setSuffix($officialInfo['name_suffix'])
+      ->setExternalIdentifier($externalIdentifier)
+      ->setOcdId($office['district']['ocd_id'])
+      ->setTitle($office['title'])
+      ->setCurrentTermStartDate($officialInfo['current_term_start_date'])
+      ->setTermEndDate($officialInfo['term_end_date'])
+      ->setPoliticalParty($officialInfo['party'])
+      ->setImageUrl($officialInfo['photo_origin_url']);
+    // We're only supporting two addresses/phones/emails at this time due to how Civi handles location types.
+    foreach ($officialInfo['addresses'] as $key => $addressData) {
+      if ($key === 0) {
+        $locationType = 'Main';
       }
-      foreach ($officialInfo['email_addresses'] as $key => $email) {
-        if ($key === 0) {
-          $locationType = 'Main';
-        }
-        if ($key === 1) {
-          $locationType = 'Other';
-        }
-        if ($key > 1) {
-          break;
-        }
-        $official->setEmailAddress($email, $locationType);
+      if ($key === 1) {
+        $locationType = 'Other';
       }
-      $officials[] = $official;
+      if ($key > 1) {
+        break;
+      }
+      $address[$key] = [
+        'street_address' => $addressData['address_1'],
+        'supplemental_address_1' => $addressData['address_2'],
+        'supplemental_address_2' => $addressData['address_3'],
+        'city' => $addressData['city'],
+        'state_province' => $addressData['state'],
+        'country' => $office['representing_country']['name_short_iso'],
+        'county' => $addressData['county'],
+        'postal_code' => $addressData['postal_code'],
+      ];
+      $official->setAddress($address[$key], $locationType);
+      $official->setPhone($addressData['phone_1'], $locationType);
     }
-    return $officials;
+    foreach ($officialInfo['email_addresses'] as $key => $email) {
+      if ($key === 0) {
+        $locationType = 'Main';
+      }
+      if ($key === 1) {
+        $locationType = 'Other';
+      }
+      if ($key > 1) {
+        break;
+      }
+      $official->setEmailAddress($email, $locationType);
+    }
+    return $official;
   }
 
 }

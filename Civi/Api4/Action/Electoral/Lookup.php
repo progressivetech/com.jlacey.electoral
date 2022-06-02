@@ -6,6 +6,8 @@ use CRM_Electoral_ExtensionUtil as E;
 /**
  * Lookup electoral info for a given Contact ID. 
  *
+ * No data is written to the database.
+ *
  */
 class Lookup extends \Civi\Api4\Generic\AbstractAction {
 
@@ -13,52 +15,85 @@ class Lookup extends \Civi\Api4\Generic\AbstractAction {
    * Contact Id to lookup.
    *
    * @var int 
-   * @required
    */
 
   protected $contactId;
 
+  /**
+   * Address string to lookup
+   *
+   * $var string
+   */
+  protected $address;
+
   public function _run(\Civi\Api4\Generic\Result $result) {
-    $locationType = \Civi\Api4\Setting::get(FALSE)
-      ->addSelect('addressLocationType')
-      ->execute()->first()['value'];
+    $contactId = $this->getContactId();
+    $address = $this->getAddress();
 
-    // Lookup the address id we should use for this contact.
-    $addressQuery = \Civi\Api4\Address::get()
-      ->addSelect('id')
-      ->addWhere('contact_id', '=', $this->getContactId());
-
-    if ($locationType == 0) {
-      $addressQuery->addWhere('is_primary', '=', TRUE);
-    }
-    else {
-      $addressQuery->addWhere('location_type_id', '=', $locationType);
-    }
-    $addressId = $addressQuery->execute()->first()['id'];
-    if (empty($addressId)) {
-      throw new \API_Exception(E::ts("Failed to find an address for that contact."));
+    if (empty($contactId) && empty($address)) {
+      throw new \Exception("Please include either a contactId or address to lookup.");
     }
 
     $enabledProviders = \Civi::settings()->get('electoralApiProviders');
-    foreach ($enabledProviders as $enabledProvider) {
-      $className = \Civi\Api4\OptionValue::get(FALSE)
-        ->addSelect('name')
-        ->addWhere('option_group_id:name', '=', 'electoral_api_data_providers')
-        ->addWhere('value', '=', $enabledProvider)
-        ->execute()
-        ->column('name')[0];
-      $provider = new $className();
-      $provider->singleAddressLookup($addressId);
-    }
+    // Pop off the first provider.
+    $enabledProvider = array_pop($enabledProviders);
+    $className = \Civi\Api4\OptionValue::get(FALSE)
+      ->addSelect('name')
+      ->addWhere('option_group_id:name', '=', 'electoral_api_data_providers')
+      ->addWhere('value', '=', $enabledProvider)
+      ->execute()
+      ->column('name')[0];
+    $limit = 0;
+    $update = TRUE;
+    $provider = new $className($limit, $update);
+    if ($contactId) {
+      $locationType = \Civi\Api4\Setting::get()
+        ->addSelect('addressLocationType')
+        ->execute()->first()['value'];
 
-    // Now we hopefully have some electoral data to report.
-    $districts = \Civi\Api4\Contact::get()
-      ->addSelect('electoral_districts.*')
-      ->addWhere('id', '=', $this->getContactId())
-      ->execute();
-    foreach($districts as $district) {
-      $result[] = $district;
+      // Lookup the address id we should use for this contact.
+      $addressQuery = \Civi\Api4\Address::get()
+        ->addSelect('id')
+        ->addWhere('contact_id', '=', $this->getContactId());
+
+      if ($locationType == 0) {
+        $addressQuery->addWhere('is_primary', '=', TRUE);
+      }
+      else {
+        $addressQuery->addWhere('location_type_id', '=', $locationType);
+      }
+      $addressId = $addressQuery->execute()->first()['id'];
+      if (empty($addressId)) {
+        throw new \API_Exception(E::ts("Failed to find an address for that contact."));
+      }
+
+      $addresses = $provider->getAddresses($addressId);
+      if (count($addresses) == 0) {
+        throw new \API_Exception(E::ts("Failed to find an address for that contact (addressId $addressId) that matches the Electoral settings."));
+      }
+      $address = array_pop($addresses);
     }
+    else {
+      $address = electoral_parse_address($this->getAddress());
+    }
+    $provider->setAddress($address);
+    $out = $provider->lookup();
+    $massaged = [
+      'district' => [],
+      'official' => [],
+    ];
+    // We have to massage the data so it's more presentable.
+    $massaged['district'] = $out['district'];
+    foreach($out['official'] as $official) {
+      $massaged['official'][] = [
+        'name' => $official->getName(),
+      ];
+    }
+    $result[] = [
+      $className => $massaged
+    ];  
   }
+
+
 }
 ?>

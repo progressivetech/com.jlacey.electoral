@@ -1,0 +1,1290 @@
+{
+  "normalizedInput": {
+    "line1": "2707 Royal Court",
+    "city": "Lincoln",
+    "state": "NE",
+    "zip": "68502"
+  },
+  "kind": "civicinfo#representativeInfoResponse",
+  "divisions": {
+    "ocd-division/country:us/state:ne/sldu:29": {
+      "name": "Nebraska State Senate district 29",
+      "alsoKnownAs": [
+        "ocd-division/country:us/state:ne/sldl:29"
+      ],
+      "officeIndices": [
+        10
+      ]
+    },
+    "ocd-division/country:us/state:ne/county:lancaster": {
+      "name": "Lancaster County",
+      "officeIndices": [
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    },
+    "ocd-division/country:us": {
+      "name": "United States",
+      "officeIndices": [
+        0,
+        1
+      ]
+    },
+    "ocd-division/country:us/state:ne/county:lancaster/council_district:4": {
+      "name": "Lancaster County NE County Commissioner District 4",
+      "officeIndices": [
+        20
+      ]
+    },
+    "ocd-division/country:us/state:ne": {
+      "name": "Nebraska",
+      "officeIndices": [
+        2,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        11
+      ]
+    },
+    "ocd-division/country:us/state:ne/place:lincoln": {
+      "name": "Lincoln city",
+      "officeIndices": [
+        21,
+        22
+      ]
+    },
+    "ocd-division/country:us/state:ne/cd:1": {
+      "name": "Nebraska's 1st congressional district",
+      "officeIndices": [
+        3
+      ]
+    }
+  },
+  "offices": [
+    {
+      "name": "President of the United States",
+      "divisionId": "ocd-division/country:us",
+      "levels": [
+        "country"
+      ],
+      "roles": [
+        "headOfGovernment",
+        "headOfState"
+      ],
+      "officialIndices": [
+        0
+      ]
+    },
+    {
+      "name": "Vice President of the United States",
+      "divisionId": "ocd-division/country:us",
+      "levels": [
+        "country"
+      ],
+      "roles": [
+        "deputyHeadOfGovernment"
+      ],
+      "officialIndices": [
+        1
+      ]
+    },
+    {
+      "name": "U.S. Senator",
+      "divisionId": "ocd-division/country:us/state:ne",
+      "levels": [
+        "country"
+      ],
+      "roles": [
+        "legislatorUpperBody"
+      ],
+      "officialIndices": [
+        2,
+        3
+      ]
+    },
+    {
+      "name": "U.S. Representative",
+      "divisionId": "ocd-division/country:us/state:ne/cd:1",
+      "levels": [
+        "country"
+      ],
+      "roles": [
+        "legislatorLowerBody"
+      ],
+      "officialIndices": [
+        4
+      ]
+    },
+    {
+      "name": "Governor of Nebraska",
+      "divisionId": "ocd-division/country:us/state:ne",
+      "levels": [
+        "administrativeArea1"
+      ],
+      "roles": [
+        "headOfGovernment"
+      ],
+      "officialIndices": [
+        5
+      ]
+    },
+    {
+      "name": "Lieutenant Governor of Nebraska",
+      "divisionId": "ocd-division/country:us/state:ne",
+      "levels": [
+        "administrativeArea1"
+      ],
+      "roles": [
+        "deputyHeadOfGovernment"
+      ],
+      "officialIndices": [
+        6
+      ]
+    },
+    {
+      "name": "NE Secretary of State",
+      "divisionId": "ocd-division/country:us/state:ne",
+      "levels": [
+        "administrativeArea1"
+      ],
+      "roles": [
+        "governmentOfficer"
+      ],
+      "officialIndices": [
+        7
+      ]
+    },
+    {
+      "name": "NE State Attorney General",
+      "divisionId": "ocd-division/country:us/state:ne",
+      "levels": [
+        "administrativeArea1"
+      ],
+      "roles": [
+        "governmentOfficer"
+      ],
+      "officialIndices": [
+        8
+      ]
+    },
+    {
+      "name": "NE State Auditor of Public Accounts",
+      "divisionId": "ocd-division/country:us/state:ne",
+      "levels": [
+        "administrativeArea1"
+      ],
+      "roles": [
+        "governmentOfficer"
+      ],
+      "officialIndices": [
+        9
+      ]
+    },
+    {
+      "name": "NE State Treasurer",
+      "divisionId": "ocd-division/country:us/state:ne",
+      "levels": [
+        "administrativeArea1"
+      ],
+      "roles": [
+        "governmentOfficer"
+      ],
+      "officialIndices": [
+        10
+      ]
+    },
+    {
+      "name": "NE State Senator",
+      "divisionId": "ocd-division/country:us/state:ne/sldu:29",
+      "levels": [
+        "administrativeArea1"
+      ],
+      "roles": [
+        "legislatorUpperBody"
+      ],
+      "officialIndices": [
+        11
+      ]
+    },
+    {
+      "name": "NE State Supreme Court Chief Justice",
+      "divisionId": "ocd-division/country:us/state:ne",
+      "levels": [
+        "administrativeArea1"
+      ],
+      "roles": [
+        "judge"
+      ],
+      "officialIndices": [
+        12
+      ]
+    },
+    {
+      "name": "Lancaster County Clerk of the District Court",
+      "divisionId": "ocd-division/country:us/state:ne/county:lancaster",
+      "levels": [
+        "administrativeArea2"
+      ],
+      "roles": [
+        "governmentOfficer"
+      ],
+      "officialIndices": [
+        13
+      ]
+    },
+    {
+      "name": "Lancaster County Sheriff",
+      "divisionId": "ocd-division/country:us/state:ne/county:lancaster",
+      "levels": [
+        "administrativeArea2"
+      ],
+      "roles": [
+        "governmentOfficer"
+      ],
+      "officialIndices": [
+        14
+      ]
+    },
+    {
+      "name": "Lancaster County Clerk",
+      "divisionId": "ocd-division/country:us/state:ne/county:lancaster",
+      "levels": [
+        "administrativeArea2"
+      ],
+      "roles": [
+        "governmentOfficer"
+      ],
+      "officialIndices": [
+        15
+      ]
+    },
+    {
+      "name": "Lancaster County Assessor/Register of Deeds",
+      "divisionId": "ocd-division/country:us/state:ne/county:lancaster",
+      "levels": [
+        "administrativeArea2"
+      ],
+      "roles": [
+        "governmentOfficer"
+      ],
+      "officialIndices": [
+        16
+      ]
+    },
+    {
+      "name": "Lancaster County Public Defender",
+      "divisionId": "ocd-division/country:us/state:ne/county:lancaster",
+      "levels": [
+        "administrativeArea2"
+      ],
+      "roles": [
+        "governmentOfficer"
+      ],
+      "officialIndices": [
+        17
+      ]
+    },
+    {
+      "name": "Lancaster County Engineer",
+      "divisionId": "ocd-division/country:us/state:ne/county:lancaster",
+      "levels": [
+        "administrativeArea2"
+      ],
+      "roles": [
+        "governmentOfficer"
+      ],
+      "officialIndices": [
+        18
+      ]
+    },
+    {
+      "name": "Lancaster County Attorney",
+      "divisionId": "ocd-division/country:us/state:ne/county:lancaster",
+      "levels": [
+        "administrativeArea2"
+      ],
+      "roles": [
+        "governmentOfficer"
+      ],
+      "officialIndices": [
+        19
+      ]
+    },
+    {
+      "name": "Lancaster County Treasurer",
+      "divisionId": "ocd-division/country:us/state:ne/county:lancaster",
+      "levels": [
+        "administrativeArea2"
+      ],
+      "roles": [
+        "governmentOfficer"
+      ],
+      "officialIndices": [
+        20
+      ]
+    },
+    {
+      "name": "Lancaster County Commissioner",
+      "divisionId": "ocd-division/country:us/state:ne/county:lancaster/council_district:4",
+      "levels": [
+        "administrativeArea2"
+      ],
+      "roles": [
+        "legislatorLowerBody"
+      ],
+      "officialIndices": [
+        21
+      ]
+    },
+    {
+      "name": "Mayor of Lincoln",
+      "divisionId": "ocd-division/country:us/state:ne/place:lincoln",
+      "levels": [
+        "locality"
+      ],
+      "roles": [
+        "headOfGovernment"
+      ],
+      "officialIndices": [
+        22
+      ]
+    },
+    {
+      "name": "Lincoln City Council Member",
+      "divisionId": "ocd-division/country:us/state:ne/place:lincoln",
+      "levels": [
+        "locality"
+      ],
+      "roles": [
+        "legislatorLowerBody"
+      ],
+      "officialIndices": [
+        23,
+        24,
+        25
+      ]
+    }
+  ],
+  "officials": [
+    {
+      "name": "Joseph R. Biden",
+      "address": [
+        {
+          "line1": "1600 Pennsylvania Avenue Northwest",
+          "city": "Washington",
+          "state": "DC",
+          "zip": "20500"
+        }
+      ],
+      "party": "Democratic Party",
+      "phones": [
+        "(202) 456-1111"
+      ],
+      "urls": [
+        "https://www.whitehouse.gov/",
+        "https://en.wikipedia.org/wiki/Joe_Biden"
+      ],
+      "channels": [
+        {
+          "type": "Twitter",
+          "id": "potus"
+        }
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "The White House 1600 Pennsylvania Avenue NW Washington, DC 20500",
+          "featureId": {
+            "cellId": "9923602325795527449",
+            "fprint": "11513381022022344111"
+          },
+          "featureType": "typeCompoundBuilding",
+          "positionPrecisionMeters": 126.14545494347092,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Kamala D. Harris",
+      "address": [
+        {
+          "line1": "1600 Pennsylvania Avenue Northwest",
+          "city": "Washington",
+          "state": "DC",
+          "zip": "20500"
+        }
+      ],
+      "party": "Democratic Party",
+      "phones": [
+        "(202) 456-1111"
+      ],
+      "urls": [
+        "https://www.whitehouse.gov/",
+        "https://en.wikipedia.org/wiki/Kamala_Harris"
+      ],
+      "channels": [
+        {
+          "type": "Twitter",
+          "id": "VP"
+        }
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "The White House 1600 Pennsylvania Avenue NW Washington, DC 20500",
+          "featureId": {
+            "cellId": "9923602325795527449",
+            "fprint": "11513381022022344111"
+          },
+          "featureType": "typeCompoundBuilding",
+          "positionPrecisionMeters": 126.14545494347092,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Ben Sasse",
+      "address": [
+        {
+          "line1": "107 Russell Senate Office Building",
+          "city": "Washington",
+          "state": "DC",
+          "zip": "20510"
+        }
+      ],
+      "party": "Republican Party",
+      "phones": [
+        "(202) 224-4224"
+      ],
+      "urls": [
+        "https://www.sasse.senate.gov/",
+        "https://en.wikipedia.org/wiki/Ben_Sasse"
+      ],
+      "photoUrl": "http://bioguide.congress.gov/bioguide/photo/S/S001197.jpg",
+      "channels": [
+        {
+          "type": "Facebook",
+          "id": "SenatorSasse"
+        },
+        {
+          "type": "Twitter",
+          "id": "SenSasse"
+        },
+        {
+          "type": "YouTube",
+          "id": "UCYaNGwcM2Dl5yDcDqS6xV2g"
+        }
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "107 Russell Senate Office Building, Washington DC 20510",
+          "featureId": {
+            "cellId": "9923602777983093035",
+            "fprint": "16754435804240149550"
+          },
+          "featureType": "typeCompoundBuilding",
+          "positionPrecisionMeters": 154.99767133790925,
+          "addressUnderstood": false
+        }
+      ]
+    },
+    {
+      "name": "Deb Fischer",
+      "address": [
+        {
+          "line1": "454 Russell Senate Office Building",
+          "city": "Washington",
+          "state": "DC",
+          "zip": "20510"
+        }
+      ],
+      "party": "Republican Party",
+      "phones": [
+        "(202) 224-6551"
+      ],
+      "urls": [
+        "https://www.fischer.senate.gov/",
+        "https://en.wikipedia.org/wiki/Deb_Fischer"
+      ],
+      "photoUrl": "http://bioguide.congress.gov/bioguide/photo/F/F000463.jpg",
+      "channels": [
+        {
+          "type": "Facebook",
+          "id": "senatordebfischer"
+        },
+        {
+          "type": "Twitter",
+          "id": "SenatorFischer"
+        },
+        {
+          "type": "YouTube",
+          "id": "SenatorDebFischer"
+        }
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "454 Russell Senate Office Building, Washington DC 20510",
+          "featureId": {
+            "cellId": "9923602777983093035",
+            "fprint": "16754435804240149550"
+          },
+          "featureType": "typeCompoundBuilding",
+          "positionPrecisionMeters": 154.99767133790925,
+          "addressUnderstood": false
+        }
+      ]
+    },
+    {
+      "name": "VACANT",
+      "party": "Unaffiliated"
+    },
+    {
+      "name": "Pete Ricketts",
+      "address": [
+        {
+          "line1": "Office of the Governor",
+          "line2": "P.O. Box 94848",
+          "line3": "",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68509-4848"
+        },
+        {
+          "line1": "Office of the Governor",
+          "line2": "505A Broadway",
+          "line3": "Suite 400",
+          "city": "Scottsbluff",
+          "state": "NE",
+          "zip": "69361"
+        }
+      ],
+      "party": "Republican Party",
+      "phones": [
+        "(402) 471-2244"
+      ],
+      "urls": [
+        "https://governor.nebraska.gov/",
+        "https://en.wikipedia.org/wiki/Pete_Ricketts"
+      ],
+      "photoUrl": "https://governor.nebraska.gov/sites/governor.nebraska.gov/files/gov-headshot_0.jpg",
+      "channels": [
+        {
+          "type": "Facebook",
+          "id": "GovernorPeteRicketts"
+        },
+        {
+          "type": "Twitter",
+          "id": "GovRicketts"
+        },
+        {
+          "type": "YouTube",
+          "id": "UCcDw3_CGhTVcVtxoGKRkjlQ"
+        }
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "P.O. Box 94848, Lincoln, NE 68509-4848",
+          "featureId": {
+            "cellId": "9770205880399803211",
+            "fprint": "1970999522621208616"
+          },
+          "featureType": "typePostalCode",
+          "positionPrecisionMeters": 500,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Mike Foley",
+      "address": [
+        {
+          "line1": "Office of the Governor",
+          "line2": "P.O. Box 94848",
+          "line3": "",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68509-4848"
+        }
+      ],
+      "party": "Republican Party",
+      "phones": [
+        "(402) 471-2256"
+      ],
+      "urls": [
+        "https://ltgov.nebraska.gov/",
+        "https://en.wikipedia.org/wiki/Mike_Foley_%28Nebraska_politician%29"
+      ],
+      "photoUrl": "https://ltgov.nebraska.gov/sites/ltgov.nebraska.gov/files/foley-headshot.jpg",
+      "emails": [
+        "mike.foley@nebraska.gov"
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "P.O. Box 94863, Lincoln, NE 68509-4863",
+          "featureId": {
+            "cellId": "9770205880399803211",
+            "fprint": "1970999522621208616"
+          },
+          "featureType": "typePostalCode",
+          "positionPrecisionMeters": 500,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Robert B. Evnen",
+      "party": "Republican Party",
+      "phones": [
+        "(402) 471-2554"
+      ],
+      "urls": [
+        "https://sos.nebraska.gov/",
+        "https://en.wikipedia.org/wiki/Bob_Evnen"
+      ],
+      "emails": [
+        "robert.evnen@nebraska.gov"
+      ],
+      "channels": [
+        {
+          "type": "Facebook",
+          "id": "Nebraska-Secretary-of-State-368792313908501"
+        },
+        {
+          "type": "Twitter",
+          "id": "NEvnen"
+        }
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "P.O. Box 94608, Lincoln, NE 68509-4608",
+          "featureId": {
+            "cellId": "9770205880399803211",
+            "fprint": "1970999522621208616"
+          },
+          "featureType": "typePostalCode",
+          "positionPrecisionMeters": 500,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Doug Peterson",
+      "party": "Republican Party",
+      "phones": [
+        "(402) 471-2683"
+      ],
+      "urls": [
+        "https://ago.nebraska.gov/",
+        "https://en.wikipedia.org/wiki/Doug_Peterson_%28Nebraska_politician%29"
+      ],
+      "emails": [
+        "djp1977@nebraska.gov"
+      ],
+      "channels": [
+        {
+          "type": "Facebook",
+          "id": "AGDougPeterson"
+        },
+        {
+          "type": "Twitter",
+          "id": "AGDougPeterson"
+        }
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "P.O. Box 98920, Lincoln, NE 68509",
+          "featureId": {
+            "cellId": "9770205880399803211",
+            "fprint": "1970999522621208616"
+          },
+          "featureType": "typePostalCode",
+          "positionPrecisionMeters": 500,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Charlie Janssen",
+      "party": "Republican Party",
+      "phones": [
+        "(402) 471-2111"
+      ],
+      "urls": [
+        "https://stateauditors.nebraska.gov/",
+        "https://en.wikipedia.org/wiki/Charlie_Janssen"
+      ],
+      "emails": [
+        "charlie.janssen@nebraska.gov"
+      ],
+      "channels": [
+        {
+          "type": "Facebook",
+          "id": "Nebraska-State-StateAuditor-Charlie-Janssen-462145667280824"
+        },
+        {
+          "type": "Twitter",
+          "id": "NEStateAuditor"
+        }
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "P.O. Box 98917, LIncoln, NE 68509-8917",
+          "featureId": {
+            "cellId": "9770205880399803211",
+            "fprint": "1970999522621208616"
+          },
+          "featureType": "typePostalCode",
+          "positionPrecisionMeters": 500,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "John Murante",
+      "party": "Republican Party",
+      "phones": [
+        "(402) 471-2455"
+      ],
+      "urls": [
+        "https://statetreasurer.nebraska.gov/",
+        "https://en.wikipedia.org/wiki/John_Murante"
+      ],
+      "emails": [
+        "john.murante@nebraska.gov"
+      ],
+      "channels": [
+        {
+          "type": "Facebook",
+          "id": "NebraskaTreasurer"
+        }
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "P.O. Box 94788, Lincoln, NE 68509-4788",
+          "featureId": {
+            "cellId": "9770205880399803211",
+            "fprint": "1970999522621208616"
+          },
+          "featureType": "typePostalCode",
+          "positionPrecisionMeters": 500,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Eliot Bostar",
+      "party": "Nonpartisan",
+      "phones": [
+        "(402) 471-2734"
+      ],
+      "urls": [
+        "http://news.legislature.ne.gov/dist29/"
+      ],
+      "emails": [
+        "ebostar@leg.ne.gov"
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "P.O. Box 94604 Lincoln, NE 68509",
+          "featureId": {
+            "cellId": "9770205880399803211",
+            "fprint": "1970999522621208616"
+          },
+          "featureType": "typePostalCode",
+          "positionPrecisionMeters": 500,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Michael G. Heavican",
+      "address": [
+        {
+          "line1": "1445 K Street",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68509"
+        }
+      ],
+      "party": "Nonpartisan",
+      "phones": [
+        "(402) 471-3738"
+      ],
+      "urls": [
+        "https://supremecourt.nebraska.gov/hon-michael-g-heavican-chief-justice",
+        "https://en.wikipedia.org/wiki/Michael_Heavican"
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "1445 K St, Rm 2214, Lincoln, NE 68509-4696",
+          "featureId": {
+            "cellId": "9770206418669113239",
+            "fprint": "8183277367626824869"
+          },
+          "featureType": "typeCompoundSection",
+          "positionPrecisionMeters": 0,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Troy Hawk",
+      "address": [
+        {
+          "line1": "575 South 10th Street",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68508"
+        }
+      ],
+      "party": "Republican Party",
+      "phones": [
+        "(402) 441-7328"
+      ],
+      "urls": [
+        "https://www.lancaster.ne.gov/313/Clerk-of-the-District-Court"
+      ],
+      "emails": [
+        "clerkdistct@lancaster.ne.gov"
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "575 S 10th St Lincoln, Nebraska 68508",
+          "featureId": {
+            "cellId": "9770206455894899835",
+            "fprint": "7216794681360055431"
+          },
+          "featureType": "typeCompoundBuilding",
+          "positionPrecisionMeters": 62.215959804916373,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Terry Wagner",
+      "address": [
+        {
+          "line1": "575 South 10th Street",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68508"
+        }
+      ],
+      "party": "Republican Party",
+      "phones": [
+        "(402) 441-6500"
+      ],
+      "urls": [
+        "https://www.lancaster.ne.gov//"
+      ],
+      "emails": [
+        "lso@lancaster.ne.gov"
+      ],
+      "channels": [
+        {
+          "type": "Facebook",
+          "id": "LSOnebraska"
+        },
+        {
+          "type": "Twitter",
+          "id": "LSOnebraska"
+        }
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "575 South 10th Street Lincoln, NE 68508",
+          "featureId": {
+            "cellId": "9770206455894899835",
+            "fprint": "7216794681360055431"
+          },
+          "featureType": "typeCompoundBuilding",
+          "positionPrecisionMeters": 62.215959804916373,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Dan Nolte",
+      "address": [
+        {
+          "line1": "555 South 10th Street",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68508"
+        }
+      ],
+      "party": "Democratic Party",
+      "phones": [
+        "(402) 441-7481"
+      ],
+      "urls": [
+        "https://www.lancaster.ne.gov/389/County-Clerk"
+      ],
+      "emails": [
+        "coclerk@lancaster.ne.gov"
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "555 South 10th Street, Room 108, Lincoln, NE 68508",
+          "featureId": {
+            "cellId": "9770206456704773293",
+            "fprint": "12072378987461485319"
+          },
+          "featureType": "typeCompoundSection",
+          "positionPrecisionMeters": 0,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Rob Ogden",
+      "address": [
+        {
+          "line1": "555 South 10th Street",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68508"
+        }
+      ],
+      "party": "Republican Party",
+      "phones": [
+        "(402) 441-7463"
+      ],
+      "urls": [
+        "https://www.lancaster.ne.gov/153/AssessorRegister-of-Deeds"
+      ],
+      "emails": [
+        "assessor@lancaster.ne.gov"
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "555 South 10th Street, Room 102, Lincoln, NE 68508",
+          "featureId": {
+            "cellId": "9770206456709190191",
+            "fprint": "11224906627996251254"
+          },
+          "featureType": "typeCompoundSection",
+          "positionPrecisionMeters": 0,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Joe Nigro",
+      "address": [
+        {
+          "line1": "633 South 9th Street",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68508"
+        }
+      ],
+      "party": "Democratic Party",
+      "phones": [
+        "(402) 441-7631"
+      ],
+      "urls": [
+        "https://www.lancaster.ne.gov//"
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "633 S 9th St, Lincoln, NE 68508",
+          "featureId": {
+            "cellId": "9770206455582509297",
+            "fprint": "13954980503654886107"
+          },
+          "featureType": "typeCompoundBuilding",
+          "positionPrecisionMeters": 21.690116077340548,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Pamela L. Dingman",
+      "address": [
+        {
+          "line1": "444 Cherrycreek Road",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68528"
+        }
+      ],
+      "party": "Republican Party",
+      "phones": [
+        "(402) 441-7681"
+      ],
+      "urls": [
+        "https://www.lancaster.ne.gov/207/County-Engineer"
+      ],
+      "emails": [
+        "coeng@lancaster.ne.gov"
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "444 Cherrycreek Road Bldg. C, Lincoln, NE 68528",
+          "featureId": {
+            "cellId": "9770206538494897975",
+            "fprint": "6776796286922124582"
+          },
+          "featureType": "typeCompoundSection",
+          "positionPrecisionMeters": 0,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Patrick F. Condon",
+      "address": [
+        {
+          "line1": "575 South 10th Street",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68508"
+        }
+      ],
+      "party": "Republican Party",
+      "phones": [
+        "(402) 441-7321"
+      ],
+      "urls": [
+        "https://www.lancaster.ne.gov//"
+      ],
+      "channels": [
+        {
+          "type": "Twitter",
+          "id": "LancasterCoAtty"
+        }
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "575 S 10th St, 4th Floor, Lincoln, NE 68508",
+          "featureId": {
+            "cellId": "9770206455894899835",
+            "fprint": "6066425222921380644"
+          },
+          "featureType": "typeCompoundSection",
+          "positionPrecisionMeters": 62.215959804916373,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Rachel Garver",
+      "address": [
+        {
+          "line1": "555 South 10th Street",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68508"
+        }
+      ],
+      "party": "Democratic Party",
+      "phones": [
+        "(402) 441-7425"
+      ],
+      "urls": [
+        "https://www.lancaster.ne.gov/224/County-Treasurer"
+      ],
+      "emails": [
+        "cotreas@lancaster.ne.gov"
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "555 South 10th St., Rm 102 Lincoln, NE 68508",
+          "featureId": {
+            "cellId": "9770206456709190191",
+            "fprint": "11224906627996251254"
+          },
+          "featureType": "typeCompoundSection",
+          "positionPrecisionMeters": 0,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Roma Amundson",
+      "address": [
+        {
+          "line1": "555 South 10th Street",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68508"
+        }
+      ],
+      "party": "Republican Party",
+      "phones": [
+        "(402) 441-7447"
+      ],
+      "emails": [
+        "ramundson@lancaster.ne.gov"
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "555 South 10th Street, Room 110 Lincoln, Nebraska 68508",
+          "featureId": {
+            "cellId": "9770206456709190191",
+            "fprint": "4860195604981442539"
+          },
+          "featureType": "typeCompoundSection",
+          "positionPrecisionMeters": 0,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Leirion Gaylor Baird",
+      "address": [
+        {
+          "line1": "555 South 10th Street",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68508"
+        }
+      ],
+      "party": "Nonpartisan",
+      "phones": [
+        "(402) 441-7511"
+      ],
+      "urls": [
+        "https://www.lincoln.ne.gov/City/Mayor"
+      ],
+      "emails": [
+        "mayor@lincoln.ne.gov"
+      ],
+      "channels": [
+        {
+          "type": "Facebook",
+          "id": "MayorLeirion"
+        },
+        {
+          "type": "Twitter",
+          "id": "MayorLeirion"
+        }
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "555 S 10th St, Suite 301, Lincoln, NE 68508",
+          "featureId": {
+            "cellId": "9770206456709572951",
+            "fprint": "12153466228996918048"
+          },
+          "featureType": "typeCompoundSection",
+          "positionPrecisionMeters": 0,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Bennie Shobe",
+      "address": [
+        {
+          "line1": "555 South 10th Street",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68508"
+        }
+      ],
+      "party": "Nonpartisan",
+      "phones": [
+        "(402) 441-7515"
+      ],
+      "urls": [
+        "https://www.lincoln.ne.gov/City/City-Council/Council-Members/At-Large-3"
+      ],
+      "emails": [
+        "bshobe@lincoln.ne.gov"
+      ],
+      "channels": [
+        {
+          "type": "Facebook",
+          "id": "bennieforlnk"
+        }
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "555 S 10th St, Room 111, Lincoln, NE 68508",
+          "featureId": {
+            "cellId": "9770206456709190191",
+            "fprint": "7131531573726136352"
+          },
+          "featureType": "typeCompoundSection",
+          "positionPrecisionMeters": 0,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Sändra Washington",
+      "address": [
+        {
+          "line1": "555 South 10th Street",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68508"
+        }
+      ],
+      "party": "Nonpartisan",
+      "phones": [
+        "(402) 441-7515"
+      ],
+      "urls": [
+        "https://www.lincoln.ne.gov/City/City-Council/Council-Members/At-Large-1"
+      ],
+      "emails": [
+        "swashington@lincoln.ne.gov"
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "555 S 10th St, Room 111, Lincoln, NE 68508",
+          "featureId": {
+            "cellId": "9770206456709190191",
+            "fprint": "7131531573726136352"
+          },
+          "featureType": "typeCompoundSection",
+          "positionPrecisionMeters": 0,
+          "addressUnderstood": true
+        }
+      ]
+    },
+    {
+      "name": "Tom Beckius",
+      "address": [
+        {
+          "line1": "555 South 10th Street",
+          "city": "Lincoln",
+          "state": "NE",
+          "zip": "68508"
+        }
+      ],
+      "party": "Nonpartisan",
+      "phones": [
+        "(402) 441-7515"
+      ],
+      "urls": [
+        "https://www.lincoln.ne.gov/City/City-Council/Council-Members/At-Large-2"
+      ],
+      "emails": [
+        "tbeckius@lincoln.ne.gov"
+      ],
+      "geocodingSummaries": [
+        {
+          "queryString": "555 S 10th St, Room 111, Lincoln, NE 68508",
+          "featureId": {
+            "cellId": "9770206456709190191",
+            "fprint": "7131531573726136352"
+          },
+          "featureType": "typeCompoundSection",
+          "positionPrecisionMeters": 0,
+          "addressUnderstood": true
+        }
+      ]
+    }
+  ]
+}

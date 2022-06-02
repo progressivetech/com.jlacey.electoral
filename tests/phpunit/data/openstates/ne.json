@@ -1,0 +1,64 @@
+{
+  "results": [
+    {
+      "id": "ocd-person/5e6ca662-d4e3-405b-a060-d0150546eede",
+      "name": "Eliot Bostar",
+      "party": "Nonpartisan",
+      "current_role": {
+        "title": "Senator",
+        "org_classification": "legislature",
+        "district": "29",
+        "division_id": "ocd-division/country:us/state:ne/sldu:29"
+      },
+      "jurisdiction": {
+        "id": "ocd-jurisdiction/country:us/state:ne/government",
+        "name": "Nebraska",
+        "classification": "state"
+      },
+      "given_name": "Eliot",
+      "family_name": "Bostar",
+      "image": "http://www.nebraskalegislature.gov/media/images/blogs/dist29.jpg",
+      "email": "ebostar@leg.ne.gov",
+      "gender": "",
+      "birth_date": "",
+      "death_date": "",
+      "extras": {},
+      "created_at": "2021-01-08T00:12:37.121633+00:00",
+      "updated_at": "2021-12-16T19:02:13.143902+00:00",
+      "openstates_url": "https://openstates.org/person/eliot-bostar-2sAvmE0zaInMhz7i0sdzLi/"
+    },
+    {
+      "id": "ocd-person/58b214d7-6e2f-5d13-9214-e69a0ee9f9c7",
+      "name": "Jeff Fortenberry",
+      "party": "Republican",
+      "current_role": {
+        "title": "Representative",
+        "org_classification": "lower",
+        "district": "NE-1",
+        "division_id": "ocd-division/country:us/state:ne/cd:1"
+      },
+      "jurisdiction": {
+        "id": "ocd-jurisdiction/country:us/government",
+        "name": "United States",
+        "classification": "country"
+      },
+      "given_name": "Jeff",
+      "family_name": "Fortenberry",
+      "image": "https://theunitedstates.io/images/congress/450x550/F000449.jpg",
+      "email": "",
+      "gender": "M",
+      "birth_date": "1960-12-27",
+      "death_date": "",
+      "extras": {},
+      "created_at": "2021-05-10T15:10:03.781609+00:00",
+      "updated_at": "2021-10-08T15:06:07.405140+00:00",
+      "openstates_url": "https://openstates.org/person/jeff-fortenberry-2hMhuLiS8iBrErzAbyYDMl/"
+    }
+  ],
+  "pagination": {
+    "per_page": 10,
+    "page": 1,
+    "max_page": 1,
+    "total_items": 2
+  }
+}

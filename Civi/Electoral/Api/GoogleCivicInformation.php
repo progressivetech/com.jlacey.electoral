@@ -10,6 +10,15 @@ use CRM_Electoral_ExtensionUtil as E;
 class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
 
   /**
+   * @var array
+   * Map google roles to Civi chamber types.
+   */
+  private $chamberMap = [
+    'lower' => 'legislatorLowerBody',
+    'upper' => 'legislatorUpperBody',
+  ];
+
+  /**
    * @inheritDoc
    */
   protected function getApiKey() : string {
@@ -20,15 +29,25 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
     return $key;
   }
 
-  public function reps() : array {
-    // Reps code here.
-    return [];
-  }
-
   /**
    * @inheritDoc
    */
-  protected function addressDistrictLookup() : array {
+  public function lookup() : array {
+    $return = [
+      'district' => [],
+      'official' => [],
+    ];
+    $this->normalizeAddress();
+    if (!$this->addressIsCompleteEnough()) {
+      $error = [
+        'reason' => 'Failed to find enough address parameters to justify a lookup.',
+        'message' => 'Google Civic lookup not attempted.',
+        'code' => '',
+      ];
+      $this->writeElectoralStatus($error);
+      return $return;
+    }
+    
     // Assemble the API URL.
     $streetAddress = rawurlencode($this->address['street_address']);
     $city = rawurlencode($this->address['city']);
@@ -40,86 +59,164 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
     $guzzleClient = $this->getGuzzleClient();
     $json = $guzzleClient->request('GET', $url)->getBody()->getContents();
     $result = $json ? json_decode($json, TRUE) : [];
-    return $result;
+    if (isset($result['error'])) {
+      $this->writeElectoralStatus($result['error']);
+      return [];
+    }
+    // Google data makes it really hard to parse like the other providers.
+    // First we have to get the district information which includes the index
+    // for the official....
+    $officialIndices = [];
+    foreach ($result['offices'] as $office) {
+      $district = $this->parseDistrictData($office);
+      if ($district) {
+        // Record the official indices so we can look those up later.
+        // We add in the districtId because stupid Google does not provide the officials with
+        // any other unique id.
+        $districtId = $district['ocd_id'];
+        foreach($district['official_indices'] as $index) {
+          $officialIndices[$index] = $districtId;
+        }
+        // Now remove them since we don't record these.
+        unset($district['official_indices']);
+        $return['district'][] = $district;
+      }
+    }
+    // Now we get the officials 
+    foreach($officialIndices as $officialIndex => $districtId) {
+      $return['official'][] = $this->parseOfficialData($result['officials'][$officialIndex], $districtId);
+    }
+    return $return;
   }
 
   /**
-   * Convert the Google raw data to the format writeDistrictData expects and write it.
+   * Ensure address is complete enough to justify
+   * a lookup.
    */
-  protected function parseDistrictData(array $districts) : bool {
-    // Check for errors first.
-    if (isset($districts['error'])) {
-      $this->writeElectoralStatus($districts, $this->address['id']);
-      return FALSE;
-    }
-
-    $chamber = $cityName = $county = NULL;
-
-    // Sort the divisions by length.  Shortest is country, second-shortest is administrativeArea1 (state/province).
-    $divisions = array_keys($districts['divisions']);
-    usort($divisions, 'self::electoral_division_sort');
-    $administrativeArea1DivisionId = $divisions[1];
-
-    // Ideally we could break this out into a subextension to better handle non-US locations
-    $districtMatches = [
-      'cd' => [
-        'level' => 'country',
-        'chamber' => 'lower',
-        'replace' => "$administrativeArea1DivisionId/cd:",
-      ],
-      'sldu' => [
-        'level' => 'administrativeArea1',
-        'chamber' => 'upper',
-        'replace' => "$administrativeArea1DivisionId/sldu:",
-      ],
-      'sldl' => [
-        'level' => 'administrativeArea1',
-        'chamber' => 'lower',
-        'replace' => "$administrativeArea1DivisionId/sldl:",
-      ],
+  protected function addressIsCompleteEnough() {
+    $required = [
+      'street_address',
+      'city',
+      'state_province_id.abbreviation',
+      'country_id.name'
     ];
-    // This next part is US-centric.  Conceivably we could determine this programmatically similar to county/local.
-    // Country and state lookup.
-    foreach ($districts['divisions'] as $divisionKey => $division) {
-      $level = $chamber = $district = $county = $cityName = NULL;
-      foreach ($districtMatches as $districtData) {
-        if (strpos($divisionKey, $districtData['replace']) === 0) {
-          $district = (int) str_replace($districtData['replace'], '', $divisionKey);
-          $level = $districtData['level'];
-          $chamber = $districtData['chamber'];
-          break;
-        }
-      }
-
-      // Sub-state divisions
-      if (!$level && strpos($divisionKey, "$administrativeArea1DivisionId/") === 0) {
-        $subdivisionId = str_replace("$administrativeArea1DivisionId/", '', $divisionKey);
-        // If there's no slash in the subdivision ID, this is administrativeArea2
-        if (strpos($subdivisionId, '/') === FALSE && $subdivisionId) {
-          $district = explode(':', $subdivisionId)[1];
-          $level = 'administrativeArea2';
-          $county = $division['name'];
-        }
-        // locality
-        if (strpos($subdivisionId, '/') !== FALSE && $subdivisionId) {
-          $district = explode(':', $subdivisionId)[2];
-          $level = 'locality';
-          $cityName = $division['name'];
-        }
-      }
-      // Write to db, if we care about this district type.
-      if ($level && in_array($level, $this->districtTypes)) {
-        $this->writeDistrictData($this->address['contact_id'], $level, $this->address['state_province_id'], $county, $cityName, $chamber, $district, FALSE);
+    foreach($required as $field) {
+      if (empty($this->address[$field])) {
+        return FALSE;
       }
     }
     return TRUE;
   }
 
-  /**
-   * Function to sort divisions by length to determine their level.
+  /** 
+   * Convert the Google raw data to the format writeDistrictData expects and
+   * write it.
    */
-  private static function electoral_division_sort(string $a, string $b) {
-    return strlen($a) - strlen($b);
+  protected function parseDistrictData($office) : array {
+    $levels = array_intersect($this->districtTypes, $office['levels']);
+    $level = array_pop($levels);
+    $chambers = array_intersect($this->chamberMap, $office['roles']);
+    $googleChamber = array_pop($chambers);
+    $chamber = array_search($googleChamber, $this->chamberMap);
+
+
+    if (empty($level) || empty($chamber)) {
+      return [];
+    }
+    if (!preg_match('/:([0-9a-z]+)$/', $office['divisionId'], $matches)) {
+      return [];
+    };
+    $district = $matches[1];
+
+    return [
+      'contactId' => $this->address['contact_id'],
+      'level' => $level,
+      'stateProvinceId' => $this->address['state_province_id'],
+      'county' => NULL,
+      'city' => $this->address['city'],
+      'chamber' => $chamber,
+      'district' => $district,
+      'note' => NULL,
+      'inOffice' => NULL,
+      'valid_from' => NULL,
+      'valid_to' => NULL,
+      'ocd_id' => $office['divisionId'],
+      // We add this special one to help us with official looksup later.
+      'official_indices' => $office['officialIndices'],
+    ];
   }
 
+  protected function parseOfficialData($officialData, $districtId) {
+    // Bah, not real identifier. So we make one up.
+    $externalIdentifier = 'google_' . hash("sha256", $officialData['name'] . $districtId);
+    $official = new \CRM_Electoral_Official();
+
+    $firstName = '';
+    $middleName = '';
+    $lastName = '';
+    $names = $this->parseName($officialData['name']);
+    // print_r($names);
+    $firstName = $names['first_name'];
+    $middleName = $names['middle_name'];
+    $lastName = $names['last_name'];
+    $official
+      ->setFirstName(utf8_encode($firstName))
+      ->setMiddleName(utf8_encode($middleName))
+      ->setLastName($lastName)
+      ->setExternalIdentifier($externalIdentifier)
+      ->setOcdId($districtId)
+      ->setPoliticalParty($officialData['party']);
+    // We're only supporting two addresses/phones/emails at this time due to how Civi handles location types.
+    if (isset($officialData['address'])) {
+      foreach ($officialData['address'] as $key => $addressData) {
+        if ($key === 0) {
+          $locationType = 'Main';
+        }
+        if ($key === 1) {
+          $locationType = 'Other';
+        }
+        if ($key > 1) {
+          break;
+        }
+        $address[$key] = [
+          'street_address' => $addressData['line1'],
+          'supplemental_address_1' => NULL,
+          'supplemental_address_2' => NULL,
+          'city' => $addressData['city'],
+          'state_province' => $addressData['state'],
+          'postal_code' => $addressData['zip'],
+          'county' => NULL,
+          'country' => $this->address['country_id.name'],
+        ];
+        $official->setAddress($address[$key], $locationType);
+      }
+    }
+    if (isset($officialData['phones'])) {
+      foreach ($officialData['phones'] as $key => $phone) {
+        if ($key === 0) {
+          $locationType = 'Main';
+        }
+        if ($key === 1) {
+          $locationType = 'Other';
+        }
+        $official->setPhone($phone, $locationType);
+      }
+    }
+    if (isset($officialData['eamils'])) {
+      foreach ($officialData['emails'] as $key => $email) {
+        if ($key === 0) {
+          $locationType = 'Main';
+        }
+        if ($key === 1) {
+          $locationType = 'Other';
+        }
+        if ($key > 1) {
+          break;
+        }
+        $official->setEmailAddress($email, $locationType);
+      }
+    }
+    return $official;
+
+  }
 }

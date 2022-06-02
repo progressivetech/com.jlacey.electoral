@@ -45,7 +45,7 @@ class CRM_Electoral_Official {
     }
     $result = $official
       ->addValue('contact_type', 'Individual')
-      ->addValue('contact_sub_type', 'Official')
+      ->addValue('contact_sub_type', ['Official'])
       ->addValue('do_not_email', TRUE)
       ->addValue('first_name', $this->firstName)
       ->addValue('middle_name', $this->middleName)
@@ -87,6 +87,10 @@ class CRM_Electoral_Official {
         $this->createWebsite($cid, $url, $websiteType);
       }
     }
+  }
+
+  public function getName() {
+    return $this->firstName . ' ' . $this->lastName;
   }
 
   /**

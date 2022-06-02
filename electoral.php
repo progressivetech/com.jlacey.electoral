@@ -34,7 +34,7 @@ function electoral_civicrm_postCommit($op, $objectName, $objectId, $objectRef) {
           ->execute()
           ->column('name')[0];
         $provider = new $className($limit, $update);
-        $provider->singleAddressLookup($objectId);
+        $provider->processSingleAddress($objectId);
       }
     }
   }
@@ -168,4 +168,23 @@ function electoral_civicrm_caseTypes(&$caseTypes) {
  */
 function electoral_civicrm_alterSettingsFolders(&$metaDataFolders = NULL) {
   _electoral_civix_civicrm_alterSettingsFolders($metaDataFolders);
+}
+
+/*
+ * Parse a given address into components.
+ *
+ * @var string $address
+ * @return array
+ */
+function electoral_parse_address($strAddress) {
+  // We expect comma separated values.
+  // 123 Street, City, State, Zip, Country
+  $address = [];
+  $pieces = explode(',', $strAddress);
+  $address['street_address'] = trim($pieces[0] ?? NULL);
+  $address['city'] = trim($pieces[1] ?? NULL);
+  $address['state_province'] = trim($pieces[2] ?? NULL);
+  $address['postal_code'] = trim($pieces[3] ?? NULL);
+  $address['country'] = trim($pieces[4] ?? NULL);
+  return $address;
 }

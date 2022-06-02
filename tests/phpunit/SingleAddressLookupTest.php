@@ -27,6 +27,7 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
 
   protected $addressId;
   protected $contactId;
+  protected $contactIds = [];
 
   public function setUpHeadless() {
     return \Civi\Test::headless()
@@ -36,32 +37,45 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
 
   public function setUp(): void {
     parent::setUp();
-    // Add a contact.
-    $this->contactId = \Civi\Api4\Contact::create()
-      ->addValue('contact_type', 'Individual')
-      ->addValue('first_name', 'Maria')
-      ->addValue('middle_name', 'Q')
-      ->addValue('last_name', 'Voter')
-      ->addChain('create_address', \Civi\Api4\Address::create()->setValues(['contact_id' => '$id', 'street_address' => '431 Park Pl', 'city' => 'Brooklyn', 'state_province_id' => '1031', 'postal_code' => '11238', 'country_id' => 1228]))
-      ->execute()->first()['id'];
-
-    // Record the address id.
-    $this->addressId = \Civi\Api4\Address::get()
-      ->addSelect('id')
-      ->addWhere('contact_id', '=', $this->contactId)
-      ->execute()->first()['id'];
 
     // Configure to insert officials.
     \Civi\Api4\Setting::set()
       ->addValue('electoralApiCreateOfficialOnDistrictLookup', TRUE)
       ->execute();
+    CRM_Core_ManagedEntities::singleton(TRUE)->reconcile();
+    // cv('api system.flush');
+  }
 
+  protected function createContact($firstName, $lastName, $address) {
+    // Add a contact.
+    $this->contactId = \Civi\Api4\Contact::create()
+      ->addValue('contact_type', 'Individual')
+      ->addValue('first_name', $firstName)
+      ->addValue('last_name', $lastName)
+      ->execute()->first()['id'];
+
+    // Collect these for deletion.
+    $this->contactIds[] = $this->contactId;
+
+    // We use the parseAddress convenience function to break out
+    // our string based address into pieces.
+    $address = electoral_parse_address($address);
+    $this->addressId = \Civi\Api4\Address::create()
+      ->addValue('contact_id', $this->contactId)
+      ->addValue('location_type_id.name', 'Home')
+      ->addValue('street_address', $address['street_address'])
+      ->addvalue('city', $address['city'])
+      ->addValue('state_province_id.abbreviation', $address['state_province'])
+      ->addValue('postal_code', $address['postal_code'])
+      ->execute()->first()['id'];
   }
 
   public function tearDown(): void {
-    \Civi\Api4\Contact::delete()
-      ->addWhere('id', '=', $this->contactId)
-      ->execute();
+    foreach ($this->contactIds as $contactId) {
+      \Civi\Api4\Contact::delete()
+        ->addWhere('id', '=', $contactId)
+        ->execute();
+    }
     parent::tearDown();
   }
 
@@ -78,56 +92,69 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
       ->addValue('electoralApiDistrictTypes', ['country', 'administrativeArea1'])
       ->execute();
     
-
-    // Create a mock guzzle client, specify exactly the response we
-    // should get from running a real query against Open States.
-    $mock = new \GuzzleHttp\Handler\MockHandler([
-      new \GuzzleHttp\Psr7\Response(200, [], $this->OpenstatesJsonResults()),
-    ]);
-
-    $handlerStack = \GuzzleHttp\HandlerStack::create($mock);
-    $client = new \GuzzleHttp\Client(['handler' => $handlerStack]);
-
-    $os = new Civi\Electoral\Api\Openstates();
-    $os->setGuzzleClient($client);
-    $os->setGeocodeProviderClass('mockGeocodeProviderClass');
-    $os->singleAddressLookup($this->addressId);
-    $districts = \Civi\Api4\Contact::get()
-        ->addSelect('electoral_districts.*')
-        ->addWhere('id', '=', $this->contactId)
-        ->execute();
-    $this->assertEquals($districts->count(), 3, 'openstates count of districts.');
-    $tests = [
-      'stateLower' => FALSE,
-      'stateUpper' => FALSE,
-      'federalLower' => FALSE,
+    $testData = [
+      [
+        'file' => 'data/openstates/ny.json',
+        'first_name' => 'Newyork',
+        'last_name' => 'McOpenstates',
+        'address' => "431 Park Place, Brooklyn, NY, 11238",
+        'districts_count' => 3,
+        'districts' => [
+          'administrativeArea1' => [
+              'upper' => 20,
+              'lower' => 57,
+          ],
+          'country' => [
+            'lower' => 'NY-9'
+          ],
+        ],
+        'officials' => [
+          [ 'first_name' => 'Zellnor', 'last_name' => 'Myrie'],
+          [ 'first_name' => 'Phara', 'last_name' => 'Forrest'],
+          [ 'first_name' => 'Yvette', 'last_name' => 'Clarke'],
+        ],
+      ],
+      [
+        'file' => 'data/openstates/ne.json',
+        'first_name' => 'Nebraska',
+        'last_name' => 'McOpenstates',
+        'address' => '2707 Royal Ct, Lincoln, NE, 68502',
+        'districts_count' => 2,
+        'districts' => [
+          'administrativeArea1' => [
+              'upper' => 29,
+          ],
+          'country' => [
+            'lower' => 'NE-1',
+          ],
+        ],
+        'officials' => [
+          [ 'first_name' => 'Eliot', 'last_name' => 'Bostar'],
+        ],
+      ],
+      [
+        'file' => 'data/openstates/ca.json',
+        'first_name' => 'Callie',
+        'last_name' => 'McOpenstates',
+        'address' => "2637 Dorking Place, Santa Barbara, CA, 93105",
+        'districts_count' => 3,
+        'districts' => [
+          'administrativeArea1' => [
+              'upper' => 19,
+              'lower' => 37,
+          ],
+          'country' => [
+            'lower' => 'CA-24',
+          ],
+        ],
+        'officials' => [
+          [ 'first_name' => 'Steve', 'last_name' => 'Bennett'],
+          [ 'first_name' => 'Monique', 'last_name' => 'Limón'],
+          [ 'first_name' => 'Salud', 'last_name' => 'Carbajal'],
+        ],
+      ],
     ];
-    foreach($districts as $district) {
-      $districtId = $district['electoral_districts.electoral_district'];
-      if ($district['electoral_districts.electoral_level'] == 'administrativeArea1') {
-        if ($district['electoral_districts.electoral_chamber'] == 'lower') {
-          if ($districtId == 57) {
-            $tests['stateLower'] = TRUE;
-          };
-        }
-        else if ($district['electoral_districts.electoral_chamber'] == 'upper') {
-          if ($districtId == 20) {
-            $tests['stateUpper'] = TRUE;
-          }
-        }
-      }
-      else if ($district['electoral_districts.electoral_level'] == 'country') {
-        if ($districtId == 'NY-9') {
-          $tests['federalLower'] = TRUE;
-        }
-      }
-    }
-    foreach ($tests as $test => $result) {
-      $this->assertTrue($result, "Openstates ${test}.");
-    }
-    $this->assertOfficialAdded('Zellnor', 'Myrie', 'openstates');
-    $this->assertOfficialAdded('Phara', 'Souffrant Forrest', 'openstates');
-    $this->assertOfficialAdded('Yvette', 'Clarke', 'openstates');
+    $this->checkData($testData, 'openstates');
   }
 
   /**
@@ -140,56 +167,79 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
     \Civi\Api4\Setting::set()
       ->addValue('electoralApiDistrictTypes', ['country', 'administrativeArea1', 'administrativeArea2', 'county', 'city'])
       ->execute();
-
-    // Create a mock guzzle client, specify exactly the response we
-    // should get from running a real query.
-    $mock = new \GuzzleHttp\Handler\MockHandler([
-      new \GuzzleHttp\Psr7\Response(200, [], $this->GoogleCivicJsonResults()),
-    ]);
-
-    $handlerStack = \GuzzleHttp\HandlerStack::create($mock);
-    $client = new \GuzzleHttp\Client(['handler' => $handlerStack]);
-
-    $gc = new Civi\Electoral\Api\GoogleCivicInformation();
-    $gc->setGuzzleClient($client);
-    $gc->setGeocodeProviderClass('mockGeocodeProviderClass');
-    $gc->singleAddressLookup($this->addressId);
-    $districts = \Civi\Api4\Contact::get()
-        ->addSelect('electoral_districts.*')
-        ->addWhere('id', '=', $this->contactId)
-        ->execute();
-    $this->assertEquals($districts->count(), 6, 'googlecivic number of districts recorded.');
-    $tests = [
-      'stateLower' => FALSE,
-      'stateUpper' => FALSE,
-      'federalLower' => FALSE,
+    $testData = [
+      [
+        'file' => 'data/googlecivic/ne.json',
+        'first_name' => 'Nebraska',
+        'last_name' => 'McGoogle',
+        'address' => '2707 Royal Ct, Lincoln, NE, 68502',
+        'districts_count' => 4,
+        'districts' => [
+          'administrativeArea1' => [
+              'upper' => 29,
+          ],
+          'administrativeArea2' => [
+              'lower' => 4,
+          ],
+          'country' => [
+            'upper' => 'ne',
+            'lower' => 1,
+          ],
+        ],
+        'officials' => [
+          [ 'first_name' => 'Eliot', 'last_name' => 'Bostar'],
+        ],
+      ],
+      [
+        'file' => 'data/googlecivic/ny.json',
+        'first_name' => 'Newyork',
+        'last_name' => 'McGoogle',
+        'address' => "431 Park Place, Brooklyn, NY, 11238",
+        'districts_count' => 4,
+        'districts' => [
+          'administrativeArea1' => [
+              'upper' => 20,
+              'lower' => 57,
+          ],
+          'country' => [
+            'upper' => 'ny',
+            'lower' => 9
+          ],
+        ],
+        'officials' => [
+          [ 'first_name' => 'Zellnor', 'last_name' => 'Myrie'],
+          [ 'first_name' => 'Phara', 'last_name' => 'Forrest'],
+          [ 'first_name' => 'Yvette', 'last_name' => 'Clarke'],
+        ],
+      ],
+      [
+        'file' => 'data/googlecivic/ca.json',
+        'first_name' => 'Callie',
+        'last_name' => 'McGoogle',
+        'address' => "2637 Dorking Place, Santa Barbara, CA, 93105",
+        'districts_count' => 5,
+        'districts' => [
+          'administrativeArea1' => [
+              'upper' => 19,
+              'lower' => 37,
+          ],
+          'country' => [
+            'upper' => 'ca',
+            'lower' => 24,
+          ],
+          'administrativeArea2' => [
+              'lower' => 1,
+          ],
+        ],
+        'officials' => [
+          [ 'first_name' => 'Das', 'last_name' => 'Williams'],
+          [ 'first_name' => 'Steve', 'last_name' => 'Bennett'],
+          [ 'first_name' => 'Monique', 'last_name' => 'Limón'],
+          [ 'first_name' => 'Salud', 'last_name' => 'Carbajal'],
+        ],
+      ],
     ];
-
-    foreach($districts as $district) {
-      $districtId = $district['electoral_districts.electoral_district'];
-      if ($district['electoral_districts.electoral_level'] == 'administrativeArea1') {
-        if ($district['electoral_districts.electoral_chamber'] == 'lower') {
-          if ($districtId ==  57) {
-            $tests['stateLower'] = TRUE;
-          }
-        }
-        else if ($district['electoral_districts.electoral_chamber'] == 'upper') {
-          if ($districtId ==  20) {
-            $tests['stateUpper'] = TRUE;
-          }
-        }
-      }
-      else if ($district['electoral_districts.electoral_level'] == 'country') {
-        if ($districtId ==  9) {
-          $tests['federalLower'] = TRUE;
-        }
-      }
-    }
-    foreach ($tests as $test => $result) {
-      $this->assertTrue($result, "Google ${test}.");
-    }
-
-    // NOTE: google doesn't provide info on elected officials.
+    $this->checkData($testData, 'googlecivic');
   }
 
   /**
@@ -202,87 +252,136 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
     \Civi\Api4\Setting::set()
       ->addValue('electoralApiDistrictTypes', ['country', 'administrativeArea1', 'administrativeArea2', 'locality' ])
       ->execute();
-
-    // Create a mock guzzle client, specify exactly the response we
-    // should get from running a real query.
-    $mock = new \GuzzleHttp\Handler\MockHandler([
-      new \GuzzleHttp\Psr7\Response(200, [], $this->ciceroJsonResults()),
-    ]);
-
-    $handlerStack = \GuzzleHttp\HandlerStack::create($mock);
-    $client = new \GuzzleHttp\Client(['handler' => $handlerStack]);
-
-    $c = new Civi\Electoral\Api\Cicero();
-    $c->setGuzzleClient($client);
-    $c->singleAddressLookup($this->addressId);
-    $districts = \Civi\Api4\Contact::get()
-        ->addSelect('electoral_districts.*')
-        ->addWhere('id', '=', $this->contactId)
-        ->execute();
-    $this->assertEquals($districts->count(), 5, "cicero number of districts recorded.");
-    $tests = [
-      'stateLower' => FALSE,
-      'stateUpper' => FALSE,
-      'cityCouncil' => FALSE,
-      'federalLower' => FALSE,
+    $testData = [
+      [
+        'file' => 'data/cicero/ny.json',
+        'first_name' => 'Newyork',
+        'last_name' => 'McCicero',
+        'address' => "431 Park Place, Brooklyn, NY, 11238",
+        'districts_count' => 5,
+        'districts' => [
+          'administrativeArea1' => [
+              'upper' => 20,
+              'lower' => 57,
+          ],
+          'country' => [
+            'upper' => 'NY',
+            'lower' => 9,
+          ],
+          'locality' => 35,
+        ],
+        'officials' => [
+          [ 'first_name' => 'Zellnor', 'last_name' => 'Myrie'],
+          [ 'first_name' => 'Phara', 'last_name' => 'Souffrant Forrest'],
+          [ 'first_name' => 'Yvette', 'last_name' => 'Clarke'],
+          [ 'first_name' => 'Crystal', 'last_name' => 'Hudson'],
+        ],
+      ],
+      [
+        'file' => 'data/cicero/ne.json',
+        'first_name' => 'Nebraska',
+        'last_name' => 'McCicero',
+        'address' => '2707 Royal Ct, Lincoln, NE, 68502',
+        'districts_count' => 4,
+        'districts' => [
+          'administrativeArea1' => [
+              'upper' => 29,
+          ],
+          'country' => [
+            'upper' => 'NE',
+            'lower' => 1,
+          ],
+          'locality' => 'At Large',
+        ],
+        'officials' => [
+          [ 'first_name' => 'Eliot', 'last_name' => 'Bostar'],
+        ],
+      ],
+      [
+        'file' => 'data/cicero/ca.json',
+        'first_name' => 'Callie',
+        'last_name' => 'McCicero',
+        'address' => "2637 Dorking Place, Santa Barbara, CA, 93105",
+        'districts_count' => 4,
+        'districts' => [
+          'administrativeArea1' => [
+              'upper' => 19,
+              'lower' => 37,
+          ],
+          'country' => [
+            'lower' => 24,
+            'upper' => 'CA',
+          ],
+          'locality' => 123,
+        ],
+        'officials' => [
+          [ 'first_name' => 'Steve', 'last_name' => 'Bennett'],
+          [ 'first_name' => 'S. Monique', 'last_name' => 'Limón'],
+          [ 'first_name' => 'Salud', 'last_name' => 'Carbajal'],
+        ],
+      ],
     ];
-
-    foreach($districts as $district) {
-      $districtId = $district['electoral_districts.electoral_district'];
-      if ($district['electoral_districts.electoral_level'] == 'administrativeArea1') {
-        if ($district['electoral_districts.electoral_chamber'] == 'lower') {
-          if ($districtId == 57){
-            $tests['stateLower'] = TRUE;
-          }
-        }
-        else if ($district['electoral_districts.electoral_chamber'] == 'upper') {
-          if ($districtId == 20){
-            $tests['stateUpper'] = TRUE;
-          }
-        }
-      }
-      else if ($district['electoral_districts.electoral_level'] == 'country') {
-        if ($district['electoral_districts.electoral_chamber'] == 'lower') {
-          if ($districtId == 9){
-            $tests['federalLower'] = TRUE;
-          }
-        }
-      }
-      else if ($district['electoral_districts.electoral_level'] == 'locality') {
-        if ($districtId == 35){
-          $tests['cityCouncil'] = TRUE;
-        }
-      }
-    }
-    foreach ($tests as $test => $result) {
-      $this->assertTrue($result, "Cicero ${test}.");
-    }
-    $this->assertOfficialAdded('Zellnor', 'Myrie', 'cicero');
-    $this->assertOfficialAdded('Phara', 'Souffrant Forrest', 'cicero');
-    $this->assertOfficialAdded('Yvette', 'Clarke', 'cicero');
-
+    $this->checkData($testData, 'cicero');
   }
+   
+  private function checkData($testData, $name) {
+    $class = NULL;
+    if ($name == 'openstates') {
+      $class = 'Civi\Electoral\Api\Openstates';
+    }
+    elseif ($name == 'cicero') {
+      $class = 'Civi\Electoral\Api\Cicero';
+    }
+    elseif ($name == 'googlecivic') {
+      $class = 'Civi\Electoral\Api\GoogleCivicInformation';
+    }
+    foreach($testData as $expected) {
+      $this->createContact($expected['first_name'], $expected['last_name'], $expected['address']);
+      // Create a mock guzzle client, specify exactly the response we
+      // should get from running a real query against Open States.
+      $json = file_get_contents(__DIR__ . '/' . $expected['file']);
+      $mock = new \GuzzleHttp\Handler\MockHandler([
+        new \GuzzleHttp\Psr7\Response(200, [], $json)
+      ]);
 
+      $handlerStack = \GuzzleHttp\HandlerStack::create($mock);
+      $client = new \GuzzleHttp\Client(['handler' => $handlerStack]);
+
+      $e = new $class();
+      $e->setGuzzleClient($client);
+      $e->setGeocodeProviderClass('mockGeocodeProviderClass');
+      $e->processSingleAddress($this->addressId);
+      $districts = \Civi\Api4\Contact::get()
+          ->addSelect('electoral_districts.*')
+          ->addWhere('id', '=', $this->contactId)
+          ->execute();
+      // print_r($districts);
+      $this->assertEquals($expected['districts_count'], $districts->count(), "$name count of districts.");
+      foreach($districts as $district) {
+        $level = $district['electoral_districts.electoral_level'];
+        $chamber = $district['electoral_districts.electoral_chamber'];
+        $districtId = $district['electoral_districts.electoral_district'];
+        if ($chamber) {
+          $value = $expected['districts'][$level][$chamber];
+        }
+        else {
+          $value = $expected['districts'][$level];
+        }
+        $this->assertEquals($value, $districtId, $districtId);
+      }
+      foreach ($expected['officials'] as $official) {
+        $this->assertOfficialAdded($official['first_name'], $official['last_name'], $name);
+      }
+    }
+  }
   protected function assertOfficialAdded($first_name, $last_name, $source): void {
     $official = \Civi\Api4\Contact::get()
       ->addWhere('contact_sub_type', '=', 'Official')
       ->addWhere('first_name', '=', $first_name)
       ->addWhere('last_name', '=', $last_name)
       ->execute();
-    $this->assertEquals($official->count(), 1, "$first_name $last_name added as official via $source.");
+    $this->assertEquals(1, $official->count(), "$first_name $last_name added as official via $source.");
   }
 
-
-  protected function OpenstatesJsonResults() {
-    return file_get_contents(__DIR__ . '/openstates.lookup.json');
-  }
-
-  protected function GoogleCivicJsonResults() {
-    return file_get_contents(__DIR__ . '/googlecivic.lookup.json');
-  }
-
-  protected function CiceroJsonResults() {
-    return file_get_contents(__DIR__ . '/cicero.lookup.json');
-  }
 
 }
