@@ -1,6 +1,25 @@
 <?php
 
 return [
+    [
+    'name' => 'ContactType_Official',
+    'entity' => 'ContactType',
+    'cleanup' => 'unused',
+    'update' => 'unmodified',
+    'params' => [
+      'version' => 4,
+      'match' => [ 'name' ],
+      'values' => [
+        'name' => 'Official',
+        'label' => 'Official',
+        'description' => NULL,
+        'image_URL' => NULL,
+        'parent_id.name' => 'Individual',
+        'is_active' => TRUE,
+        'is_reserved' => FALSE,
+      ],
+    ],
+  ],
   [
     'name' => 'electoral_all_districts',
     'entity' => 'Job',
