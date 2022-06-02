@@ -187,7 +187,7 @@ abstract class AbstractApi {
   protected function getAddresses(?int $addressId = NULL) {
     // Construct the API call to get the addresses.
     $addressQuery = \Civi\Api4\Address::get(FALSE)
-      ->addSelect('id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'state_province_id.abbreviation', 'contact_id', 'postal_code', 'country_id:name')
+      ->addSelect('id', 'street_address', 'city', 'state_province_id', 'state_province_id:name', 'state_province_id.abbreviation', 'contact_id', 'postal_code', 'country_id:name', 'geo_code_1', 'geo_code_2')
       ->addJoin('Custom_electoral_districts AS custom_electoral_districts', 'LEFT', ['custom_electoral_districts.entity_id', '=', 'contact_id'])
       ->setGroupBy(['contact_id'])
       ->addWhere('street_address', 'IS NOT NULL')

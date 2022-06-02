@@ -10,6 +10,7 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
     'electoralApiProviders' => 'Electoral API settings',
     'ciceroAPIKey' => 'Electoral API settings',
     'googleCivicInformationAPIKey' => 'Electoral API settings',
+    'openstatesAPIKey' => 'Electoral API settings',
     'addressLocationType' => 'Electoral API settings',
     'electoralApiIncludedCountries' => 'Electoral API settings',
     //'includedStatesProvinces' => 'Electoral API settings',

@@ -17,6 +17,11 @@
            <td>{$form.googleCivicInformationAPIKey.html|crmAddClass:huge}<br />
            <span class="description">{ts}Add your registered Google Civic Information API Key.  <a href="https://developers.google.com/civic-information/docs/using_api#APIKey" target="_blank">Register at the Google Civic Information API</a> to obtain a key.{/ts}</span></td>
        </tr>
+       <tr class="crm-electoral-api-form-block-openstates-api-key">
+           <td>{$form.openstatesAPIKey.label}</td>
+           <td>{$form.openstatesAPIKey.html|crmAddClass:huge}<br />
+           <span class="description">{ts}Add your registered Open States API Key.  <a href="https://openstates.org/accounts/signup/" target="_blank">Register at Open States</a> to obtain a free key.{/ts}</span></td>
+       </tr>
         <tr class="crm-electoral-api-form-block-district-types">
            <td>{$form.electoralApiDistrictTypes.label}</td>
            <td>{$form.electoralApiDistrictTypes.html|crmAddClass:huge}&nbsp;&nbsp;{$form.electoralApiIncludeRedistricted.html}  {$form.electoralApiIncludeRedistricted.label}<br />
@@ -53,7 +58,7 @@
            <td>{$form.electoralApiLookupOnAddressUpdate.html}<br />
            <span class="description">{ts}Get district data any time an address matching these criteria is added/changed.{/ts}</span></td>
        </tr>
-        <tr class="crm-electoral-api-form-block-create-official-on-district-lookup cicero-only">
+        <tr class="crm-electoral-api-form-block-create-official-on-district-lookup">
            <td>{$form.electoralApiCreateOfficialOnDistrictLookup.label}</td>
            <td>{$form.electoralApiCreateOfficialOnDistrictLookup.html}<br />
            <span class="description">{ts}Create a contact for the matching elected official when performing district lookups.{/ts}</span></td>
@@ -71,7 +76,7 @@
   });
   function showHideKeyFields() {
     activeProviders = CRM.$('#electoralApiProviders').select2('data');
-    ciceroVisible = gCivicVisible = false;
+    ciceroVisible = gCivicVisible = openstatesVisible = false;
     activeProviders.forEach(function (item, index) {
       if (item.text == 'Cicero') {
         ciceroVisible = true;
@@ -79,20 +84,49 @@
       if (item.text == 'Google Civic') {
         gCivicVisible = true;
       }
+      if (item.text == 'Open States') {
+        openstatesVisible = true;
+      }
     });
+
     CRM.$('.cicero-only').toggle(ciceroVisible);
     CRM.$('.crm-electoral-api-form-block-cicero-api-key').toggle(ciceroVisible);
     CRM.$('.crm-electoral-api-form-block-nonlegislative-districts').toggle(ciceroVisible);
     CRM.$('.crm-electoral-api-form-block-google-civic-information-api-key').toggle(gCivicVisible);
+    CRM.$('.crm-electoral-api-form-block-openstates-api-key').toggle(openstatesVisible);
     CRM.$('#electoralApiDistrictTypes option').prop( 'disabled', 'disabled');
 
-    // Only show legislative options appropriate for this data provider.
-    ['legislative', 'voting', 'judicial', 'police', 'school'].forEach(function (item, index) {
+    // Only show districts to lookup options appropriate for this data provider.
+    // All providers handle country and administrativeArea1 (state/local)
+    ['country', 'administrativeArea1'].forEach(function (item, index) {
+      CRM.$("#electoralApiDistrictTypes option[value='" + item + "']").prop( 'disabled', '' );
+    });
+
+    // Cicero and Google both handle administartiveArea2 (county) and locality.
+    if (ciceroVisible || gCivicVisible) {
+      ['administrativeArea2', 'locality'].forEach(function (item, index) {
+        CRM.$("#electoralApiDistrictTypes option[value='" + item + "']").prop( 'disabled', '');
+      });
+    }
+    else {
+      ['administrativeArea2', 'locality'].forEach(function (item, index) {
+        CRM.$("#electoralApiDistrictTypes option[value='" + item + "']").prop( 'disabled', 'disabled');
+      });
+    }
+    // Cicero has special fields which should only be available if it's enabled, and should
+    // go away if it's disabled.
+    ['voting', 'judicial', 'police', 'school'].forEach(function (item, index) {
       CRM.$("#electoralApiDistrictTypes option[value='" + item + "']").prop( 'disabled', ciceroVisible ? '' : 'disabled').addClass('hidden');
     });
-    ['country', 'administrativeArea1', 'administrativeArea2', 'locality'].forEach(function (item, index) {
-      CRM.$("#electoralApiDistrictTypes option[value='" + item + "']").prop( 'disabled', gCivicVisible ? '' : 'disabled').addClass('hidden');
-    });
+ 
+    // cicero and openstates can add elected officials.
+    if (ciceroVisible || openstatesVisible) {
+      CRM.$('.crm-electoral-api-form-block-create-official-on-district-lookup').toggle(true);
+    }
+    else {
+      CRM.$('.crm-electoral-api-form-block-create-official-on-district-lookup').toggle(false);
+    }
+
     var hideStyle = '#select2-drop .select2-results .select2-result-unselectable {display:none;}';
     var styleSheet = document.createElement("style")
     styleSheet.type = "text/css"

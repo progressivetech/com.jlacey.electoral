@@ -91,14 +91,24 @@ class Cicero extends \Civi\Electoral\AbstractApi {
     $queryString = $this->buildAddressQueryString($address);
     // Do a legislative lookup if we have district types.
     $response = [];
+    $legislativeDistrictTypes = [
+      'country',
+      'administrativeArea1',
+      'administrativeArea2',
+      'locality',
+    ];
+    $legislativeLookupComplete = FALSE;
     foreach ($this->districtTypes as $districtType) {
       try {
-        if ($districtType === 'legislative') {
+        // Cicero has one URL for legislative lookups and a different URL for each other lookup.
+        if (!$legislativeLookupComplete && in_array($districtType, $legislativeDistrictTypes)) { {
           $url = self::CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString;
           if ($this->includeUpcoming) {
             $today = (new \DateTime('now'))->format('Y-m-d');
             $url .= "&valid_on_or_after=$today";
           }
+          // One legislative lookup gets all the levels, so don't re-run for each level.
+          $legislativeLookupComplete = TRUE;
         }
         else {
           $url = self::CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL . "$queryString&type=$districtType";
