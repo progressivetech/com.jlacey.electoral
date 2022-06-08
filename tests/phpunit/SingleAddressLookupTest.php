@@ -118,7 +118,7 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
       ->execute();
 
     // Create a mock guzzle client, specify exactly the response we
-    // should get from running a real query against Open States.
+    // should get from running a real query.
     $mock = new \GuzzleHttp\Handler\MockHandler([
       new \GuzzleHttp\Psr7\Response(200, [], $this->GoogleCivicJsonResults()),
     ]);
@@ -126,10 +126,10 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
     $handlerStack = \GuzzleHttp\HandlerStack::create($mock);
     $client = new \GuzzleHttp\Client(['handler' => $handlerStack]);
 
-    $os = new Civi\Electoral\Api\GoogleCivicInformation();
-    $os->setGuzzleClient($client);
-    $os->setGeocodeProviderClass('mockGeocodeProviderClass');
-    $os->singleAddressLookup($this->addressId);
+    $gc = new Civi\Electoral\Api\GoogleCivicInformation();
+    $gc->setGuzzleClient($client);
+    $gc->setGeocodeProviderClass('mockGeocodeProviderClass');
+    $gc->singleAddressLookup($this->addressId);
     $districts = \Civi\Api4\Contact::get()
         ->addSelect('electoral_districts.*')
         ->addWhere('id', '=', $this->contactId)
@@ -151,7 +151,49 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
 
   }
 
+  /**
+   * Test single address lookup for google civic.
+   */
+  public function testCicero() {
+    \Civi\Api4\Setting::set()
+      ->addValue('ciceroAPIKey', 'foo123')
+      ->execute();
+    \Civi\Api4\Setting::set()
+      ->addValue('electoralApiDistrictTypes', ['country', 'administrativeArea1', 'administrativeArea2', 'county', 'city'])
+      ->execute();
 
+    // Create a mock guzzle client, specify exactly the response we
+    // should get from running a real query.
+    $mock = new \GuzzleHttp\Handler\MockHandler([
+      new \GuzzleHttp\Psr7\Response(200, [], $this->ciceroJsonResults()),
+    ]);
+
+    $handlerStack = \GuzzleHttp\HandlerStack::create($mock);
+    $client = new \GuzzleHttp\Client(['handler' => $handlerStack]);
+
+    $c = new Civi\Electoral\Api\Cicero();
+    $c->setGuzzleClient($client);
+    $c->singleAddressLookup($this->addressId);
+    $districts = \Civi\Api4\Contact::get()
+        ->addSelect('electoral_districts.*')
+        ->addWhere('id', '=', $this->contactId)
+        ->execute();
+    $this->assertEquals($districts->count(), 6);
+    foreach($districts as $district) {
+      if ($district['electoral_districts.electoral_level'] == 'administrativeArea1') {
+        if ($district['electoral_districts.electoral_chamber'] == 'lower') {
+          $this->assertEquals($district['electoral_districts.electoral_district'], 57);
+        }
+        else if ($district['electoral_districts.electoral_chamber'] == 'upper') {
+          $this->assertEquals($district['electoral_districts.electoral_district'], 20);
+        }
+      }
+      else if ($district['electoral_districts.electoral_level'] == 'country') {
+        $this->assertEquals($district['electoral_districts.electoral_district'], '9');
+      }
+    }
+
+  }
   protected function OpenstatesJsonResults() {
     return '{
       "results": [
@@ -1174,6 +1216,10 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
         }
       ]
     }';
+  }
+
+  protected function CiceroJsonResults() {
+    return '{}';
   }
 
 }

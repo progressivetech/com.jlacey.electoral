@@ -222,7 +222,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    */
   private function civicrm_cicero_get_response($url, $postfields = '') {
     \Civi::log()->debug("Contacting cicero with url: {$url} and postfields: {$postfields}.", ['electoral']);
-    $guzzleClient = new \GuzzleHttp\Client();
+    $guzzleClient = $this->getGuzzleClient();
     $response = $guzzleClient->request('GET', $url);
     $json = $response->getBody()->getContents();
     if ($json) {
