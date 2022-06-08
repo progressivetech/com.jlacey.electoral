@@ -37,7 +37,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
     $url = "https://www.googleapis.com/civicinfo/v2/representatives?address=$streetAddress%20$city%20$stateProvinceAbbrev&key=$apiKey";
 
     \Civi::log()->debug("Contacting Google Civic API with url: {$url}.", ['electoral']);
-    $guzzleClient = new \GuzzleHttp\Client();
+    $guzzleClient = $this->getGuzzleClient();
     $json = $guzzleClient->request('GET', $url)->getBody()->getContents();
     $result = $json ? json_decode($json, TRUE) : [];
     return $result;
