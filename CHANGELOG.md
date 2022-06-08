@@ -1,5 +1,12 @@
 # Electoral API Changelog
 
+## Version 3.1
+
+* Add Openstates as a data provider.
+* Standardize district levels between all data providers
+* Add Api V4 Lookup for a single contact lookup
+* Add unit test
+
 ## Version 3.0
 
 * Fix settings menu to not give an error on CiviCRM 5.31+.

@@ -7,7 +7,7 @@ The extension is licensed under [AGPL-3.0](LICENSE.txt).
 ## Requirements
 
 * PHP v7.2+
-* CiviCRM 5.33+
+* CiviCRM 5.45+
 
 ## Installation (Web UI)
 
@@ -30,9 +30,9 @@ After installation, configure the extension at **Administer Â» System Settings Â
 
 ![Screenshot of Electoral API Settings page](/images/settings_screen.png)
 
-* **Data Provider(s)**:  Electoral API ships with support for Azavea Cicero and Google Civic Information.  Select the provider(s) you want to use.
-* **Cicero API Key**/**Google Civic Information API Key**: When you [register with Cicero](https://www.cicerodata.com/free-trial/) or [register with Google Developers](https://developers.google.com/civic-information/docs/using_api#APIKey) you will receive an "API key", which gives you access to information using your registered account.  Put the API key in this field.
-* **Districts to Look Up**:  Select the types of electoral districting data you want.  Cicero options are "Legislative", "Voting", "Judicial", "Police", and "School".  Google Civic only provides electoral data, but you can choose to only collect data at the "Country", "State/Province", "County", and "City" levels.
+* **Data Provider(s)**:  Electoral API ships with support for Azavea Cicero, Google Civic Information, and Openstates.  Select the provider(s) you want to use.
+* **Cicero API Key**/**Google Civic Information API Key**/**Openstates API Key**: When you [register with Cicero](https://www.cicerodata.com/free-trial/), [register with Google Developers](https://developers.google.com/civic-information/docs/using_api#APIKey), or [register with Openstates](https://openstates.org/accounts/signup/) you will receive an "API key", which gives you access to information using your registered account.  Put the API key in this field.
+* **Districts to Look Up**:  Select the types of electoral districting data you want.  For electoral data, choose "Country", "State", "County" or "City" levels. Cicero offers additional lookups for "Voting", "Judicial", "Police", and "School" (each additional lookup costs an additional credit).  Openstates only supports the "Country" and "State" levels.
 * **Include Future Districts** (Cicero only): If data exists for future electoral districts in your area, you can enable this option to download them.  You can distinguish current and future districts with the "Valid From" and "Valid To" dates (see *Usage*, below).
 * **Address location for district lookup**: Choose the address (home, work, etc.) you want to use to determine a contact's districts.
 * **Countries**/**States**/**Counties**: You can choose to only look up district information for contacts whose address falls in certain countries/states/counties.  You can also select the corresponding **All Countries/All States/All Counties**.
