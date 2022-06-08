@@ -50,6 +50,23 @@ abstract class AbstractApi {
   protected $address;
 
   /**
+   * @var object
+   *
+   * guzzleClient - by allowing us to inject a guzzle client
+   * we can more effectively run automated test.
+   */
+  protected $guzzleClient;
+
+  /**
+   * @var str
+   *
+   * geocodeProviderClass - by allowing us to define the 
+   * geocodeProvider class we can more easily run automated
+   * tests.
+   */
+  protected $geocodeProviderClass;
+
+  /**
    * Constructor class.
    */
   public function __construct(int $limit = 0, bool $update = FALSE) {
@@ -59,6 +76,30 @@ abstract class AbstractApi {
     return $this;
   }
 
+  // Enable test suite to inject a mock guzzle client.
+  public function setGuzzleClient($guzzleClient) {
+    $this->guzzleClient = $guzzleClient;
+  }
+
+  protected function getGuzzleClient() {
+    if (is_null($this->guzzleClient)) {
+      $this->guzzleClient = new \GuzzleHttp\Client();
+    }
+    return $this->guzzleClient;
+  }
+
+  // Enable test suite to inject a mock geocode provider
+  // class name.
+  public function setGeocodeProviderClass($class) {
+    $this->geocodeProviderClass = $class;
+  }
+
+  protected function getGeocodeProviderClass() {
+    if (is_null($this->geocodeProviderClass)) {
+      $class = CRM_Utils_GeocodeProvider::getUsableClassName();
+    }
+    return $this->geocodeProviderClass;
+  }
   /**
    * Starting point for the Electoral.districts API.  Given a number of addresses to look up, finds those without district data
    */

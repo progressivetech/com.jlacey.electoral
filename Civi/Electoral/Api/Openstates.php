@@ -132,7 +132,7 @@ class Openstates extends \Civi\Electoral\AbstractApi {
       return [ $address['geo_code_1'], $address['geo_code_2'] ];
     }
     // Try to do a lookup
-    $class = CRM_Utils_GeocodeProvider::getUsableClassName();
+    $class = $this->getGeocodeProviderClass();
     if (empty($class)) {
       // No geocode method set.
       // TODO: give a notice that this is important.
@@ -173,7 +173,7 @@ class Openstates extends \Civi\Electoral\AbstractApi {
    */
   private function get_response($url) {
     \Civi::log()->debug("Contacting openstates with url: {$url}.", ['electoral']);
-    $guzzleClient = new \GuzzleHttp\Client();
+    $guzzleClient = $this->getGuzzleClient();
     $response = $guzzleClient->request('GET', $url);
     $json = $response->getBody()->getContents();
     if ($json) {
@@ -200,6 +200,8 @@ class Openstates extends \Civi\Electoral\AbstractApi {
       return FALSE;
     }
     foreach ($districtData['district'] as $districtDatum) {
+      $county = NULL;
+      $city = NULL;
       $contactId = $this->address['contact_id'];
       $level = $this->levelMap[$districtDatum->jurisdiction->classification];
       $stateProvinceId = $this->address['state_province_id'] ?? '';
