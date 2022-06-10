@@ -253,7 +253,6 @@ return [
       ],
     ],
   ],
-];
   [
     'name' => 'electoral_all_districts',
     'entity' => 'Job',
