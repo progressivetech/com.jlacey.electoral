@@ -12,7 +12,7 @@ use CRM_Electoral_Official;
  */
 class Cicero extends \Civi\Electoral\AbstractApi {
 
-  const CIVICRM_CICERO_LEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/official?';
+  const CIVICRM_CICERO_LEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/official?max=200&';
   const CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/nonlegislative_district?';
 
   public function reps() : array {
