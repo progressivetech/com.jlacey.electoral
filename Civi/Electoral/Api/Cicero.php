@@ -101,7 +101,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
     foreach ($this->districtTypes as $districtType) {
       try {
         // Cicero has one URL for legislative lookups and a different URL for each other lookup.
-        if (!$legislativeLookupComplete && in_array($districtType, $legislativeDistrictTypes)) { {
+        if (!$legislativeLookupComplete && in_array($districtType, $legislativeDistrictTypes)) {
           $url = self::CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString;
           if ($this->includeUpcoming) {
             $today = (new \DateTime('now'))->format('Y-m-d');
