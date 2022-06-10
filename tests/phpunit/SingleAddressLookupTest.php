@@ -159,7 +159,7 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
       ->addValue('ciceroAPIKey', 'foo123')
       ->execute();
     \Civi\Api4\Setting::set()
-      ->addValue('electoralApiDistrictTypes', ['country', 'administrativeArea1', 'administrativeArea2', 'county', 'city'])
+      ->addValue('electoralApiDistrictTypes', ['country', 'administrativeArea1', 'administrativeArea2', 'locality' ])
       ->execute();
 
     // Create a mock guzzle client, specify exactly the response we
@@ -178,7 +178,7 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
         ->addSelect('electoral_districts.*')
         ->addWhere('id', '=', $this->contactId)
         ->execute();
-    $this->assertEquals($districts->count(), 6);
+    $this->assertEquals($districts->count(), 4);
     foreach($districts as $district) {
       if ($district['electoral_districts.electoral_level'] == 'administrativeArea1') {
         if ($district['electoral_districts.electoral_chamber'] == 'lower') {
@@ -189,21 +189,22 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
         }
       }
       else if ($district['electoral_districts.electoral_level'] == 'country') {
-        $this->assertEquals($district['electoral_districts.electoral_district'], '9');
+        if ($district['electoral_districts.electoral_chamber'] == 'lower') {
+          $this->assertEquals($district['electoral_districts.electoral_district'], '9');
+        }
       }
     }
-
   }
   protected function OpenstatesJsonResults() {
-    return file_get_contents('openstates.lookup.json');
+    return file_get_contents(__DIR__ . '/openstates.lookup.json');
   }
 
   protected function GoogleCivicJsonResults() {
-    return file_get_contents('googlecivic.lookup.json');
+    return file_get_contents(__DIR__ . '/googlecivic.lookup.json');
   }
 
   protected function CiceroJsonResults() {
-    return file_get_contents('cicero.lookup.json');
+    return file_get_contents(__DIR__ . '/cicero.lookup.json');
   }
 
 }

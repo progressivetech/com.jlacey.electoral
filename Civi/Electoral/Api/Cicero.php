@@ -90,7 +90,10 @@ class Cicero extends \Civi\Electoral\AbstractApi {
 
     $queryString = $this->buildAddressQueryString($address);
     // Do a legislative lookup if we have district types.
-    $response = [];
+    $response = [
+      'district' => [],
+      'official' => [],
+    ];
     $legislativeDistrictTypes = [
       'country',
       'administrativeArea1',
@@ -128,7 +131,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       // successful lookup.
       if ($resp_obj) {
         // We previously used the district API endpoint to get legislative district info, but now we use the "officials" endpoint to get both district and official in one lookup.
-        if ($districtType == 'legislative') {
+        if (in_array($districtType, $legislativeDistrictTypes)) {
           foreach ($resp_obj->response->results->candidates[0]->officials as $official) {
             $response['district'][] = $official->office->district;
             $response['official'][] = $official;
