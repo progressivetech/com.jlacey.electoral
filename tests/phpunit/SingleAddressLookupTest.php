@@ -62,7 +62,7 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
   /**
    * Test single address lookup for open states.
    */
-  public function testOpenStates() {
+  public function testOpenstates() {
     // We don't actually do an OpenStates lookup, but we have to have a
     // key or we get an error.
     \Civi\Api4\Setting::set()
@@ -89,21 +89,35 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
         ->addSelect('electoral_districts.*')
         ->addWhere('id', '=', $this->contactId)
         ->execute();
-    $this->assertEquals($districts->count(), 3);
+    $this->assertEquals($districts->count(), 3, 'openstates count of districts.');
+    $tests = [
+      'stateLower' => FALSE,
+      'stateUpper' => FALSE,
+      'federalLower' => FALSE,
+    ];
     foreach($districts as $district) {
+      $districtId = $district['electoral_districts.electoral_district'];
       if ($district['electoral_districts.electoral_level'] == 'administrativeArea1') {
         if ($district['electoral_districts.electoral_chamber'] == 'lower') {
-          $this->assertEquals($district['electoral_districts.electoral_district'], 57);
+          if ($districtId == 57) {
+            $tests['stateLower'] = TRUE;
+          };
         }
         else if ($district['electoral_districts.electoral_chamber'] == 'upper') {
-          $this->assertEquals($district['electoral_districts.electoral_district'], 20);
+          if ($districtId == 20) {
+            $tests['stateUpper'] = TRUE;
+          }
         }
       }
       else if ($district['electoral_districts.electoral_level'] == 'country') {
-        $this->assertEquals($district['electoral_districts.electoral_district'], 'NY-9');
+        if ($districtId == 'NY-9') {
+          $tests['federalLower'] = TRUE;
+        }
       }
     }
-
+    foreach ($tests as $test => $result) {
+      $this->assertTrue($result, "Openstates ${test}.");
+    }
   }
 
   /**
@@ -134,21 +148,36 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
         ->addSelect('electoral_districts.*')
         ->addWhere('id', '=', $this->contactId)
         ->execute();
-    $this->assertEquals($districts->count(), 6);
+    $this->assertEquals($districts->count(), 6, 'googlecivic number of districts recorded.');
+    $tests = [
+      'stateLower' => FALSE,
+      'stateUpper' => FALSE,
+      'federalLower' => FALSE,
+    ];
+
     foreach($districts as $district) {
+      $districtId = $district['electoral_districts.electoral_district'];
       if ($district['electoral_districts.electoral_level'] == 'administrativeArea1') {
         if ($district['electoral_districts.electoral_chamber'] == 'lower') {
-          $this->assertEquals($district['electoral_districts.electoral_district'], 57);
+          if ($districtId ==  57) {
+            $tests['stateLower'] = TRUE;
+          }
         }
         else if ($district['electoral_districts.electoral_chamber'] == 'upper') {
-          $this->assertEquals($district['electoral_districts.electoral_district'], 20);
+          if ($districtId ==  20) {
+            $tests['stateUpper'] = TRUE;
+          }
         }
       }
       else if ($district['electoral_districts.electoral_level'] == 'country') {
-        $this->assertEquals($district['electoral_districts.electoral_district'], '9');
+        if ($districtId ==  9) {
+          $tests['federalLower'] = TRUE;
+        }
       }
     }
-
+    foreach ($tests as $test => $result) {
+      $this->assertTrue($result, "Google ${test}.");
+    }
   }
 
   /**
@@ -178,23 +207,47 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
         ->addSelect('electoral_districts.*')
         ->addWhere('id', '=', $this->contactId)
         ->execute();
-    $this->assertEquals($districts->count(), 4);
+    $this->assertEquals($districts->count(), 5, "cicero number of districts recorded.");
+    $tests = [
+      'stateLower' => FALSE,
+      'stateUpper' => FALSE,
+      'cityCouncil' => FALSE,
+      'federalLower' => FALSE,
+    ];
+
     foreach($districts as $district) {
+      $districtId = $district['electoral_districts.electoral_district'];
       if ($district['electoral_districts.electoral_level'] == 'administrativeArea1') {
         if ($district['electoral_districts.electoral_chamber'] == 'lower') {
-          $this->assertEquals($district['electoral_districts.electoral_district'], 57);
+          if ($districtId == 57){
+            $tests['stateLower'] = TRUE;
+          }
         }
         else if ($district['electoral_districts.electoral_chamber'] == 'upper') {
-          $this->assertEquals($district['electoral_districts.electoral_district'], 20);
+          if ($districtId == 20){
+            $tests['stateUpper'] = TRUE;
+          }
         }
       }
       else if ($district['electoral_districts.electoral_level'] == 'country') {
         if ($district['electoral_districts.electoral_chamber'] == 'lower') {
-          $this->assertEquals($district['electoral_districts.electoral_district'], '9');
+          if ($districtId == 9){
+            $tests['federalLower'] = TRUE;
+          }
+        }
+      }
+      else if ($district['electoral_districts.electoral_level'] == 'locality') {
+        if ($districtId == 35){
+          $tests['cityCouncil'] = TRUE;
         }
       }
     }
+    foreach ($tests as $test => $result) {
+      $this->assertTrue($result, "Cicero ${test}.");
+    }
   }
+
+
   protected function OpenstatesJsonResults() {
     return file_get_contents(__DIR__ . '/openstates.lookup.json');
   }
