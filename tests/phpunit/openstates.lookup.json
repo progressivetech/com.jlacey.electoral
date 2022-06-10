@@ -1,0 +1,90 @@
+{
+  "results": [
+    {
+      "id":"ocd-person/8683c8ab-0d6c-471f-9259-a1b506109912",
+      "name":"Phara Souffrant Forrest",
+      "party":"Democratic",
+      "current_role": {
+        "title":"Assembly Member",
+        "org_classification":"lower",
+        "district":"57",
+        "division_id":"ocd-division/country:us/state:ny/sldl:57"
+      },
+      "jurisdiction":{
+      "id":"ocd-jurisdiction/country:us/state:ny/government",
+        "name":"New York",
+        "classification":"state"
+      },
+      "given_name":"",
+      "family_name":"",
+      "image":"https://assembly.state.ny.us/write/upload/member_files/057/headshot/057.jpg",
+      "email":"souffrantforrestp@nyassembly.gov",
+      "gender":"",
+      "birth_date":"",
+      "death_date":"",
+      "extras":{},
+      "created_at":"2021-01-09T00:14:50.467984+00:00",
+      "updated_at":"2022-02-19T01:08:20.373856+00:00",
+      "openstates_url":"https://openstates.org/person/phara-souffrant-forrest-45pCE4KIyx6HyKZYyDq7so/"
+    },
+    {
+      "id": "ocd-person/969d3e67-5686-5b4c-a8fe-5ec702a7343d",
+      "name":"Yvette D. Clarke",
+      "party":"Democratic",
+      "current_role": {
+      "title":"Representative",
+        "org_classification":"lower",
+        "district":"NY-9",
+        "division_id":"ocd-division/country:us/state:ny/cd:9"
+      },
+        "jurisdiction":{
+        "id":"ocd-jurisdiction/country:us/government",
+          "name":"United States",
+          "classification":"country"
+      },
+      "given_name":"Yvette",
+      "family_name":"Clarke",
+      "image":"https://theunitedstates.io/images/congress/450x550/C001067.jpg",
+      "email":"",
+      "gender":"F",
+      "birth_date":"1964-11-21",
+      "death_date":"","extras":{},
+      "created_at":"2021-05-10T15:10:40.897825+00:00",
+      "updated_at":"2022-01-04T03:07:19.608798+00:00",
+      "openstates_url":"https://openstates.org/person/yvette-d-clarke-4aChztG65qAUrvrrvBBZRl/"
+    },
+    {
+      "id":"ocd-person/52c0e400-2385-4c12-8bf4-6b9205c18eb2",
+      "name":"Zellnor Myrie",
+      "party":"Democratic",
+      "current_role":{
+      "title":"Senator",
+        "org_classification":"upper",
+        "district":"20",
+        "division_id":"ocd-division/country:us/state:ny/sldu:20"
+      },
+      "jurisdiction":{
+      "id":"ocd-jurisdiction/country:us/state:ny/government",
+        "name":"New York",
+        "classification":"state"
+      },
+      "given_name":"Zellnor",
+      "family_name":"Myrie",
+      "image":"https://www.nysenate.gov/sites/default/files/styles/160x160/public/zmyriemainheadimage_0.jpg?itok=O2-EZTeD",
+      "email":"myrie@nysenate.gov",
+      "gender":"",
+      "birth_date":"",
+      "death_date":"",
+      "extras":{},
+      "created_at":"2019-01-13T06:15:42.453689+00:00",
+      "updated_at":"2021-10-08T14:55:28.147689+00:00",
+      "openstates_url":"https://openstates.org/person/zellnor-myrie-2W9WMrIZovzFCgYZe7bmza/"
+    }
+  ],
+  "pagination":{
+  "per_page":10,
+  "page":1,
+  "max_page":1,
+  "total_items":3
+  }
+}
