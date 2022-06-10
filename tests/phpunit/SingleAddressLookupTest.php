@@ -50,6 +50,12 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
       ->addSelect('id')
       ->addWhere('contact_id', '=', $this->contactId)
       ->execute()->first()['id'];
+
+    // Configure to insert officials.
+    \Civi\Api4\Setting::set()
+      ->addValue('electoralApiCreateOfficialOnDistrictLookup', TRUE)
+      ->execute();
+
   }
 
   public function tearDown(): void {
@@ -71,6 +77,7 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
     \Civi\Api4\Setting::set()
       ->addValue('electoralApiDistrictTypes', ['country', 'administrativeArea1'])
       ->execute();
+    
 
     // Create a mock guzzle client, specify exactly the response we
     // should get from running a real query against Open States.
@@ -118,6 +125,9 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
     foreach ($tests as $test => $result) {
       $this->assertTrue($result, "Openstates ${test}.");
     }
+    $this->assertOfficialAdded('Zellnor', 'Myrie', 'openstates');
+    $this->assertOfficialAdded('Phara', 'Souffrant Forrest', 'openstates');
+    $this->assertOfficialAdded('Yvette', 'Clarke', 'openstates');
   }
 
   /**
@@ -178,6 +188,8 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
     foreach ($tests as $test => $result) {
       $this->assertTrue($result, "Google ${test}.");
     }
+
+    // NOTE: google doesn't provide info on elected officials.
   }
 
   /**
@@ -245,6 +257,19 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
     foreach ($tests as $test => $result) {
       $this->assertTrue($result, "Cicero ${test}.");
     }
+    $this->assertOfficialAdded('Zellnor', 'Myrie', 'cicero');
+    $this->assertOfficialAdded('Phara', 'Souffrant Forrest', 'cicero');
+    $this->assertOfficialAdded('Yvette', 'Clarke', 'cicero');
+
+  }
+
+  protected function assertOfficialAdded($first_name, $last_name, $source): void {
+    $official = \Civi\Api4\Contact::get()
+      ->addWhere('contact_sub_type', '=', 'Official')
+      ->addWhere('first_name', '=', $first_name)
+      ->addWhere('last_name', '=', $last_name)
+      ->execute();
+    $this->assertEquals($official->count(), 1, "$first_name $last_name added as official via $source.");
   }
 
 

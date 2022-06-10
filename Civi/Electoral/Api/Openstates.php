@@ -237,10 +237,24 @@ class Openstates extends \Civi\Electoral\AbstractApi {
         continue;
       }
       // Get the basic info.
+      // Sometimes given_name and family_name are empty so we have to parse
+      // the full name.
+      $namePieces = explode(' ', $officialInfoObject->name);
+      $givenName = $officialInfoObject->given_name; 
+      $familyName = $officialInfoObject->family_name; 
+      if (empty($givenName)) {
+        // Inexact but best guess?
+        $givenName = $namePieces[0];
+      }
+      if (empty($familyName)) {
+        // Get rid of first name.
+        array_shift($namePieces);
+        $familyName = implode(' ', $namePieces);
+      }
       $official = new CRM_Electoral_Official();
       $official
-        ->setFirstName($officialInfoObject->given_name)
-        ->setLastName($officialInfoObject->family_name)
+        ->setFirstName($givenName)
+        ->setLastName($familyName)
         ->setExternalIdentifier($externalIdentifier)
         ->setOcdId($officialInfoObject->jurisdiction->id)
         ->setPoliticalParty($officialInfoObject->party);

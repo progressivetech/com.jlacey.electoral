@@ -16,9 +16,9 @@ class CRM_Electoral_Official {
    * The next three are arrays, they can contain more than one of themselves.
    * @var array
    */
-  private $address;
-  private $emailAddress;
-  private $phone;
+  private $address = [];
+  private $emailAddress = [];
+  private $phone = [];
   private $website;
   private $politicalParty;
   private $twitter;
@@ -178,12 +178,25 @@ class CRM_Electoral_Official {
     //and set it to primary
     if (!isset($addressExist) || $addressExist['street_address'] != $address['street_address']) {
       // Ugh, can't do state by abbreviation in APIv4.
+      $countryId = \Civi\Api4\Country::get()
+        ->addSelect('id')
+        ->addWhere('name', '=', $address['country'])
+        ->execute()->first()['id'];
+      if (empty($countryId)) {
+        \Civi\log()->debug("Failed to located country Id for " . $address['country']);
+        return;
+      }
       $stateProvinceId = \Civi\Api4\StateProvince::get(FALSE)
         ->addSelect('id')
-        ->addWhere('abbreviation', '=', $address['state_province'])
-        ->addWhere('country.name', '=', $address['country'])
+        ->addClause('OR', ['abbreviation', '=', $address['state_province']], ['name', '=', $address['state_province']])
+        ->addWhere('country_id', '=', $countryId)
         ->execute()
-        ->column('id')[0] ?? NULL;
+        ->first()['id'];
+
+      if (empty($stateProvinceId)) {
+        \Civi\log()->debug("Failed to located state province Id for " . $address['state_province']);
+        return;
+      }
       \Civi\Api4\Address::create(FALSE)
         ->addValue('location_type_id:name', $locationType)
         ->addValue('contact_id', $contactId)

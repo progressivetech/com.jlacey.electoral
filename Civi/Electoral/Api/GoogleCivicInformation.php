@@ -5,7 +5,7 @@ namespace Civi\Electoral\Api;
 use CRM_Electoral_ExtensionUtil as E;
 
 /**
- * Cicero Data Provider class.
+ * Google Civic Data Provider class.
  */
 class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
 
@@ -44,7 +44,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
   }
 
   /**
-   * Convert the Cicero raw data to the format writeDistrictData expects and write it.
+   * Convert the Google raw data to the format writeDistrictData expects and write it.
    */
   protected function parseDistrictData(array $districts) : bool {
     // Check for errors first.
