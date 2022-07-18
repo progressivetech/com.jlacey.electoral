@@ -279,6 +279,7 @@ abstract class AbstractApi {
       if ($this->address['country']) {
         // Let's ensure it's a valid country.
         $countryResult = \Civi\Api4\Country::get()
+          ->setCheckPermissions(FALSE)
           ->addClause('OR',
             ['name', '=', $this->address['country'] ],
             ['iso_code', '=', $this->address['country'] ]
@@ -294,6 +295,7 @@ abstract class AbstractApi {
       else {
         // Use the default country.
         $normalized['country_id.name'] = \Civi\Api4\Setting::get()
+          ->setCheckPermissions(FALSE)
           ->addSelect('defaultContactCountry:name')
           ->execute()->first()['value'];
       }
@@ -316,6 +318,7 @@ abstract class AbstractApi {
       }
       if ($stateProvinceLookup) {
         $stateProvince = \Civi\Api4\StateProvince::get()
+          ->setCheckPermissions(FALSE)
           ->addSelect('id', 'abbreviation', 'name')
           ->addClause(
             'OR', 
