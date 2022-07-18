@@ -439,4 +439,45 @@ class CRM_Electoral_Official {
     return $this;
   }
 
+  /**
+   * Getter for first name.
+   */
+  public function getFirstName() {
+    return $this->firstName;
+  }
+
+  /**
+   * Getter for last name.
+   */
+  public function getLastName() {
+    return $this->lastName;
+  }
+
+  /**
+   * Getter for email.
+   */
+  public function getEmailAddress() {
+    return $this->emailAddress;
+  }
+
+  /**
+   * Getter for image url.
+   */
+  public function getImageUrl() {
+    return $this->imageUrl;
+  }
+
+  /**
+   * Getter for ocdId.
+   */
+  public function getOcdId() {
+    return $this->ocdId;
+  }
+
+  /**
+   * Getter for title.
+   */
+  public function getTitle() {
+    return $this->title;
+  }
 }
