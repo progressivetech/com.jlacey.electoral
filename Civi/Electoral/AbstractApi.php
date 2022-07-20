@@ -276,7 +276,7 @@ abstract class AbstractApi {
 
     // Check for country.
     if (empty($normalized['country_id.name'])) {
-      if ($this->address['country']) {
+      if (isset($this->address['country'])) {
         // Let's ensure it's a valid country.
         $countryResult = \Civi\Api4\Country::get()
           ->setCheckPermissions(FALSE)
