@@ -308,15 +308,13 @@ abstract class AbstractApi {
       'state_province_id.name',
       'state_province_id.abbreviation',
     ];
-    if (isset($this->address['state_province'])) {
-      $stateProvinceLookup = FALSE;
-      foreach ($stateProvinceFields as $field) {
-        $value = $this->address[$field] ?? NULL;
-        if (empty($value)) {
-          $stateProvinceLookup = TRUE;
-        }
-      }
-      if ($stateProvinceLookup) {
+
+    // If we don't have a state_province_id.name, we have to look it up.
+    if (empty($normalized['state_province_id.name'])) {
+      $stateProvince = NULL;
+      if (isset($this->address['state_province'])) {
+        // We have been passed a bare state province name. Lookup the details in
+        // the state province table.
         $stateProvince = \Civi\Api4\StateProvince::get()
           ->setCheckPermissions(FALSE)
           ->addSelect('id', 'abbreviation', 'name')
@@ -327,15 +325,20 @@ abstract class AbstractApi {
           )
           ->addWhere('country_id.name', '=', $normalized['country_id.name'])
           ->execute()->first();
-        if ($stateProvince) {
-          $normalized['state_province_id'] = $stateProvince['id'];
-          $normalized['state_province_id.abbreviation'] = $stateProvince['abbreviation'];
-          $normalized['state_province_id.name'] = $stateProvince['name'];
-
-        }
-        else {
-          throw new \Exception("Unknown state province: " . $this->address['state_province'] . " in country: " . $normalized['country_id.name']);
-        }
+      }
+      elseif ($normalized['state_province_id']) {
+        // We have been passed a state province id. Lookup the details in
+        // the state province table.
+        $stateProvince = \Civi\Api4\StateProvince::get()
+            ->setCheckPermissions(FALSE)
+            ->addSelect('id', 'abbreviation', 'name')
+            ->addWhere('id', '=', $normalized['state_province_id'])
+            ->execute()->first();
+      }
+      if ($stateProvince) {
+        $normalized['state_province_id'] = $stateProvince['id'];
+        $normalized['state_province_id.abbreviation'] = $stateProvince['abbreviation'];
+        $normalized['state_province_id.name'] = $stateProvince['name'];
       }
     }
     $this->address = $normalized;
