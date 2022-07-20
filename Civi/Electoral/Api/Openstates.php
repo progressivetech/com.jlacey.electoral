@@ -46,6 +46,7 @@ class Openstates extends \Civi\Electoral\AbstractApi {
 
     $this->setGeoCoordinates();
     if (empty($this->address['geo_code_1']) || empty($this->address['geo_code_2'])) {
+      \Civi::log()->debug("Failed to lookup geo coordinates. Ensure geo lookup is enabled and working.");
       return [];
     }
     $queryString = $this->buildAddressQueryString();
@@ -105,11 +106,18 @@ class Openstates extends \Civi\Electoral\AbstractApi {
    * it has enough parameters for a successful geo code lookup.
    */
   private function addressIsCompleteEnough() : bool {
-    if ($this->address['country_id.name'] != 'United States') {
-      \Civi::log()->debug("Rejecting address that is in " . $this->address['country_id.name'] . ". Address must be in US for Open States to work.");
+    $country = $this->address['country_id.name'] ?? NULL;
+    if (empty($country)) {
+      \Civi::log()->debug("Rejecting address without a country set. Please set a default country in your CiviCRM database or use a country field in your form.");
+      return FALSE;
+    }
+    if ($country != 'United States') {
+      \Civi::log()->debug("Rejecting address that is in the country:" . $this->address['country_id.name'] . ". Address must be in US for Open States to work.");
       return FALSE;
     }
     if (empty($this->address['street_address']) || empty($this->address['state_province_id.name']) || empty($this->address['city'])) {
+      \Civi::log()->debug("Rejecting address without a street address, state province name or city. All are required..");
+      \Civi::log()->debug(print_r($this->address, TRUE));
       return FALSE;
     }
     return TRUE;
@@ -203,13 +211,18 @@ class Openstates extends \Civi\Electoral\AbstractApi {
     if (empty($familyName)) {
       $familyName = $names['last_name'];
     }
+    $level = $this->levelMap[$officialInfoObject->jurisdiction->classification];
+    $chamber = $this->parseChamber($officialInfoObject->current_role->org_classification);
+
     $official = new CRM_Electoral_Official();
     $official
       ->setFirstName($givenName)
       ->setLastName($familyName)
       ->setExternalIdentifier($externalIdentifier)
       ->setOcdId($officialInfoObject->jurisdiction->id)
-      ->setPoliticalParty($officialInfoObject->party);
+      ->setPoliticalParty($officialInfoObject->party)
+      ->setChamber($chamber)
+      ->setLevel($level);
     // Note - we have the image url but civi doesn't render remote images
     //  ->setImageUrl($officialInfoObject->image);
     // We're only supporting two addresses/phones/emails at this time due to how Civi handles location types.
