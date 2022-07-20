@@ -443,7 +443,7 @@ class CRM_Electoral_Official {
    * Get first email address
    */
   public function getEmailAddress() {
-    return $this->emailAddress[0];
+    return array_shift($this->emailAddress);
   }
 
   /**
