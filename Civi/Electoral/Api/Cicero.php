@@ -291,6 +291,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
 
     // This is for readability.
     $office = $officialInfo['office'] ?? NULL;
+    $districtType = $office['district']['district_type'];
 
     // Get the basic info.
     $official = new CRM_Electoral_Official();
@@ -307,7 +308,10 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       ->setCurrentTermStartDate($officialInfo['current_term_start_date'])
       ->setTermEndDate($officialInfo['term_end_date'])
       ->setPoliticalParty($officialInfo['party'])
-      ->setImageUrl($officialInfo['photo_origin_url']);
+      ->setImageUrl($officialInfo['photo_origin_url'])
+      ->setChamber($this->chamberMap[$districtType])
+      ->setLevel($this->levelMap[$districtType])
+    ;
     // We're only supporting two addresses/phones/emails at this time due to how Civi handles location types.
     foreach ($officialInfo['addresses'] as $key => $addressData) {
       if ($key === 0) {

@@ -25,6 +25,8 @@ class CRM_Electoral_Official {
   private $facebook;
   private $instagram;
   private $imageUrl;
+  private $level;
+  private $chamber;
 
   /**
    * Create an official from the Official class.
@@ -58,6 +60,8 @@ class CRM_Electoral_Official {
       ->addValue('official_info.electoral_ocd_id_official', $this->ocdId)
       ->addValue('official_info.electoral_current_term_start_date', $this->currentTermStartDate)
       ->addValue('official_info.electoral_term_end_date', $this->termEndDate)
+      ->addValue('official_info.electoral_official_chamber', $this->chamber)
+      ->addValue('official_info.electoral_official_level', $this->level)
       ->execute()
       ->first();
     $cid = $result['id'];
@@ -440,10 +444,35 @@ class CRM_Electoral_Official {
   }
 
   /**
+   * Set the value of chamber
+   *
+   * @return  self
+   */
+  public function setChamber($chamber) {
+    $this->chamber = $chamber;
+    return $this;
+  }
+
+  /**
+   * Set the value of level
+   *
+   * @return  self
+   */
+  public function setLevel($level) {
+    $this->level = $level;
+    return $this;
+  }
+
+  /**
    * Get first email address
    */
   public function getEmailAddress() {
-    return array_shift($this->emailAddress);
+    foreach($this->emailAddress as $locationType => $email) {
+      if ($email) {
+        return $email;
+      }
+    }
+    return NULL;
   }
 
   /**
@@ -479,6 +508,20 @@ class CRM_Electoral_Official {
    */
   public function getTitle() {
     return $this->title;
+  }
+
+  /**
+   * Get chamber
+   */
+  public function getChamber() {
+    return $this->chamber;
+  }
+
+  /**
+   * Get level
+   */
+  public function getLevel() {
+    return $this->level;
   }
 
 }
