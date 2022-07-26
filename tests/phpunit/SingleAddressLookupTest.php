@@ -12,8 +12,8 @@ use Civi\Test\TransactionalInterface;
  */
 class mockGeocodeProviderClass {
   public static function format(&$params) {
-    $params['geo_code_1'] = '40.67650';
-    $params['geo_code_2'] = '-73.96918';
+    $params['geo_code_1'] = rand(1,100);
+    $params['geo_code_2'] = -rand(1,100);
     return TRUE;
   }
 }
@@ -268,7 +268,9 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
             'upper' => 'NY',
             'lower' => 9,
           ],
-          'locality' => 35,
+          'locality' => [
+            'lower' => 35,
+          ]
         ],
         'officials' => [
           [ 'first_name' => 'Zellnor', 'last_name' => 'Myrie'],
@@ -291,7 +293,9 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
             'upper' => 'NE',
             'lower' => 1,
           ],
-          'locality' => 'At Large',
+          'locality' => [
+            'lower' => 'At Large',
+          ]
         ],
         'officials' => [
           [ 'first_name' => 'Eliot', 'last_name' => 'Bostar'],
@@ -312,7 +316,9 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
             'lower' => 24,
             'upper' => 'CA',
           ],
-          'locality' => 123,
+          'locality' => [
+            'lower' => 123,
+          ],
         ],
         'officials' => [
           [ 'first_name' => 'Steve', 'last_name' => 'Bennett'],
@@ -347,7 +353,7 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
       $handlerStack = \GuzzleHttp\HandlerStack::create($mock);
       $client = new \GuzzleHttp\Client(['handler' => $handlerStack]);
 
-      $e = new $class();
+      $e = new $class(0, FALSE, TRUE);
       $e->setGuzzleClient($client);
       $e->setGeocodeProviderClass('mockGeocodeProviderClass');
       $e->processSingleAddress($this->addressId);
@@ -367,7 +373,7 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
         else {
           $value = $expected['districts'][$level];
         }
-        $this->assertEquals($value, $districtId, $districtId);
+        $this->assertEquals($value, $districtId, $name);
       }
       foreach ($expected['officials'] as $official) {
         $this->assertOfficialAdded($official['first_name'], $official['last_name'], $name);

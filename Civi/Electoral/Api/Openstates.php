@@ -50,6 +50,7 @@ class Openstates extends \Civi\Electoral\AbstractApi {
       return [];
     }
     $queryString = $this->buildAddressQueryString();
+    $resp_obj = NULL;
     $response = [];
     // Only run if we have an appropriate district type.
     $openstatesDistrictTypes = [
@@ -67,17 +68,12 @@ class Openstates extends \Civi\Electoral\AbstractApi {
       return [];
     }
 
-    try {
-      $url = self::OPENSTATES_QUERY_URL . $queryString;
-      $resp_obj = $this->get_response($url);
+    $url = self::OPENSTATES_QUERY_URL . $queryString;
+    $json = $this->lookupUrl($url);
+    if ($json) {
+      $resp_obj = $this->processLookupResults($json);
     }
-    catch (\GuzzleHttp\Exception\RequestException $e) {
-      \Civi::log()->debug("Failed to retrieve data from openstates for contact {$this->address['contact_id']}", ['electoral']);
-      if ($e->hasResponse()) {
-        $statusCode = $e->getResponse()->getStatusCode();
-        \Civi::log()->debug("Got response code $statusCode");
-      }
-    }
+    
     // successful lookup.
     if ($resp_obj) {
       // We previously used the district API endpoint to get legislative district info, but now we use the "officials" endpoint to get both district and official in one lookup.
@@ -133,17 +129,10 @@ class Openstates extends \Civi\Electoral\AbstractApi {
    *   The url of the cicero page you are getting aresponse from. Defaults to
    *   'http://cicero.azavea.com/token/new.json'.
    *
-   * @param $postfields
-   *   The posfields to be passed to the page.
-   *
    * @return $json
    *   Decoded JSON PHP object object returned by the Cicero API or FALSE on error.
    */
-  private function get_response($url) {
-    \Civi::log()->debug("Contacting openstates with url: {$url}.", ['electoral']);
-    $guzzleClient = $this->getGuzzleClient();
-    $response = $guzzleClient->request('GET', $url);
-    $json = $response->getBody()->getContents();
+  protected function processLookupResults($json) {
     if ($json) {
       $json_decoded = json_decode($json);
       if (!is_object($json_decoded)) {

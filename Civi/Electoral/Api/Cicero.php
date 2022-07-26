@@ -96,32 +96,28 @@ class Cicero extends \Civi\Electoral\AbstractApi {
     ];
     $legislativeLookupComplete = FALSE;
     foreach ($this->districtTypes as $districtType) {
-      try {
-        // Cicero has one URL for legislative lookups and a different URL for each other lookup.
-        if (in_array($districtType, $legislativeDistrictTypes)) {
-          if ($legislativeLookupComplete) {
-            continue;
-          }
-          $url = self::CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString;
-          if ($this->includeUpcoming) {
-            $today = (new \DateTime('now'))->format('Y-m-d');
-            $url .= "&valid_on_or_after=$today";
-          }
-          // One legislative lookup gets all the levels, so don't re-run for each level.
-          $legislativeLookupComplete = TRUE;
+      // Cicero has one URL for legislative lookups and a different URL for each other lookup.
+      if (in_array($districtType, $legislativeDistrictTypes)) {
+        if ($legislativeLookupComplete) {
+          continue;
         }
-        else {
-          $url = self::CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL . "$queryString&type=$districtType";
+        $url = self::CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString;
+        if ($this->includeUpcoming) {
+          $today = (new \DateTime('now'))->format('Y-m-d');
+          $url .= "&valid_on_or_after=$today";
         }
-        $resp_obj = $this->civicrm_cicero_get_response($url);
+        // One legislative lookup gets all the levels, so don't re-run for each level.
+        $legislativeLookupComplete = TRUE;
       }
-      catch (\GuzzleHttp\Exception\RequestException $e) {
-        \Civi::log()->debug("Failed to retrieve $districtType data from Cicero for contact {$this->address['contact_id']}", ['electoral']);
-        if ($e->hasResponse()) {
-          $statusCode = $e->getResponse()->getStatusCode();
-          \Civi::log()->debug("Got response code $statusCode");
-        }
+      else {
+        $url = self::CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL . "$queryString&type=$districtType";
       }
+      $resp_obj = NULL;
+      $json = $this->lookupUrl($url);
+      if ($json) {
+        $resp_obj = $this->processLookupResults($json);
+      }
+      
       // successful lookup.
       if ($resp_obj) {
         // We previously used the district API endpoint to get legislative
@@ -224,11 +220,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    * @return $json
    *   Decoded JSON PHP object object returned by the Cicero API or FALSE on error.
    */
-  private function civicrm_cicero_get_response($url) {
-    \Civi::log()->debug("Contacting cicero with url: {$url}.", ['electoral']);
-    $guzzleClient = $this->getGuzzleClient();
-    $response = $guzzleClient->request('GET', $url);
-    $json = $response->getBody()->getContents();
+  protected function processLookupResults($json) {
     if ($json) {
       $json_decoded = json_decode($json);
       if (!is_object($json_decoded)) {
@@ -257,10 +249,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       // Success.
       return $json_decoded;
     }
-    elseif ($json === FALSE) {
-      \Civi::log()->debug("cicero url: $url returned false. Giving up.", ['electoral']);
-      return FALSE;
-    }
+    return FALSE;
   }
 
   /**

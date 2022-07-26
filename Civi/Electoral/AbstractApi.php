@@ -7,13 +7,19 @@ abstract class AbstractApi {
    * @var int
    * How many records to update at once.
    */
-  private $limit;
+  private $limit = 0;
 
   /**
    * @var bool
    * Overwrite existing records' electoral data.
    */
-  private $update;
+  private $update = FALSE;
+
+  /**
+   * @var bool
+   * Cache lookups so we don't repeatedly hit the upstream API
+   */
+  private $cache = FALSE;
 
   /**
    * @var bool
@@ -67,9 +73,10 @@ abstract class AbstractApi {
   /**
    * Constructor class.
    */
-  public function __construct(int $limit = 0, bool $update = FALSE) {
+  public function __construct(int $limit = 0, bool $update = FALSE, bool $cache = FALSE) {
     $this->limit = $limit;
     $this->update = $update;
+    $this->cache = $cache;
     $this->settingsToProperties();
     return $this;
   }
@@ -565,4 +572,37 @@ abstract class AbstractApi {
     return $names;
   }
 
+  /**
+   * Lookup URL. Given an API URL, return the results
+   *
+   * All subclasses should call this function and overload
+   * the ApiUrlLookup function.
+   */
+  protected function lookupUrl($url) {
+    if ($this->cache) {
+      $cacheKey = hash('sha256', $url);
+      $json = \Civi::cache('long')->get($cacheKey);
+      if ($json) {
+        \Civi::log()->debug("Retrieved electoral values from cache using key: $cacheKey.");
+        return $json;
+      }
+    }
+    $guzzleClient = $this->getGuzzleClient();
+    try {
+      $json = $guzzleClient->request('GET', $url)->getBody()->getContents();
+    }
+    catch (\GuzzleHttp\Exception\RequestException $e) {
+      \Civi::log()->debug("Failed to retrieve data via url: $url");
+      if ($e->hasResponse()) {
+        $statusCode = $e->getResponse()->getStatusCode();
+        \Civi::log()->debug("Got response code $statusCode");
+      }
+      return NULL;
+    }
+    if ($this->cache && $json) {
+      \Civi::log()->debug("setting cache on key $cacheKey");
+      \Civi::cache('long')->set($cacheKey, $json);
+    }
+    return $json;
+  }
 }

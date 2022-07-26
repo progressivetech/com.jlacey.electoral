@@ -54,37 +54,35 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
     $stateProvinceAbbrev = $this->address['state_province_id.abbreviation'];
     $apiKey = $this->getApiKey();
     $url = "https://www.googleapis.com/civicinfo/v2/representatives?address=$streetAddress%20$city%20$stateProvinceAbbrev&key=$apiKey";
-
-    \Civi::log()->debug("Contacting Google Civic API with url: {$url}.", ['electoral']);
-    $guzzleClient = $this->getGuzzleClient();
-    $json = $guzzleClient->request('GET', $url)->getBody()->getContents();
-    $result = $json ? json_decode($json, TRUE) : [];
-    if (isset($result['error'])) {
-      $this->writeElectoralStatus($result['error']);
-      return [];
+    $result = NULL;
+    $json = $this->lookupUrl($url);
+    if ($json) {
+      $result = $this->processLookupResults($json);
     }
-    // Google data makes it really hard to parse like the other providers.
-    // Google first provides a list of offices, which contain an "official_indices"
-    // key, which is an array of indexes referring to a second list of officials.
-    //
-    // First we parse the officies to get the district information. And, as we do that,
-    // we keep track of the official_indices so we can then parse the officials.
-    $officialIndices = [];
-    foreach ($result['offices'] as $office) {
-      $district = $this->parseDistrictData($office);
-      if ($district) {
-        // Record the official indices so we can look those up later.
-        foreach($district['official_indices'] as $index) {
-          $officialIndices[$index] = $district;
+    if ($result) {
+      // Google data makes it really hard to parse like the other providers.
+      // Google first provides a list of offices, which contain an "official_indices"
+      // key, which is an array of indexes referring to a second list of officials.
+      //
+      // First we parse the officies to get the district information. And, as we do that,
+      // we keep track of the official_indices so we can then parse the officials.
+      $officialIndices = [];
+      foreach ($result['offices'] as $office) {
+        $district = $this->parseDistrictData($office);
+        if ($district) {
+          // Record the official indices so we can look those up later.
+          foreach($district['official_indices'] as $index) {
+            $officialIndices[$index] = $district;
+          }
+          // Now remove them since we don't record these.
+          unset($district['official_indices']);
+          $return['district'][] = $district;
         }
-        // Now remove them since we don't record these.
-        unset($district['official_indices']);
-        $return['district'][] = $district;
       }
-    }
-    // Now we get the officials 
-    foreach($officialIndices as $officialIndex => $district) {
-      $return['official'][] = $this->parseOfficialData($result['officials'][$officialIndex], $district);
+      // Now we get the officials 
+      foreach($officialIndices as $officialIndex => $district) {
+        $return['official'][] = $this->parseOfficialData($result['officials'][$officialIndex], $district);
+      }
     }
     return $return;
   }
@@ -219,6 +217,14 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
       }
     }
     return $official;
+  }
 
+  protected function processLookupResults($json) {
+    $result = $json ? json_decode($json, TRUE) : [];
+    if (isset($result['error'])) {
+      $this->writeElectoralStatus($result['error']);
+      return [];
+    }
+    return $result;
   }
 }
