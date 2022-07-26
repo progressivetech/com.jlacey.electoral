@@ -13,16 +13,6 @@ The extension is licensed under [AGPL-3.0](LICENSE.txt).
 
 This extension has not yet been published for installation via the web UI.
 
-## Installation (CLI, Zip)
-
-Sysadmins and developers may download the `.zip` file for this extension and
-install it with the command-line tool [cv](https://github.com/civicrm/cv).
-
-```bash
-cd <extension-dir>
-cv dl eventonbehalfof@https://github.com/FIXME/eventonbehalfof/archive/master.zip
-```
-
 ## Configuration
 
 ### Settings page
@@ -95,5 +85,4 @@ When you are really sure it is all working, remove the limit.
 
 ## Known Issues
 
-* Officials lookup from Google Civic Data is not currently supported.  The previous version of this extension (2.0) supports this.  If you need this functionality, please do not upgrade at this time.
-* Google and Cicero both support data for multiple countries, but Google has not been tested on non-US locations.
+* Google and Cicero both support data for multiple countries, but Google has not been tested on non-US locations. Open States only support the US.

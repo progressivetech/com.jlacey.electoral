@@ -13,8 +13,8 @@
     <url desc="Support">https://github.com/josephlacey/com.jlacey.electoral/issues</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
-  <releaseDate>2021-11-26</releaseDate>
-  <version>3.1.0</version>
+  <releaseDate>2022-07-26</releaseDate>
+  <version>3.2.0</version>
   <develStage>stable</develStage>
   <classloader>
     <psr4 prefix="Civi\" path="Civi" />
@@ -22,7 +22,7 @@
   <compatibility>
     <ver>5.45</ver>
   </compatibility>
-  <comments>This module provides integration to various electoral API's.  Currently included API's are the Cicero API and Google's Civic Information API.  Its development has been generously funded by the Center for Constitional Rights, 9to5, and Azavea.</comments>
+  <comments>This module provides integration to various electoral API's. Currently included API's are the Cicero API, Google's Civic Information API, and Open States API.  Its development has been generously funded by the Center for Constitional Rights, 9to5, and Azavea.</comments>
   <civix>
     <namespace>CRM/Electoral</namespace>
   </civix>
