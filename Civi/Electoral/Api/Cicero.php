@@ -44,6 +44,9 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    * Map Cicero district types to Civi's chamber types.
    */
   private $chamberMap = [
+    // arbitrarily calling city council "lower" because that seems
+    // to be what Google does.
+    'LOCAL' => 'lower',
     'NATIONAL_LOWER' => 'lower',
     'NATIONAL_LOWER_REDISTRICTED' => 'lower',
     'NATIONAL_UPPER' => 'upper',

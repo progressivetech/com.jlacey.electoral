@@ -493,7 +493,7 @@ class CRM_Electoral_Official {
    * Get last name
    */
   public function getLastName() {
-    return $this->LastName;
+    return $this->lastName;
   }
 
   /**
@@ -522,6 +522,13 @@ class CRM_Electoral_Official {
    */
   public function getLevel() {
     return $this->level;
+  }
+
+  /**
+   * Get external identifier 
+   */
+  public function getExternalIdentifier() {
+    return $this->externalIdentifier;
   }
 
 }

@@ -64,18 +64,18 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
       return [];
     }
     // Google data makes it really hard to parse like the other providers.
-    // First we have to get the district information which includes the index
-    // for the official....
+    // Google first provides a list of offices, which contain an "official_indices"
+    // key, which is an array of indexes referring to a second list of officials.
+    //
+    // First we parse the officies to get the district information. And, as we do that,
+    // we keep track of the official_indices so we can then parse the officials.
     $officialIndices = [];
     foreach ($result['offices'] as $office) {
       $district = $this->parseDistrictData($office);
       if ($district) {
         // Record the official indices so we can look those up later.
-        // We add in the districtId because stupid Google does not provide the officials with
-        // any other unique id.
-        $districtId = $district['ocd_id'];
         foreach($district['official_indices'] as $index) {
-          $officialIndices[$index] = $districtId;
+          $officialIndices[$index] = $district;
         }
         // Now remove them since we don't record these.
         unset($district['official_indices']);
@@ -83,8 +83,8 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
       }
     }
     // Now we get the officials 
-    foreach($officialIndices as $officialIndex => $districtId) {
-      $return['official'][] = $this->parseOfficialData($result['officials'][$officialIndex], $districtId);
+    foreach($officialIndices as $officialIndex => $district) {
+      $return['official'][] = $this->parseOfficialData($result['officials'][$officialIndex], $district);
     }
     return $return;
   }
@@ -146,7 +146,8 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
     ];
   }
 
-  protected function parseOfficialData($officialData, $districtId) {
+  protected function parseOfficialData($officialData, $district) {
+    $districtId = $district['ocd_id'];
     // Bah, not real identifier. So we make one up.
     $externalIdentifier = 'google_' . hash("sha256", $officialData['name'] . $districtId);
     $official = new \CRM_Electoral_Official();
@@ -155,7 +156,6 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
     $middleName = '';
     $lastName = '';
     $names = $this->parseName($officialData['name']);
-    // print_r($names);
     $firstName = $names['first_name'];
     $middleName = $names['middle_name'];
     $lastName = $names['last_name'];
@@ -165,7 +165,9 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
       ->setLastName($lastName)
       ->setExternalIdentifier($externalIdentifier)
       ->setOcdId($districtId)
-      ->setPoliticalParty($officialData['party']);
+      ->setPoliticalParty($officialData['party'])
+      ->setChamber($district['chamber'])
+      ->setLevel($district['level']);
     // We're only supporting two addresses/phones/emails at this time due to how Civi handles location types.
     if (isset($officialData['address'])) {
       foreach ($officialData['address'] as $key => $addressData) {
@@ -202,7 +204,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
         $official->setPhone($phone, $locationType);
       }
     }
-    if (isset($officialData['eamils'])) {
+    if (isset($officialData['emails'])) {
       foreach ($officialData['emails'] as $key => $email) {
         if ($key === 0) {
           $locationType = 'Main';
