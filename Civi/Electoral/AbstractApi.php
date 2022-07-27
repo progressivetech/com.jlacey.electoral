@@ -29,14 +29,11 @@ abstract class AbstractApi {
   protected $statesProvinces;
   protected $allCountries;
   protected $countries;
-  /**
-   * @var bool
-   * Search for all counties.
-   */
   protected $allCounties;
   protected $counties;
   protected $allCities;
   protected $cities;
+
   protected $addressLocationType;
   protected $districtTypes;
   protected $apiKey;
@@ -132,21 +129,6 @@ abstract class AbstractApi {
     return "$totalAddresses addresses found. $totalProcessed addresses processed.";
   }
 
-  /**
-   *
-   * Provider-specific lookup for a single address.
-   *
-   * Returns an array of processed district data keyed to "district" and an
-   * array of official data keyed to "official" returned by the address
-   * set.
-   *
-   */
-  abstract public function lookup() : array;
-
-  /**
-   * Get the API key of this data provider.
-   */
-  abstract protected function getApiKey() : string;
 
   /**
    * Take the values stored in `civicrm_setting` and populate the corresponding properties.
@@ -260,7 +242,6 @@ abstract class AbstractApi {
    * their respective ids and abbreviations.
    *
    */
-
   protected function normalizeAddress() {
     $normalized = [
       'id' => NULL,
@@ -605,4 +586,43 @@ abstract class AbstractApi {
     }
     return $json;
   }
+
+  public function lookup() : array {
+    $this->normalizeAddress();
+    if (!$this->addressIsCompleteEnough()) {
+      $error = [
+        'reason' => 'Address Incomplete',
+        'message' => 'Failed to find enough address parameters to justify a lookup.',
+        'code' => '',
+      ];
+      $this->writeElectoralStatus($error);
+      return [];
+    }
+    return $this->apiLookup();
+  }
+
+  /**
+   *
+   * Provider-specific lookup for a single address.
+   *
+   * Returns an array of processed district data keyed to "district" and an
+   * array of official data keyed to "official" returned by the address
+   * set.
+   *
+   */
+  abstract protected function apiLookup() : array;
+
+  /**
+   * Check to ensure address is complete enough
+   *
+   * Should return TRUE if the available address has enough parameters
+   * to justify a lookup or FALSE.
+   */
+  abstract protected function addressIsCompleteEnough() : bool;
+
+  /**
+   * Get the API key of this data provider.
+   */
+  abstract protected function getApiKey() : string;
+
 }

@@ -32,18 +32,7 @@ class Openstates extends \Civi\Electoral\AbstractApi {
   /**
    * @inheritDoc
    */
-  public function lookup() : array {
-    $this->normalizeAddress();
-    if (!$this->addressIsCompleteEnough()) {
-      $error = [
-        'reason' => 'Failed to find enough address parameters to justify a lookup.',
-        'message' => 'Open States lookup not attempted.',
-        'code' => '',
-      ];
-      $this->writeElectoralStatus($error);
-      return [];
-    }
-
+  protected function apiLookup() : array {
     $this->setGeoCoordinates();
     if (empty($this->address['geo_code_1']) || empty($this->address['geo_code_2'])) {
       \Civi::log()->debug("Failed to lookup geo coordinates. Ensure geo lookup is enabled and working.");
@@ -101,7 +90,7 @@ class Openstates extends \Civi\Electoral\AbstractApi {
    * enough to justify attempting a lookup. Really that means
    * it has enough parameters for a successful geo code lookup.
    */
-  private function addressIsCompleteEnough() : bool {
+  protected function addressIsCompleteEnough() : bool {
     $country = $this->address['country_id.name'] ?? NULL;
     if (empty($country)) {
       \Civi::log()->debug("Rejecting address without a country set. Please set a default country in your CiviCRM database or use a country field in your form.");
@@ -152,7 +141,7 @@ class Openstates extends \Civi\Electoral\AbstractApi {
   /**
    * Convert the Open States raw data to the format writeDistrictData expects.
    */
-  protected function parseDistrictData($districtDatum) : array {
+  private function parseDistrictData($districtDatum) : array {
     $county = NULL;
     $city = NULL;
     $contactId = $this->address['contact_id'] ?? NULL;
@@ -226,7 +215,7 @@ class Openstates extends \Civi\Electoral\AbstractApi {
    * Should be either "lower" or "upper" but sometimes (Nebraska) it's legislature which we
    * will parse as upper
    */
-  protected function parseChamber($chamber) {
+  private function parseChamber($chamber) {
     $allowed = [ 'upper', 'lower' ];
 
     if ($chamber == 'legislature') {

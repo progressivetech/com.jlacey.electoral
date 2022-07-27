@@ -70,18 +70,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   /**
    * @inheritDoc
    */
-  public function lookup() : array {
-    $this->normalizeAddress();
-    if (!$this->addressIsCompleteEnough()) {
-      $error = [
-        'reason' => 'Failed to find enough address parameters to justify a lookup.',
-        'message' => 'Cicero lookup not attempted.',
-        'code' => '',
-      ];
-      $this->writeElectoralStatus($error);
-      return [];
-    }
-
+  protected function apiLookup() : array {
     $queryString = $this->buildAddressQueryString();
     // Do a legislative lookup if we have district types.
     $response = [
@@ -146,7 +135,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    * Format address array into a query string.
    */
   private function buildAddressQueryString() : string {
-    $streetAddress = $this->civicrm_cicero_adjust_street_address();
+    $streetAddress = $this->adjustStreetAddress();
     $city = $this->address['city'] ?? NULL;
     $stateProvince = $this->address['state_province_id.name'] ?? NULL;
     $postalCode = $this->address['postal_code'] ?? NULL;
@@ -175,7 +164,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    *   The adjusted street _address after attempting to adjust the street_address
    *   to increase the odds of matching in cicero.
    */
-  private function civicrm_cicero_adjust_street_address() {
+  private function adjustStreetAddress() {
     // Civi can't handle Spanish-language address parsing because it has both floor and door numbers
     $streetAddress = $this->address['street_address'];
     if (in_array($this->address['country_id.name'], ['MX', 'ES'])) {
@@ -197,7 +186,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    * enough to justify attempting a cicero lookup, which will
    * cost money even if no matches are made.
    */
-  private function addressIsCompleteEnough() : bool {
+  protected function addressIsCompleteEnough() : bool {
     $stateProvinceNeeded = FALSE;
     if (in_array($this->address['country_id.name'], ['US', 'CA'])) {
       $stateProvinceNeeded = TRUE;
@@ -255,7 +244,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   /**
    * Convert the Cicero raw data to the format writeDistrictData expects and write it.
    */
-  protected function parseDistrictData($districtDatum) : array {
+  private function parseDistrictData($districtDatum) : array {
     $data['contactId'] = $this->address['contact_id'];
     $data['level'] = $this->levelMap[$districtDatum->district_type];
     $data['stateProvinceId'] = $this->address['state_province_id'] ?? '';

@@ -32,21 +32,11 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
   /**
    * @inheritDoc
    */
-  public function lookup() : array {
+  protected function apiLookup() : array {
     $return = [
       'district' => [],
       'official' => [],
     ];
-    $this->normalizeAddress();
-    if (!$this->addressIsCompleteEnough()) {
-      $error = [
-        'reason' => 'Failed to find enough address parameters to justify a lookup.',
-        'message' => 'Google Civic lookup not attempted.',
-        'code' => '',
-      ];
-      $this->writeElectoralStatus($error);
-      return $return;
-    }
     
     // Assemble the API URL.
     $streetAddress = rawurlencode($this->address['street_address']);
@@ -91,7 +81,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
    * Ensure address is complete enough to justify
    * a lookup.
    */
-  protected function addressIsCompleteEnough() {
+  protected function addressIsCompleteEnough() : bool {
     $required = [
       'street_address',
       'city',
@@ -110,7 +100,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
    * Convert the Google raw data to the format writeDistrictData expects and
    * write it.
    */
-  protected function parseDistrictData($office) : array {
+  private function parseDistrictData($office) : array {
     $levels = array_intersect($this->districtTypes, $office['levels']);
     $level = array_pop($levels);
     $chambers = array_intersect($this->chamberMap, $office['roles']);
@@ -144,7 +134,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
     ];
   }
 
-  protected function parseOfficialData($officialData, $district) {
+  private function parseOfficialData($officialData, $district) {
     $districtId = $district['ocd_id'];
     // Bah, not real identifier. So we make one up.
     $externalIdentifier = 'google_' . hash("sha256", $officialData['name'] . $districtId);
@@ -220,10 +210,10 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
   }
 
   protected function processLookupResults($json) {
-    $result = $json ? json_decode($json, TRUE) : [];
+    $result = $json ? json_decode($json, TRUE) : NULL;
     if (isset($result['error'])) {
       $this->writeElectoralStatus($result['error']);
-      return [];
+      return NULL;
     }
     return $result;
   }
