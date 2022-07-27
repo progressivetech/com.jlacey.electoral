@@ -419,6 +419,7 @@ abstract class AbstractApi {
    */
   protected function writeDistrictData($data) : void {
     \Civi\Api4\Contact::update()
+      ->setCheckPermissions(FALSE)
       ->addValue('id', $data['contactId'])
       ->addValue('electoral_districts.electoral_level', $data['level'])
       ->addValue('electoral_districts.electoral_states_provinces', $data['stateProvinceId'] ?? NULL)

@@ -186,7 +186,7 @@ class CRM_Electoral_Official {
     //and set it to primary
     if (!isset($addressExist) || $addressExist['street_address'] != $address['street_address']) {
       // Ugh, can't do state by abbreviation in APIv4.
-      $countryId = \Civi\Api4\Country::get()
+      $countryId = \Civi\Api4\Country::get(FALSE)
         ->addSelect('id')
         ->addWhere('name', '=', $address['country'])
         ->execute()->first()['id'];
