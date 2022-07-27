@@ -7,26 +7,26 @@ abstract class AbstractApi {
    * @var int
    * How many records to update at once.
    */
-  private $limit = 0;
+  public $limit = 0;
 
   /**
    * @var bool
    * Overwrite existing records' electoral data.
    */
-  private $update = FALSE;
+  public $update = FALSE;
 
   /**
    * @var bool
    * Cache lookups so we don't repeatedly hit the upstream API
    */
-  private $cache = FALSE;
+  public $cache = FALSE;
 
   /**
    * @var string
    * Limit addresses to contacts in the given comma
    * separated list of group ids.
    */
-  private $groups = '';
+  public $groups = '';
 
   /**
    * The following properties are stored in settings and
