@@ -22,8 +22,15 @@ abstract class AbstractApi {
   private $cache = FALSE;
 
   /**
-   * @var bool
-   * Search for all states and provinces.
+   * @var string
+   * Limit addresses to contacts in the given comma
+   * separated list of group ids.
+   */
+  private $groups = '';
+
+  /**
+   * The following properties are stored in settings and
+   * populated from settings when initialized. 
    */
   protected $allStates;
   protected $statesProvinces;
@@ -37,6 +44,15 @@ abstract class AbstractApi {
   protected $addressLocationType;
   protected $districtTypes;
   protected $apiKey;
+
+  /**
+   * Whether or not to create the official
+   *
+   * This one is public so it can be changed on
+   * the fly (e.g. when doing lookups via the petitionemail
+   * extension, which also adds officials).
+   */
+  public $createOfficialOnDistrictLookup = FALSE;
 
   /**
    * @var bool
@@ -70,10 +86,11 @@ abstract class AbstractApi {
   /**
    * Constructor class.
    */
-  public function __construct(int $limit = 0, bool $update = FALSE, bool $cache = FALSE) {
+  public function __construct(int $limit = 0, bool $update = FALSE, bool $cache = FALSE, string $groups = '') {
     $this->limit = $limit;
     $this->update = $update;
     $this->cache = $cache;
+    $this->groups = $groups;
     $this->settingsToProperties();
     return $this;
   }
@@ -147,7 +164,8 @@ abstract class AbstractApi {
         'electoralApiIncludedCountries', 
         'electoralApiAllCities', 
         'electoralApiAllCountries', 
-        'electoralApiIncludeRedistricted')
+        'electoralApiIncludeRedistricted',
+        'electoralApiCreateOfficialOnDistrictLookup')
       ->execute()
       ->indexBy('name');
 
@@ -175,6 +193,7 @@ abstract class AbstractApi {
     $this->addressLocationType = $settings['addressLocationType']['value'][0];
     $this->districtTypes = $settings['electoralApiDistrictTypes']['value'];
     $this->includeUpcoming = $settings['electoralApiIncludeRedistricted']['value'];
+    $this->createOfficialOnDistrictLookup = $settings['electoralApiCreateOfficialOnDistrictLookup']['value'];
     $this->apiKey = $this->getApiKey();
   }
 
@@ -227,7 +246,7 @@ abstract class AbstractApi {
     foreach ($data['district'] as $district) {
       $this->writeDistrictData($district);
     }
-    if (\Civi::settings()->get('electoralApiCreateOfficialOnDistrictLookup')) {
+    if ($this->createOfficialOnDistrictLookup) {
       foreach ($data['official'] as $official) {
         $official->createOfficial();
       }
@@ -372,6 +391,9 @@ abstract class AbstractApi {
     if ($this->cities) {
       // This is sanitized above.
       $addressQuery->addWhere('city', 'IN', $this->cities);
+    }
+    if ($this->groups) {
+      $addressQuery->addWhere('contact_id.groups', 'IN', explode(',', $this->groups));
     }
     // "0" means the location type is "primary".
     if ($this->addressLocationType == 0) {
