@@ -136,8 +136,10 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
 
   private function parseOfficialData($officialData, $district) {
     $districtId = $district['ocd_id'];
-    // Bah, not real identifier. So we make one up.
-    $externalIdentifier = 'google_' . hash("sha256", $officialData['name'] . $districtId);
+
+    // Bah, not real identifier. So we make one up. We have to shorten it so it
+    // fits in the 64 character external identifier field. Hopefully no collisions.
+    $externalIdentifier = 'g_' . substr(hash("sha256", $officialData['name'] . $districtId), 0,62);
     $official = new \CRM_Electoral_Official();
 
     $firstName = '';
