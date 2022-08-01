@@ -5,12 +5,12 @@
   <description>Electoral API integration</description>
   <license>AGPL-3.0</license>
   <maintainer>
-    <author>Joseph Lacey</author>
-    <email>joseph@mayfirst.org</email>
+    <author>Jamie McClelland</author>
+    <email>jamie@progressivetech.org</email>
   </maintainer>
   <urls>
-    <url desc="Main Extension Page">https://github.com/josephlacey/com.jlacey.electoral</url>
-    <url desc="Support">https://github.com/josephlacey/com.jlacey.electoral/issues</url>
+    <url desc="Main Extension Page">https://github.com/progressivetech/com.jlacey.electoral</url>
+    <url desc="Support">https://github.com/progressivetech/com.jlacey.electoral/issues</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
   <releaseDate>2022-07-26</releaseDate>
@@ -22,7 +22,7 @@
   <compatibility>
     <ver>5.45</ver>
   </compatibility>
-  <comments>This module provides integration to various electoral API's. Currently included API's are the Cicero API, Google's Civic Information API, and Open States API.  Its development has been generously funded by the Center for Constitional Rights, 9to5, and Azavea.</comments>
+  <comments>This module provides integration to various electoral APIs. Currently included APIs are Cicero, Google's Civic Information, and Open States. It was originall developed by Joseph Lacey and generously funded by the Center for Constitional Rights and 9to5. It was furhter developed by Jon Goldberg and funded by Azavea.</comments>
   <civix>
     <namespace>CRM/Electoral</namespace>
   </civix>
