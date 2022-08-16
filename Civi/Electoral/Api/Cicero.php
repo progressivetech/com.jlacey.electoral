@@ -119,6 +119,11 @@ class Cicero extends \Civi\Electoral\AbstractApi {
             if (strpos($districtInfo->district_type, '_EXEC')) {
               continue;
             }
+            // We also want to exclude COUNTY as a subtype - to avoid having county
+            // commissioners pop up when we want city council members.
+            if (property_exists($districtInfo, 'subtype') && $districtInfo->subtype == 'COUNTY') {
+              continue;
+            }
             $response['district'][] = $this->parseDistrictData($districtInfo);
             $response['official'][] = $this->parseOfficialData($official);
           }
