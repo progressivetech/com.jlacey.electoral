@@ -12,7 +12,7 @@ function civicrm_api3_electoral_Districts(array $params) : array {
   try {
     $limit = (int) ($params['limit'] ?? 100);
     $update = (bool) ($params['update'] ?? FALSE);
-    $groups = (bool) ($params['groups'] ?? FALSE);
+    $groups = (int) ($params['groups'] ?? FALSE);
     $cache = FALSE;
     $EnabledProviders = \Civi::settings()->get('electoralApiProviders');
     foreach ($EnabledProviders as $enabledProvider) {

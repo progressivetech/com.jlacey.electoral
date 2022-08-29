@@ -203,13 +203,12 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   }
 
   /**
-   * Get Respsonse from Cicero.
+   * Process Respsonse from Cicero.
    *
    * Function to do Cicero API calls.
    *
-   * @param $url
-   *   The url of the cicero page you are getting aresponse from. Defaults to
-   *   'http://cicero.azavea.com/token/new.json'.
+   * @param $json 
+   *   Raw json from cicero. 
    *
    * @return $json
    *   Decoded JSON PHP object object returned by the Cicero API or FALSE on error.
@@ -234,7 +233,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
           // showing an embarrasing error to a user.
           \CRM_Core_Session::setStatus(E::ts("Out of credits for lookup of electoral info."), "Out of credits", 'alert');
         }
-        $errorArray['code'] = $response->getStatusCode();
+        $errorArray['code'] = '';
         $errorArray['reason'] = '';
         $errorArray['message'] = $error;
         $this->writeElectoralStatus($errorArray);

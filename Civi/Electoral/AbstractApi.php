@@ -135,7 +135,7 @@ abstract class AbstractApi {
     $totalAddresses = $totalProcessed = 0;
     $addresses = $this->getAddresses();
     foreach ($addresses as $address) {
-      $totalAddress++;
+      $totalAddresses++;
       $this->address = $address;
       $data = $this->lookup();
       if ($data) {
@@ -207,7 +207,7 @@ abstract class AbstractApi {
     $addressId = $this->address['id'] ?? NULL;
     if ($addressId) {
       civicrm_api3('CustomValue', 'create', [
-        'entity_id' => $this->address['id'],
+        'entity_id' => $addressId,
         'custom_electoral_status:Error Code' => substr($error['code'], 0, 11),
         'custom_electoral_status:Error Reason' => substr($error['reason'], 0, 255),
         'custom_electoral_status:Error Message' => substr($error['message'], 0, 255),
@@ -406,8 +406,8 @@ abstract class AbstractApi {
       $addressQuery->addWhere('id', '=', $addressId);
     }
     if (!$this->update) {
-      $addressQuery->addWhere('electoral_status.electoral_status_error_code', 'IS NULL');
-      $addressQuery->addWhere('custom_electoral_districts.electoral_level', 'IS NULL');
+      $addressQuery->addWhere('electoral_status.electoral_status_error_code', 'IS EMPTY');
+      $addressQuery->addWhere('custom_electoral_districts.electoral_level', 'IS EMPTY');
     }
     // Let 'er rip.
     $addresses = $addressQuery->execute();
