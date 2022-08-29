@@ -67,7 +67,7 @@ optionally set the parameters `limit`, `update`, or `groups` for example:
 ```
 limit=100
 update=false
-groups=3,4
+groups=Administrators|Staff
 ```
 
 * **Limit** indicates how many contacts to look up districts for in a single
@@ -76,8 +76,8 @@ groups=3,4
   already have it.  **Update** set to true will include contacts that have
   already been looked up and overwrite their existing district data.  Default:
   false
-* **groups** will restrict look ups to contacts in the matching comma separated
-  list of group ids.
+* **groups** will restrict look ups to contacts in the matching pipe (|) separated
+  list of group names. 
 
 ### Performance note
 

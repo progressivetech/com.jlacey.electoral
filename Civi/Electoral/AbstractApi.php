@@ -23,8 +23,8 @@ abstract class AbstractApi {
 
   /**
    * @var string
-   * Limit addresses to contacts in the given comma
-   * separated list of group ids.
+   * Limit addresses to contacts in the given pipe (|) 
+   * separated list of group titles.
    */
   public $groups = '';
 
@@ -393,7 +393,12 @@ abstract class AbstractApi {
       $addressQuery->addWhere('city', 'IN', $this->cities);
     }
     if ($this->groups) {
-      $addressQuery->addWhere('contact_id.groups', 'IN', explode(',', $this->groups));
+      // Convert Group titles to group ids.
+      $groupIds = \Civi\Api4\Group::get()
+        ->addWhere('title', 'IN', explode('|', $this->groups))
+        ->addSelect('id')
+        ->execute()->column('id');
+      $addressQuery->addWhere('contact_id.groups', 'IN', $groupIds );
     }
     // "0" means the location type is "primary".
     if ($this->addressLocationType == 0) {
