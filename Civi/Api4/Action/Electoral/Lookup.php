@@ -71,7 +71,7 @@ class Lookup extends \Civi\Api4\Generic\AbstractAction {
       if (count($addresses) == 0) {
         throw new \API_Exception(E::ts("Failed to find an address for that contact (addressId $addressId) that matches the Electoral settings."));
       }
-      $address = array_pop($addresses);
+      $address = $addresses->first();
     }
     else {
       $address = electoral_parse_address($this->getAddress());
