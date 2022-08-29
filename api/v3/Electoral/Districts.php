@@ -12,6 +12,8 @@ function civicrm_api3_electoral_Districts(array $params) : array {
   try {
     $limit = (int) ($params['limit'] ?? 100);
     $update = (bool) ($params['update'] ?? FALSE);
+    $groups = (bool) ($params['groups'] ?? FALSE);
+    $cache = FALSE;
     $EnabledProviders = \Civi::settings()->get('electoralApiProviders');
     foreach ($EnabledProviders as $enabledProvider) {
       $className = \Civi\Api4\OptionValue::get(FALSE)
@@ -20,7 +22,7 @@ function civicrm_api3_electoral_Districts(array $params) : array {
         ->addWhere('value', '=', $enabledProvider)
         ->execute()
         ->column('name')[0];
-      $provider = new $className($limit, $update);
+      $provider = new $className($limit, $update, $cache, $groups);
       $returnValues[] = $provider->processBatch();
     }
 
