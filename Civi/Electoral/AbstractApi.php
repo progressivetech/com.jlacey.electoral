@@ -138,7 +138,7 @@ abstract class AbstractApi {
       $totalAddresses++;
       $this->address = $address;
       $data = $this->lookup();
-      if ($data) {
+      if ($data['district'] || $data['official']) {
         $this->writeData($data);
         $totalProcessed++;
       }
@@ -376,7 +376,7 @@ abstract class AbstractApi {
       ->addWhere('street_address', 'IS NOT NULL')
       ->addWhere('contact_id.is_deceased', '!=', TRUE)
       ->addWhere('contact_id.is_deleted', '!=', TRUE)
-      ->addOrderBy('contact_id', 'DESC')
+      ->addOrderBy('custom_electoral_districts.electoral_modified_date', 'ASC')
       ->setLimit($this->limit);
 
     if ($this->countries) {
