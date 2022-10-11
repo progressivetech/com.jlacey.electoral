@@ -423,23 +423,52 @@ abstract class AbstractApi {
    * Helper function to create or update electoral districts custom data
    */
   protected function writeDistrictData($data) : void {
-    \Civi\Api4\Contact::update()
-      ->setCheckPermissions(FALSE)
-      ->addValue('id', $data['contactId'])
-      ->addValue('electoral_districts.electoral_level', $data['level'])
-      ->addValue('electoral_districts.electoral_states_provinces', $data['stateProvinceId'] ?? NULL)
-      ->addValue('electoral_districts.electoral_counties', $data['countyId'] ?? NULL)
-      ->addValue('electoral_districts.electoral_cities', $data['city'] ?? NULL)
-      ->addValue('electoral_districts.electoral_chamber', $data['chamber'] ?? NULL)
-      ->addValue('electoral_districts.electoral_district', $data['district'] ?? NULL)
+    $id = $this->matchDistrictData($data);
+    if ($id) {
+      echo "here\n";
+      $district = \Civi\Api4\CustomValue::update('electoral_districts')
+        ->addWhere('id', '=', $id);
+    }
+    else {
+      $district = \Civi\Api4\CustomValue::create('electoral_districts');
+    }
+    $district->setCheckPermissions(FALSE)
+      ->addValue('entity_id', $data['contactId'])
+      ->addValue('electoral_level', $data['level'])
+      ->addValue('electoral_states_provinces', $data['stateProvinceId'] ?? NULL)
+      ->addValue('electoral_counties', $data['countyId'] ?? NULL)
+      ->addValue('electoral_cities', $data['city'] ?? NULL)
+      ->addValue('electoral_chamber', $data['chamber'] ?? NULL)
+      ->addValue('electoral_district', $data['district'] ?? NULL)
       // This needs to be a string - see core #2461.
-      ->addValue('electoral_districts.electoral_in_office', (string) $data['inOffice'] ?? NULL)
-      ->addValue('electoral_districts.electoral_note', $data['note'] ?? NULL)
-      ->addValue('electoral_districts.electoral_modified_date', (new \DateTime('now'))->format('Y-m-d H:i:s'))
-      ->addValue('electoral_districts.electoral_ocd_id_district', $data['ocd_id'] ?? NULL)
-      ->addValue('electoral_districts.electoral_valid_from', $data['valid_from'] ?? NULL)
-      ->addValue('electoral_districts.electoral_valid_to', $data['valid_to'] ?? NULL)
+      ->addValue('electoral_in_office', (string) $data['inOffice'] ?? NULL)
+      ->addValue('electoral_note', $data['note'] ?? NULL)
+      ->addValue('electoral_modified_date', (new \DateTime('now'))->format('Y-m-d H:i:s'))
+      ->addValue('electoral_ocd_id_district', $data['ocd_id'] ?? NULL)
+      ->addValue('electoral_valid_from', $data['valid_from'] ?? NULL)
+      ->addValue('electoral_valid_to', $data['valid_to'] ?? NULL)
       ->execute();
+  }
+
+  /**
+   * Match existing district
+   *
+   * We may be updating, so we have to be sure we update rather then simply
+   * append new district data. For the given data, return a 0 if there is
+   * no match or the id of a matching record. 
+   */
+  private function matchDistrictData($data) : int {
+    $id = \Civi\Api4\CustomValue::get('electoral_districts')
+      ->addWhere('entity_id', '=', $data['contactId'])
+      ->addWhere('electoral_level', '=', $data['level'])
+      ->addWhere('electoral_states_provinces', '=', $data['stateProvinceId'])
+      ->addWhere('electoral_chamber', '=', $data['chamber'])
+      ->execute()->first()['id'];
+
+    if ($id) {
+      return $id;
+    }
+    return 0;
   }
 
   /**
