@@ -1,115 +1,86 @@
 <?php
+use CRM_Electoral_ExtensionUtil as E;
 
 /**
  * Collection of upgrade steps.
  */
 class CRM_Electoral_Upgrader extends CRM_Electoral_Upgrader_Base {
 
-  // By convention, functions that look like "function upgrade_NNNN()" are
-  // upgrade tasks. They are executed in order (like Drupal's hook_update_N).
-
   /**
-   * Example: Run an external SQL script when the module is uninstalled.
+   * Convert electoral status from address to contact
    *
-  public function uninstall() {
-
-  }
-
-  /**
-   * Example: Run an external SQL script when the module is installed.
-   *
-  public function install() {
-
-  }
-
-  /**
-   * Example: Run a simple query when a module is enabled.
-   *
-  public function enable() {
-    CRM_Core_DAO::executeQuery('UPDATE foo SET is_active = 1 WHERE bar = "whiz"');
-  }
-
-  /**
-   * Example: Run a simple query when a module is disabled.
-   *
-  public function disable() {
-    CRM_Core_DAO::executeQuery('UPDATE foo SET is_active = 0 WHERE bar = "whiz"');
-  }
-
-  /**
-   * Example: Run a couple simple queries.
+   * Take every entity_id in the electoral_status table, lookup the address
+   * matching the entity_id to find the corresponding contact id, and then
+   * insert that into the new electoral update status table. If there is more
+   * then one (a contact might have more then one address with an electoral
+   * status record), take the first one. 
    *
    * @return TRUE on success
    * @throws Exception
-   *
-  public function upgrade_4200() {
-    $this->ctx->log->info('Applying update 4200');
-    CRM_Core_DAO::executeQuery('UPDATE foo SET bar = "whiz"');
-    CRM_Core_DAO::executeQuery('DELETE FROM bang WHERE willy = wonka(2)');
-    return TRUE;
-  } // */
+   */
+  public function upgrade_1005() {
+    $this->ctx->log->info('Applying update 1005');
 
+    // Get all the electoral statuses.
+    $oldElectoralStatusGroup = \Civi\Api4\CustomGroup::get()
+      ->addSelect('table_name')
+      ->addWhere('name', '=', 'electoral_status')
+      ->execute()->first();
 
-  /**
-   * Example: Run an external SQL script.
-   *
-   * @return TRUE on success
-   * @throws Exception
-  public function upgrade_4201() {
-    $this->ctx->log->info('Applying update 4201');
-    // this path is relative to the extension base dir
-    $this->executeSqlFile('sql/upgrade_4201.sql');
-    return TRUE;
-  } // */
-
-
-  /**
-   * Example: Run a slow upgrade process by breaking it up into smaller chunk.
-   *
-   * @return TRUE on success
-   * @throws Exception
-  public function upgrade_4202() {
-    $this->ctx->log->info('Planning update 4202'); // PEAR Log interface
-
-    $this->addTask(ts('Process first step'), 'processPart1', $arg1, $arg2);
-    $this->addTask(ts('Process second step'), 'processPart2', $arg3, $arg4);
-    $this->addTask(ts('Process second step'), 'processPart3', $arg5);
-    return TRUE;
-  }
-  public function processPart1($arg1, $arg2) { sleep(10); return TRUE; }
-  public function processPart2($arg3, $arg4) { sleep(10); return TRUE; }
-  public function processPart3($arg5) { sleep(10); return TRUE; }
-  // */
-
-
-  /**
-   * Example: Run an upgrade with a query that touches many (potentially
-   * millions) of records by breaking it up into smaller chunks.
-   *
-   * @return TRUE on success
-   * @throws Exception
-  public function upgrade_4203() {
-    $this->ctx->log->info('Planning update 4203'); // PEAR Log interface
-
-    $minId = CRM_Core_DAO::singleValueQuery('SELECT coalesce(min(id),0) FROM civicrm_contribution');
-    $maxId = CRM_Core_DAO::singleValueQuery('SELECT coalesce(max(id),0) FROM civicrm_contribution');
-    for ($startId = $minId; $startId <= $maxId; $startId += self::BATCH_SIZE) {
-      $endId = $startId + self::BATCH_SIZE - 1;
-      $title = ts('Upgrade Batch (%1 => %2)', array(
-        1 => $startId,
-        2 => $endId,
-      ));
-      $sql = '
-        UPDATE civicrm_contribution SET foobar = whiz(wonky()+wanker)
-        WHERE id BETWEEN %1 and %2
-      ';
-      $params = array(
-        1 => array($startId, 'Integer'),
-        2 => array($endId, 'Integer'),
-      );
-      $this->addTask($title, 'executeSql', $sql, $params);
+    if (!$oldElectoralStatusGroup) {
+      // It's already gone, nothing to do.
+      return TRUE;
     }
+
+    $tableName = $oldElectoralStatusGroup['table_name'];
+    $sql = "SELECT * FROM $tableName";
+    $dao = \CRM_Core_DAO::executeQuery($sql);
+     
+    $seenContactIds = [];
+    while ($dao->fetch()) {
+      // Before the upgrade, the entity_id points to the id of the
+      // record in the corresponding civicrm_address table.
+      $addressId = $dao->entity_id;
+      $electoralStatusId = $dao->id;
+      $message = $dao->electoral_status_error_message;
+      $reason = $dao->electoral_status_error_reason;
+
+      // Fetch the related contact_id.
+      $contactId = \Civi\Api4\Address::get()
+        ->addSelect('contact_id')
+        ->addWhere('id', '=', $addressId)
+        ->execute()->first()['contact_id'];
+      if ($contactId) {
+        if (!in_array($seenContactIds)) {
+          // Add to contact
+          \Civi\Api4\Contact::update()
+            ->addValue('electoral_update_status.electoral_error_message', $reason . ' ' . $message)
+            ->addValue('electoral_update_status.electoral_last_status', 'failed')
+            ->addValue('electoral_update_status.electoral_last_updated', date('Y-m-d'))
+            ->addWhere('id', '=', $contactId)
+            ->execute();
+          // Indicate that we have already updated this contact record. If
+          // we get another electoral status, we will ignore it and it will get
+          // deleted when we delete the old custom field group.
+          $seenContactIds[] = $contactId; 
+          // Go to the next record.
+          continue;
+        }
+      }
+    }
+
+    // Lastly, delete the old custom fields. 
+    \Civi\Api4\CustomField::delete()
+      ->addWhere('custom_group_id.name', '=', 'electoral_status')
+      ->execute();
+    \Civi\Api4\CustomGroup::delete()
+      ->addWhere('name', '=', 'electoral_status')
+      ->execute();
+
     return TRUE;
-  } // */
+  }
+
+
+
 
 }

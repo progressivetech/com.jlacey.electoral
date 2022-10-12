@@ -84,6 +84,16 @@ abstract class AbstractApi {
   protected $geocodeProviderClass;
 
   /**
+   * @var array
+   *
+   * results hold an array indicating the status of the
+   * given request. It's keys are: 
+   *  status => (success|failure)
+   *  message =>  the error message if it's an error.
+  */
+  protected $results = [];
+
+  /**
    * Constructor class.
    */
   public function __construct(int $limit = 0, bool $update = FALSE, bool $cache = FALSE, string $groups = '') {
@@ -142,6 +152,8 @@ abstract class AbstractApi {
         $this->writeData($data);
         $totalProcessed++;
       }
+      // Always write electoral status.
+      $this->writeElectoralStatus();
     }
     return "$totalAddresses addresses found. $totalProcessed addresses processed.";
   }
@@ -200,18 +212,20 @@ abstract class AbstractApi {
   /**
    * Write values (typically errors) to the electoral status fields.
    * @param $error
-   *   An array consisting of up to three elements, keyed with "code", "reason", and "message".
+   *   An array consisting of up to three elements, keyed with "status" (success or failure) and "message".
    */
-  protected function writeElectoralStatus(array $error) {
+  protected function writeElectoralStatus() {
     //Retain the error, so we can filter out the address on future runs until it's corrected
-    $addressId = $this->address['id'] ?? NULL;
-    if ($addressId) {
-      civicrm_api3('CustomValue', 'create', [
-        'entity_id' => $addressId,
-        'custom_electoral_status:Error Code' => substr($error['code'], 0, 11),
-        'custom_electoral_status:Error Reason' => substr($error['reason'], 0, 255),
-        'custom_electoral_status:Error Message' => substr($error['message'], 0, 255),
-      ]);
+    $contactId = $this->address['contact_id'] ?? NULL;
+    $status = $this->results['status'] ?? NULL;
+    $message = $this->results['message'] ?? NULL;
+    if ($contactId && $status) {
+      \Civi\Api4\Contact::update()
+        ->addWhere('id', '=', $contactId)
+        ->addValue('electoral_update_status.electoral_last_status', $status)
+        ->addValue('electoral_update_status.electoral_error_message', substr($error, 0, 2048))
+        ->addValue('electoral_update_status.electoral_last_updated', date('Y-m-d H:i:s'))
+        ->execute();
     }
   }
 
@@ -376,7 +390,6 @@ abstract class AbstractApi {
       ->addWhere('street_address', 'IS NOT NULL')
       ->addWhere('contact_id.is_deceased', '!=', TRUE)
       ->addWhere('contact_id.is_deleted', '!=', TRUE)
-      ->addOrderBy('custom_electoral_districts.electoral_modified_date', 'ASC')
       ->setLimit($this->limit);
 
     if ($this->countries) {
@@ -411,8 +424,14 @@ abstract class AbstractApi {
       $addressQuery->addWhere('id', '=', $addressId);
     }
     if (!$this->update) {
-      $addressQuery->addWhere('electoral_status.electoral_status_error_code', 'IS EMPTY');
-      $addressQuery->addWhere('custom_electoral_districts.electoral_level', 'IS EMPTY');
+      // Don't update, only get records that have never been coded.
+      $addressQuery->addWhere('contact_id.electoral_update_status.electoral_last_updated', 'IS EMPTY');
+    }
+    else {
+      // If we are updating, first get the ones that have never been updated, followed
+      // by the ones updated the longest time in the past. This way if we run in batches
+      // we will be sure not to update the same ones over and over again.
+      $addressQuery->addOrderBy('contact_id.electoral_update_status.electoral_last_updated', 'ASC');
     }
     // Let 'er rip.
     $addresses = $addressQuery->execute();
@@ -425,7 +444,6 @@ abstract class AbstractApi {
   protected function writeDistrictData($data) : void {
     $id = $this->matchDistrictData($data);
     if ($id) {
-      echo "here\n";
       $district = \Civi\Api4\CustomValue::update('electoral_districts')
         ->addWhere('id', '=', $id);
     }
@@ -448,6 +466,8 @@ abstract class AbstractApi {
       ->addValue('electoral_valid_from', $data['valid_from'] ?? NULL)
       ->addValue('electoral_valid_to', $data['valid_to'] ?? NULL)
       ->execute();
+
+    $this->results[ 'status'] = 'success';
   }
 
   /**
@@ -571,6 +591,8 @@ abstract class AbstractApi {
         $statusCode = $e->getResponse()->getStatusCode();
         \Civi::log()->debug("Got response code $statusCode");
       }
+      // Note: We don't update the status because we didn't complete the connection to the
+      // lookup URL. So we do want to re-try this one until we do connect.
       return NULL;
     }
     if ($this->cache && $json) {
@@ -583,12 +605,8 @@ abstract class AbstractApi {
   public function lookup() : array {
     $this->normalizeAddress();
     if (!$this->addressIsCompleteEnough()) {
-      $error = [
-        'reason' => 'Address Incomplete',
-        'message' => 'Failed to find enough address parameters to justify a lookup.',
-        'code' => '',
-      ];
-      $this->writeElectoralStatus($error);
+      $this->results['status'] = 'failure';
+      $this->results['message'] = 'Failed to find enough address parameters to justify a lookup.';
       return [];
     }
     return $this->apiLookup();

@@ -218,35 +218,30 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    *   Decoded JSON PHP object object returned by the Cicero API or FALSE on error.
    */
   protected function processLookupResults($json) {
-    if ($json) {
-      $json_decoded = json_decode($json);
-      if (!is_object($json_decoded) || $json_decoded->response->errors ?? FALSE) {
-        $error = 'Unknown Error';
-        if (!is_object($json_decoded)) {
-          $error = "Cicero did not return an object for contact id: ." . $this->address['contact_id'];
-        }
-        elseif (is_string($json_decoded->response->errors)) {
-          $error = $json_decoded->response->errors;
-        }
-        elseif (is_array($json_decoded->response->errors)) {
-          $error = array_pop($json_decoded->response->errors);
-        }
-        if ($error == 'This account has reached its overdraft limit. Please purchase more credits.') {
-          // This is an error that should get immediate attention even if it means
-          // showing an embarrasing error to a user.
-          \CRM_Core_Session::setStatus(E::ts("Out of credits for lookup of electoral info."), "Out of credits", 'alert');
-        }
-        \Civi::log()->debug($error);
-        $errorArray['code'] = '';
-        $errorArray['reason'] = '';
-        $errorArray['message'] = $error;
-        $this->writeElectoralStatus($errorArray);
-        return FALSE;
+    $json_decoded = json_decode($json);
+    if (!is_object($json_decoded) || $json_decoded->response->errors ?? FALSE) {
+      $error = 'Unknown Error';
+      if (!is_object($json_decoded)) {
+        $error = "Cicero did not return an object for contact id: ." . $this->address['contact_id'];
       }
-      // Success.
-      return $json_decoded;
+      elseif (is_string($json_decoded->response->errors)) {
+        $error = $json_decoded->response->errors;
+      }
+      elseif (is_array($json_decoded->response->errors)) {
+        $error = array_pop($json_decoded->response->errors);
+      }
+      if ($error == 'This account has reached its overdraft limit. Please purchase more credits.') {
+        // This is an error that should get immediate attention even if it means
+        // showing an embarrasing error to a user.
+        \CRM_Core_Session::setStatus(E::ts("Out of credits for lookup of electoral info."), "Out of credits", 'alert');
+      }
+      \Civi::log()->debug($error);
+      $this->results['status'] = 'failure';
+      $this->results['message'] = $error;
+      return FALSE;
     }
-    return FALSE;
+    // Success.
+    return $json_decoded;
   }
 
   /**

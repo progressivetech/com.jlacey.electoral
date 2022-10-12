@@ -214,7 +214,8 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
   protected function processLookupResults($json) {
     $result = $json ? json_decode($json, TRUE) : NULL;
     if (isset($result['error'])) {
-      $this->writeElectoralStatus($result['error']);
+      $this->results['status'] = 'failed';
+      $this->results['message'] = $result['error'];
       return NULL;
     }
     return $result;

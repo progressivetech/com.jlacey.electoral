@@ -35,7 +35,10 @@ class Openstates extends \Civi\Electoral\AbstractApi {
   protected function apiLookup() : array {
     $this->setGeoCoordinates();
     if (empty($this->address['geo_code_1']) || empty($this->address['geo_code_2'])) {
-      \Civi::log()->debug("Failed to lookup geo coordinates. Ensure geo lookup is enabled and working.");
+      $msg = "Failed to lookup geo coordinates. Ensure geo lookup is enabled and working.";
+      \Civi::log()->debug($msg);
+      // Don't set results - this doesn't count as a lookup since we didn't actually look
+      // it up.
       return [];
     }
     $queryString = $this->buildAddressQueryString();
@@ -125,7 +128,10 @@ class Openstates extends \Civi\Electoral\AbstractApi {
     if ($json) {
       $json_decoded = json_decode($json);
       if (!is_object($json_decoded)) {
-        \Civi::log()->debug("Open States did not return an object.", ['electoral']);
+        $message = "Open States did not return an object.";
+        \Civi::log()->debug($message);
+        $this->results['status'] = 'failed';
+        $this->results['message'] = $message;
         return FALSE;
       }
       
@@ -133,7 +139,7 @@ class Openstates extends \Civi\Electoral\AbstractApi {
       return $json_decoded;
     }
     elseif ($json === FALSE) {
-      \Civi::log()->debug("open states url: $url returned false. Giving up.", ['electoral']);
+      \Civi::log()->debug("open states url: $url returned false. Giving up.");
       return FALSE;
     }
   }
