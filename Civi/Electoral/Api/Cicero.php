@@ -250,7 +250,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
   private function parseDistrictData($districtDatum) : array {
     $data['contactId'] = $this->address['contact_id'];
     $data['level'] = $this->levelMap[$districtDatum->district_type];
-    $data['stateProvinceId'] = $this->address['state_province_id'] ?? '';
+    $data['state_province_id'] = $this->address['state_province_id'] ?? '';
     $data['county'] = NULL;
     $data['city'] = $districtDatum->city;
     $data['chamber'] = $this->chamberMap[$districtDatum->district_type] ?? NULL;

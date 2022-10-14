@@ -453,7 +453,7 @@ abstract class AbstractApi {
     $district->setCheckPermissions(FALSE)
       ->addValue('entity_id', $data['contactId'])
       ->addValue('electoral_level', $data['level'])
-      ->addValue('electoral_states_provinces', $data['stateProvinceId'] ?? NULL)
+      ->addValue('electoral_states_provinces', $data['state_province_id'] ?? NULL)
       ->addValue('electoral_counties', $data['countyId'] ?? NULL)
       ->addValue('electoral_cities', $data['city'] ?? NULL)
       ->addValue('electoral_chamber', $data['chamber'] ?? NULL)
@@ -481,7 +481,7 @@ abstract class AbstractApi {
     $id = \Civi\Api4\CustomValue::get('electoral_districts')
       ->addWhere('entity_id', '=', $data['contactId'])
       ->addWhere('electoral_level', '=', $data['level'])
-      ->addWhere('electoral_states_provinces', '=', $data['stateProvinceId'])
+      ->addWhere('electoral_states_provinces', '=', $data['state_province_id'])
       ->addWhere('electoral_chamber', '=', $data['chamber'])
       ->execute()->first()['id'];
 

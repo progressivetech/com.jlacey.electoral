@@ -119,7 +119,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
     return [
       'contactId' => $this->address['contact_id'],
       'level' => $level,
-      'stateProvinceId' => $this->address['state_province_id'],
+      'state_province_id' => $this->address['state_province_id'],
       'county' => NULL,
       'city' => $this->address['city'],
       'chamber' => $chamber,
