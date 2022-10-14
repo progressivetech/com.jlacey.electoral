@@ -18,6 +18,16 @@ class Openstates extends \Civi\Electoral\AbstractApi {
     'country' => 'country',
   ];
 
+  /*
+   * Delay by 2 seconds.
+   *
+   * The default bronze tier limits to 40 lookups per minute,
+   * so we ensure a 2 second gap between lookups which should ensure
+   * we do no more then 30 per minute. Also, the bronze allows only 
+   * 1000 lookups per day.
+   */
+  protected $delay = 2;
+
   /**
    * @inheritDoc
    */

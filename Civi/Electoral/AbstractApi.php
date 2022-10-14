@@ -84,6 +84,17 @@ abstract class AbstractApi {
   protected $geocodeProviderClass;
 
   /**
+   * delay
+   *
+   * Set the minimum delay between requests. Useful if the API
+   * provider has restrictions on number of requests per minute.
+   * For example, set to 2 to ensure there's a minimum of 2 seconds
+   * between requests, which will restrict to 30 requests per minute.
+   * Set to 0 to indicate no delay.
+   */
+  protected $delay = 0;
+
+  /**
    * @var array
    *
    * results hold an array indicating the status of the
@@ -144,10 +155,21 @@ abstract class AbstractApi {
     // Set variables.
     $totalAddresses = $totalProcessed = 0;
     $addresses = $this->getAddresses();
+    $lastLookupCompleted = NULL;
+    $sleepTime = 0;
     foreach ($addresses as $address) {
+      if ($this->delay && $lastLookupCompleted) {
+        $elapsed = time() - $lastLookupCompleted;
+        if ($elapsed < $this->delay) {
+          $remaining = $this->delay - $elapsed;
+          $sleepTime += $remaining;
+          sleep($remaining);
+        }
+      }
       $totalAddresses++;
       $this->address = $address;
       $data = $this->lookup();
+      $lastLookupCompleted = time();
       if ($data['district'] || $data['official']) {
         $this->writeData($data);
         $totalProcessed++;
@@ -155,7 +177,7 @@ abstract class AbstractApi {
       // Always write electoral status.
       $this->writeElectoralStatus();
     }
-    return "$totalAddresses addresses found. $totalProcessed addresses processed.";
+    return "$totalAddresses addresses found. $totalProcessed addresses processed, $sleepTime seconds spent sleeping.";
   }
 
 
