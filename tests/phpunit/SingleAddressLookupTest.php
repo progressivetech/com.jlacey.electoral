@@ -258,7 +258,7 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
         'first_name' => 'Newyork',
         'last_name' => 'McCicero',
         'address' => "431 Park Place, Brooklyn, NY, 11238",
-        'districts_count' => 6,
+        'districts_count' => 5,
         'districts' => [
           'administrativeArea1' => [
               'upper' => 20,
@@ -284,7 +284,7 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
         'first_name' => 'Nebraska',
         'last_name' => 'McCicero',
         'address' => '2707 Royal Ct, Lincoln, NE, 68502',
-        'districts_count' => 8,
+        'districts_count' => 4,
         'districts' => [
           'administrativeArea1' => [
               'upper' => 29,
@@ -293,15 +293,11 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
             'upper' => 'NE',
             'lower' => 1,
           ],
-          // Lincoln returns three city council members, three at large
-          // and one in district 3. Ug. Just doesn't match are testing
-          // framework.
-          // 'locality' => [
-          //  'lower' => 'At Large',
-          //  'lower' => 3,
-          // ]
+          // Lincoln returns four city council members, three at large
+          // and one in district 3. Ug. Just doesn't match our testing
+          // framework. We only capture one of them.
           'locality' => [ 
-            'lower' => NULL,
+            'lower' => 'At Large',
           ],
         ],
         'officials' => [
@@ -313,7 +309,7 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
         'first_name' => 'Callie',
         'last_name' => 'McCicero',
         'address' => "2637 Dorking Place, Santa Barbara, CA, 93105",
-        'districts_count' => 5,
+        'districts_count' => 4,
         'districts' => [
           'administrativeArea1' => [
               'upper' => 19,
@@ -322,9 +318,6 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
           'country' => [
             'lower' => 24,
             'upper' => 'CA',
-          ],
-          'locality' => [
-            'lower' => 123,
           ],
         ],
         'officials' => [
@@ -368,7 +361,9 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
           ->addSelect('electoral_districts.*')
           ->addWhere('id', '=', $this->contactId)
           ->execute();
-      $this->assertEquals($expected['districts_count'], $districts->count(), "$name count of districts.");
+      $identifier = $expected['file'];
+      $this->assertEquals($expected['districts_count'], $districts->count(), "$identifier count of districts.");
+      
       foreach($districts as $district) {
         $level = $district['electoral_districts.electoral_level'];
         $chamber = $district['electoral_districts.electoral_chamber'];
