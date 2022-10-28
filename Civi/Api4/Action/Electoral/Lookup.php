@@ -26,9 +26,26 @@ class Lookup extends \Civi\Api4\Generic\AbstractAction {
    */
   protected $address;
 
+  /**
+   * Write
+   *
+   * By default, we only lookup the value, we don't write any
+   * data to the database. If you pass a contactId, you can 
+   * set write=1 to also write the results we find to the specified
+   * id.
+   */
+  protected $write = FALSE;
+
   public function _run(\Civi\Api4\Generic\Result $result) {
     $contactId = $this->getContactId();
     $address = $this->getAddress();
+    $write = $this->getWrite();
+
+    if ($write && !$contactId) {
+      $msg = E::ts("When specifying that we should write the results to the databse, 
+        you must provide a contactId so we know which contact to write to.");
+      throw new \Exception($msg);
+    }
 
     if (empty($contactId) && empty($address)) {
       throw new \Exception("Please include either a contactId or address to lookup.");
@@ -78,6 +95,11 @@ class Lookup extends \Civi\Api4\Generic\AbstractAction {
     }
     $provider->setAddress($address);
     $out = $provider->lookup();
+    if ($write && count($out['district']) > 0) {
+      // We should end up using the cached results, so for simplicity just re-run
+      // the query.
+      $provider->processSingleAddress($addressId);
+    }
     $massaged = [
       'district' => [],
       'official' => [],

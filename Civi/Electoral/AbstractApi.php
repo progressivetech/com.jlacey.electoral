@@ -270,6 +270,7 @@ abstract class AbstractApi {
       $data = $this->lookup();
       $this->writeData($data);
     }
+    $this->writeElectoralStatus();
   }
 
   /**
