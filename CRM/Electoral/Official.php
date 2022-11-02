@@ -191,7 +191,7 @@ class CRM_Electoral_Official {
         ->addWhere('name', '=', $address['country'])
         ->execute()->first()['id'];
       if (empty($countryId)) {
-        \Civi\log()->debug("Failed to located country Id for " . $address['country']);
+        \Civi::log()->debug("Failed to located country Id for " . $address['country']);
         return;
       }
       $stateProvinceId = \Civi\Api4\StateProvince::get(FALSE)
@@ -202,7 +202,7 @@ class CRM_Electoral_Official {
         ->first()['id'];
 
       if (empty($stateProvinceId)) {
-        \Civi\log()->debug("Failed to located state province Id for " . $address['state_province']);
+        \Civi::log()->debug("Failed to located state province Id for " . $address['state_province']);
         return;
       }
       \Civi\Api4\Address::create(FALSE)
