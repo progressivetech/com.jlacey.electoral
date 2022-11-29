@@ -434,6 +434,9 @@ abstract class AbstractApi {
         ->addWhere('title', 'IN', explode('|', $this->groups))
         ->addSelect('id')
         ->execute()->column('id');
+      if (!$groupIds) {
+        throw new \Exception(E::ts("Failed to find a group Id with the name: %1.", [ 1 => $this->groups ]));
+      }
       $addressQuery->addWhere('contact_id.groups', 'IN', $groupIds );
     }
     // "0" means the location type is "primary".

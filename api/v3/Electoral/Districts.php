@@ -13,6 +13,12 @@ function civicrm_api3_electoral_Districts(array $params) : array {
     $limit = (int) ($params['limit'] ?? 100);
     $update = (bool) ($params['update'] ?? FALSE);
     $groups = $params['groups'] ?? FALSE;
+    if ($groups) {
+      // It's tempting to put double quotes or single quotes around
+      // the group names when adding it as a parameter on the scheduled
+      // jobs web UI.
+      $groups = trim($group, '"\' ');
+    }
     $cache = FALSE;
     $EnabledProviders = \Civi::settings()->get('electoralApiProviders');
     foreach ($EnabledProviders as $enabledProvider) {
