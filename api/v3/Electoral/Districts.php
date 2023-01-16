@@ -17,7 +17,7 @@ function civicrm_api3_electoral_Districts(array $params) : array {
       // It's tempting to put double quotes or single quotes around
       // the group names when adding it as a parameter on the scheduled
       // jobs web UI.
-      $groups = trim($group, '"\' ');
+      $groups = trim($groups, '"\' ');
     }
     $cache = FALSE;
     $EnabledProviders = \Civi::settings()->get('electoralApiProviders');
