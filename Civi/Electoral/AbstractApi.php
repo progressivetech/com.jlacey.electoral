@@ -243,6 +243,7 @@ abstract class AbstractApi {
     $message = $this->results['message'] ?? NULL;
     if ($contactId && $status) {
       \Civi\Api4\Contact::update()
+        ->setCheckPermissions(FALSE)
         ->addWhere('id', '=', $contactId)
         ->addValue('electoral_update_status.electoral_last_status', $status)
         ->addValue('electoral_update_status.electoral_error_message', substr($error, 0, 2048))
@@ -505,6 +506,7 @@ abstract class AbstractApi {
    */
   private function matchDistrictData($data) : int {
     $id = \Civi\Api4\CustomValue::get('electoral_districts')
+      ->setCheckPermissions(FALSE)
       ->addWhere('entity_id', '=', $data['contactId'])
       ->addWhere('electoral_level', '=', $data['level'])
       ->addWhere('electoral_states_provinces', '=', $data['state_province_id'])
