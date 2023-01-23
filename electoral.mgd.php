@@ -129,7 +129,7 @@ return [
         'default_value' => NULL,
         'is_required' => FALSE,
         'is_searchable' => TRUE,
-        'is_search_range' => FALSE,
+        'is_search_range' => TRUE,
         'help_pre' => NULL,
         'help_post' => NULL,
         'mask' => NULL,
