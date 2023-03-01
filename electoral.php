@@ -14,15 +14,6 @@ function electoral_civicrm_postCommit($op, $objectName, $objectId, $objectRef) {
       if (parse_url($_REQUEST['entryURL'])['path'] == '/civicrm/import/contact') {
         return;
       }
-      // Make sure this person doesn't have data already.
-      $hasDistrictData = \Civi\Api4\CustomValue::get('electoral_districts', FALSE)
-        ->addWhere('entity_id', '=', $objectRef->contact_id)
-        ->execute()
-        ->count();
-      if ($hasDistrictData) {
-        return;
-      }
-
       $limit = 1;
       $update = FALSE;
       $enabledProviders = \Civi::settings()->get('electoralApiProviders');
