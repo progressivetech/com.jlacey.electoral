@@ -1,6 +1,7 @@
 <?php
 
 class CRM_Electoral_Official {
+  private $contactId;
   private $firstName;
   private $middleName;
   private $lastName;
@@ -35,15 +36,28 @@ class CRM_Electoral_Official {
     //Check if rep already exists, create or update accordingly
     $exists = \Civi\Api4\Contact::get(FALSE)
       ->addWhere('external_identifier', '=', $this->externalIdentifier)
-      ->execute()
-      ->count();
-    if (!$exists) {
-      $official = \Civi\Api4\Contact::create(FALSE)
-        ->addValue('external_identifier', $this->externalIdentifier);
+      ->addWhere('is_deleted', 'IN', [ TRUE, FALSE ])
+      ->addSelect('is_deleted', 'id')
+      ->execute()->first();
+    if ($exists) {
+      if ($exists['is_deleted']) {
+        // Delete the matching external identifier on this deleted record
+        // so when we save a new one, we won't have a conflict.
+        \Civi\Api4\Contact::update()
+          ->addValue('external_identifier', NULL)
+          ->addWhere('id', '=', $exists['id'])
+          ->execute();
+        // Poof. They no longer exist.
+        $exists = FALSE;
+      }
     }
-    else {
+    if ($exists) {
       $official = \Civi\Api4\Contact::update(FALSE)
         ->addWhere('external_identifier', '=', $this->externalIdentifier);
+    }
+    else {
+      $official = \Civi\Api4\Contact::create(FALSE)
+        ->addValue('external_identifier', $this->externalIdentifier); 
     }
     $result = $official
       ->addValue('contact_type', 'Individual')
@@ -62,21 +76,20 @@ class CRM_Electoral_Official {
       ->addValue('official_info.electoral_term_end_date', $this->termEndDate)
       ->addValue('official_info.electoral_official_chamber', $this->chamber)
       ->addValue('official_info.electoral_official_level', $this->level)
-      ->execute()
-      ->first();
-    $cid = $result['id'];
+      ->execute()->first();
+    $this->contactId = $result['id'];
 
     // Create the email, phone, address.
     foreach ($this->emailAddress as $locationType => $email) {
-      $this->createEmail($cid, $email, $locationType);
+      $this->createEmail($email, $locationType);
     };
 
     foreach ($this->phone as $locationType => $phone) {
-      $this->createPhone($cid, $phone, $locationType);
+      $this->createPhone($phone, $locationType);
     };
 
     foreach ($this->address as $locationType => $address) {
-      $this->createAddress($cid, $address, $locationType);
+      $this->createAddress($address, $locationType);
     };
 
     $websiteList = [
@@ -88,7 +101,7 @@ class CRM_Electoral_Official {
 
     foreach ($websiteList as $websiteType => $url) {
       if ($url) {
-        $this->createWebsite($cid, $url, $websiteType);
+        $this->createWebsite($url, $websiteType);
       }
     }
   }
@@ -101,11 +114,11 @@ class CRM_Electoral_Official {
    * Helper function to check if website exists
    * and if not, create it
    */
-  private function createWebsite($contactId, $website, $websiteType) {
+  private function createWebsite($website, $websiteType) {
     //Check if contact has a website set, Main location type
     $websiteExist = \Civi\Api4\Website::get(FALSE)
       ->addSelect('id', 'url')
-      ->addWhere('contact_id', '=', $contactId)
+      ->addWhere('contact_id', '=', $this->getContactId())
       ->addWhere('website_type_id:name', '=', $websiteType)
       ->execute()
       ->first();
@@ -115,7 +128,7 @@ class CRM_Electoral_Official {
       \Civi\Api4\Website::create(FALSE)
         ->addValue('website_type_id:name', $websiteType)
         ->addValue('url', $website)
-        ->addValue('contact_id', $contactId)
+        ->addValue('contact_id', $this->getContactId())
         ->execute();
     }
   }
@@ -124,11 +137,11 @@ class CRM_Electoral_Official {
    * Helper function to check if email exists
    * and if not, create it
    */
-  private function createEmail($contactId, $email, $locationType) {
+  private function createEmail($email, $locationType) {
     //Check if contact has an email address set, Main location type
     $emailExist = \Civi\Api4\Email::get(FALSE)
       ->addSelect('id', 'email')
-      ->addWhere('contact_id', '=', $contactId)
+      ->addWhere('contact_id', '=', $this->getContactId())
       ->addWhere('location_type_id:name', '=', $locationType)
       ->execute()
       ->first();
@@ -138,7 +151,7 @@ class CRM_Electoral_Official {
       \Civi\Api4\Email::create(FALSE)
         ->addValue('location_type_id:name', $locationType)
         ->addValue('email', $email)
-        ->addValue('contact_id', $contactId)
+        ->addValue('contact_id', $this->getContactId())
         ->addValue('is_primary', 1)
         ->execute();
     }
@@ -148,11 +161,11 @@ class CRM_Electoral_Official {
    * Helper function to check if phone exists
    * and if not, create it
    */
-  private function createPhone($contactId, $phone, $locationType) {
+  private function createPhone($phone, $locationType) {
     //Check if contact has a phone set, Main location type
     $phoneExist = \Civi\Api4\Phone::get(FALSE)
       ->addSelect('id', 'phone')
-      ->addWhere('contact_id', '=', $contactId)
+      ->addWhere('contact_id', '=', $this->getContactId())
       ->addWhere('location_type_id:name', '=', $locationType)
       ->execute()
       ->first();
@@ -163,7 +176,7 @@ class CRM_Electoral_Official {
         ->addValue('location_type_id:name', $locationType)
         ->addValue('phone_type_id:name', 'Phone')
         ->addValue('phone', $phone)
-        ->addValue('contact_id', $contactId)
+        ->addValue('contact_id', $this->getContactId())
         ->addValue('is_primary', 1)
         ->execute();
     }
@@ -173,11 +186,11 @@ class CRM_Electoral_Official {
    * Helper function to check if address exists
    * and if not, create it
    */
-  private function createAddress($contactId, $address, $locationType) {
+  private function createAddress($address, $locationType) {
     //Check if contact has an address set
     $addressExist = \Civi\Api4\Address::get(FALSE)
       ->addSelect('id', 'street_address')
-      ->addWhere('contact_id', '=', $contactId)
+      ->addWhere('contact_id', '=', $this->getContactId())
       ->addWhere('location_type_id:name', '=', $locationType)
       ->execute()
       ->first();
@@ -207,7 +220,7 @@ class CRM_Electoral_Official {
       }
       \Civi\Api4\Address::create(FALSE)
         ->addValue('location_type_id:name', $locationType)
-        ->addValue('contact_id', $contactId)
+        ->addValue('contact_id', $this->getContactId())
         ->addValue('street_address', $address['street_address'])
         ->addValue('supplemental_address_1', $address['supplemental_address_1'])
         ->addValue('supplemental_address_2', $address['supplemental_address_2'])
@@ -461,6 +474,13 @@ class CRM_Electoral_Official {
   public function setLevel($level) {
     $this->level = $level;
     return $this;
+  }
+
+  /**
+   * Get Contact Id
+   */
+  public function getContactId() {
+    return $this->contactId;
   }
 
   /**
