@@ -246,7 +246,7 @@ abstract class AbstractApi {
         ->setCheckPermissions(FALSE)
         ->addWhere('id', '=', $contactId)
         ->addValue('electoral_update_status.electoral_last_status', $status)
-        ->addValue('electoral_update_status.electoral_error_message', substr($error, 0, 2048))
+        ->addValue('electoral_update_status.electoral_error_message', substr($message, 0, 2048))
         ->addValue('electoral_update_status.electoral_last_updated', date('Y-m-d H:i:s'))
         ->execute();
     }
@@ -505,16 +505,16 @@ abstract class AbstractApi {
    * no match or the id of a matching record. 
    */
   private function matchDistrictData($data) : int {
-    $id = \Civi\Api4\CustomValue::get('electoral_districts')
+    $district = \Civi\Api4\CustomValue::get('electoral_districts')
       ->setCheckPermissions(FALSE)
       ->addWhere('entity_id', '=', $data['contactId'])
       ->addWhere('electoral_level', '=', $data['level'])
       ->addWhere('electoral_states_provinces', '=', $data['state_province_id'])
       ->addWhere('electoral_chamber', '=', $data['chamber'])
-      ->execute()->first()['id'];
+      ->execute()->first();
 
-    if ($id) {
-      return $id;
+    if ($district) {
+      return $district['id'];
     }
     return 0;
   }
