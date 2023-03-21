@@ -294,10 +294,10 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
             'lower' => 1,
           ],
           // Lincoln returns four city council members, three at large
-          // and one in district 3. Ug. Just doesn't match our testing
-          // framework. We only capture one of them.
+          // and one in district 3. We should only return district info
+          // for actual districts, not the at large ones. 
           'locality' => [ 
-            'lower' => 'At Large',
+            'lower' => 3,
           ],
         ],
         'officials' => [

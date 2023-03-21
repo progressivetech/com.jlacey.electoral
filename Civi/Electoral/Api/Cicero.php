@@ -131,16 +131,21 @@ class Cicero extends \Civi\Electoral\AbstractApi {
             // ocd-division/country:us/state:tx/place:austin/council_district:32
             // to indicate that it's a council member and not the mayor.
             if (preg_match('/^LOCAL/', $districtInfo->district_type)) {
+              // We will skip this record unless council_district is specified.
+              $skip = TRUE;
               $ocdIdParts = explode('/', $districtInfo->ocd_id);
               $lastPart = $ocdIdParts[4] ?? NULL;
               if ($lastPart){
                 $districtTypeParts = explode(':', $lastPart);
                 $districtType = $districtTypeParts[0] ?? NULL;
                 if ($districtType) {
-                  if ($districtType != 'council_district') {
-                    continue;
+                  if ($districtType == 'council_district') {
+                    $skip = FALSE;
                   }
                 }
+              }
+              if ($skip) {
+                continue;
               }
             }
 
