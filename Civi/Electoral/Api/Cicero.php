@@ -119,6 +119,32 @@ class Cicero extends \Civi\Electoral\AbstractApi {
             if (strpos($districtInfo->district_type, '_EXEC')) {
               continue;
             }
+
+            // Sometimes the mayor shows up as LOCAL_EXEC but other times the
+            // mayor is a member of the city council so they will show up as
+            // just LOCAL making them seem like a city council person. If we
+            // add them as a district it will be added as a AT LARGE district
+            // and will mess up searching on the real city council districts. 
+            //
+            // Rebecca Womack from Cicero said we can use the presence of
+            // "council_district" in the ocd_id field, eg:
+            // ocd-division/country:us/state:tx/place:austin/council_district:32
+            // to indicate that it's a council member and not the mayor.
+            if (preg_match('/^LOCAL/', $districtInfo->district_type)) {
+              $ocdIdParts = explode('/', $districtInfo->ocd_id);
+              $lastPart = $ocdIdParts[4] ?? NULL;
+              if ($lastPart){
+                $districtTypeParts = explode(':', $lastPart);
+                $districtType = $districtTypeParts[0] ?? NULL;
+                if ($districtType) {
+                  if ($districtType != 'council_district') {
+                    continue;
+                  }
+                }
+              }
+            }
+
+
             // We also want to exclude COUNTY as a subtype - to avoid having county
             // commissioners pop up when we want city council members.
             if (property_exists($districtInfo, 'subtype') && $districtInfo->subtype == 'COUNTY') {
