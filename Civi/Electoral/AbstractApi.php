@@ -1,8 +1,9 @@
 <?php
 
 namespace Civi\Electoral;
-abstract class AbstractApi {
 use CRM_Electoral_ExtensionUtil as E;
+
+abstract class AbstractApi {
 
   /**
    * @var int
