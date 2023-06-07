@@ -149,18 +149,26 @@ class Cicero extends \Civi\Electoral\AbstractApi {
               }
             }
 
-
             // We also want to exclude COUNTY as a subtype - to avoid having county
             // commissioners pop up when we want city council members.
             if (property_exists($districtInfo, 'subtype') && $districtInfo->subtype == 'COUNTY') {
               continue;
             }
+            if (empty($districtInfo->district_id)) {
+              continue;
+            }
+
             $response['district'][] = $this->parseDistrictData($districtInfo);
             $response['official'][] = $this->parseOfficialData($official);
           }
         }
         else {
-          $response['district'] = array_merge($response['district'], $this->parseDistrictData($resp_obj->response->results->candidates[0]->districts));
+          foreach ($resp_obj->response->results->candidates[0]->districts as $districtInfo) {
+            if (empty($districtInfo->district_id)) {
+              continue;
+            }
+            $response['district'][] = $this->parseDistrictData($districtInfo);
+          }
         }
       }
     }
