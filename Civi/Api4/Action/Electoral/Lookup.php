@@ -105,8 +105,8 @@ class Lookup extends \Civi\Api4\Generic\AbstractAction {
       'official' => [],
     ];
     // We have to massage the data so it's more presentable.
-    $massaged['district'] = $out['district'];
-    foreach($out['official'] as $official) {
+    $massaged['district'] = $out['district'] ?? [];
+    foreach($out['official'] ?? [] as $official) {
       $massaged['official'][] = [
         'name' => $official->getName(),
       ];

@@ -219,7 +219,7 @@ abstract class AbstractApi {
     }
     $this->allCities = $settings['electoralApiAllCities']['value'];
     if (!$this->allCities) {
-      $cities = $settings['cities']['value'][0] ?? NULL;
+      $cities = $settings['includedCities']['value'][0] ?? NULL;
       // Get the "includedCities" setting, trim out space around commas, and put quotation marks in where needed.
       if ($cities) {
         $this->cities = explode(',', preg_replace('/\s*,\s*/', ',', $settings['includedCities']['value']));
@@ -311,7 +311,10 @@ abstract class AbstractApi {
       'state_province_id.abbreviation' => NULL,
       'contact_id' => NULL, 
       'postal_code' => NULL,
+      'country_id' => NULL,
       'country_id.name' => NULL,
+      'county_id' => NULL,
+      'county_id.name' => NULL,
       'geo_code_1' => NULL,
       'geo_code_2' => NULL
     ];
@@ -323,7 +326,7 @@ abstract class AbstractApi {
 
     // Check for country.
     if (empty($normalized['country_id.name'])) {
-      if (isset($this->address['country'])) {
+      if ($this->address['country'] ?? NULL) {
         // Let's ensure it's a valid country.
         $countryResult = \Civi\Api4\Country::get()
           ->setCheckPermissions(FALSE)
@@ -334,6 +337,7 @@ abstract class AbstractApi {
           ->execute();
         if ($countryResult->count() == 1) {
           $normalized['country_id.name'] = $this->address['country'];
+          $normalized['country_id'] = $countryResult->first()['id'];
         }
         else {
           throw new \Exception("Unknown country: " . $this->address['country']);
@@ -345,21 +349,16 @@ abstract class AbstractApi {
           ->setCheckPermissions(FALSE)
           ->addSelect('defaultContactCountry:name')
           ->execute()->first()['value'];
+        $normalized['country_id'] = \Civi\Api4\Setting::get()
+          ->setCheckPermissions(FALSE)
+          ->addSelect('defaultContactCountry')
+          ->execute()->first()['value'];
       }
     } 
-    // Check for state province lookup fields. All of these fields should be
-    // populated. If they are not populated and we have a state_province set,
-    // then we'll lookup the values.
-    $stateProvinceFields = [
-      'state_province_id',
-      'state_province_id.name',
-      'state_province_id.abbreviation',
-    ];
-
     // If we don't have a state_province_id.name, we have to look it up.
     if (empty($normalized['state_province_id.name'])) {
       $stateProvince = NULL;
-      if (isset($this->address['state_province'])) {
+      if ($this->address['state_province'] ?? NULL) {
         // We have been passed a bare state province name. Lookup the details in
         // the state province table.
         $stateProvince = \Civi\Api4\StateProvince::get()
@@ -388,6 +387,24 @@ abstract class AbstractApi {
         $normalized['state_province_id.name'] = $stateProvince['name'];
       }
     }
+    // We only need county_id so we know if we should reject this address based
+    // on county_id restrictions.
+    if (empty($normalized['county_id'])) {
+      $county = NULL;
+      if (isset($this->address['county'])) {
+        // We have been passed a bare county name. Lookup the details in
+        // the county table.
+        $county = \Civi\Api4\County::get()
+          ->setCheckPermissions(FALSE)
+          ->addSelect('id')
+          ->addWhere('name', '=', $this->address['county'])
+          ->addWhere('state_province_id', '=', $normalized['state_province_id'])
+          ->execute()->first();
+      }
+      if ($county) {
+        $normalized['county_id'] = $county['id'];
+      }
+    }
     $this->address = $normalized;
   }
 
@@ -408,7 +425,10 @@ abstract class AbstractApi {
         'state_province_id.abbreviation', 
         'contact_id', 
         'postal_code', 
+        'country_id', 
         'country_id.name', 
+        'county_id.name', 
+        'county_id', 
         'geo_code_1', 
         'geo_code_2')
       ->addJoin('Custom_electoral_districts AS custom_electoral_districts', 'LEFT', ['custom_electoral_districts.entity_id', '=', 'contact_id'])
@@ -639,6 +659,35 @@ abstract class AbstractApi {
       $this->results['message'] = 'Failed to find enough address parameters to justify a lookup.';
       return [];
     }
+    if ($this->countries) {
+      if (!in_array($this->address['country_id'], $this->countries)) {
+        $msg = E::ts('Country ID (%1) is not in list of allowed countries. No lookup made.', [ 1 => $this->address['country_id']]);
+        $this->results['status'] = 'failure';
+        $this->results['message'] = $msg;
+        \Civi::log()->debug($msg);
+        return [];
+      }
+    }
+    if ($this->statesProvinces) {
+      \Civi::log()->debug("have states province");
+      if (!in_array($this->address['state_province_id'], $this->statesProvinces)) {
+        $msg = E::ts('State/Province ID (%1) is not in list of allowed state/provinces. No lookup made.', [ 1 => $this->address['state_province_id']]);
+        $this->results['status'] = 'failure';
+        $this->results['message'] = $msg;
+        \Civi::log()->debug($msg);
+        return [];
+      }
+    }
+    if ($this->cities) {
+      if (!in_array($this->address['city'], $this->cities)) {
+        $msg = E::ts('City (%1) is not in list of allowed cities. No lookup made.', [ 1 => $this->address['city']]);
+        $this->results['status'] = 'failure';
+        $this->results['message'] = $msg;
+        \Civi::log()->debug($msg);
+        return [];
+      }
+    }
+
     return $this->apiLookup();
   }
 
