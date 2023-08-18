@@ -641,8 +641,8 @@ abstract class AbstractApi {
         $statusCode = $e->getResponse()->getStatusCode();
         \Civi::log()->debug("Got response code $statusCode");
       }
-      // Note: We don't update the status because we didn't complete the connection to the
-      // lookup URL. So we do want to re-try this one until we do connect.
+      $this->results['status'] = 'failure';
+      $this->results['message'] = "Received response code $statusCode when doing address lookup.";
       return NULL;
     }
     if ($this->cache && $json) {
@@ -669,7 +669,6 @@ abstract class AbstractApi {
       }
     }
     if ($this->statesProvinces) {
-      \Civi::log()->debug("have states province");
       if (!in_array($this->address['state_province_id'], $this->statesProvinces)) {
         $msg = E::ts('State/Province ID (%1) is not in list of allowed state/provinces. No lookup made.', [ 1 => $this->address['state_province_id']]);
         $this->results['status'] = 'failure';
