@@ -14,6 +14,10 @@ class Cicero extends \Civi\Electoral\AbstractApi {
 
   const CIVICRM_CICERO_LEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/official?max=200&';
   const CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/nonlegislative_district?';
+  const COUNCIL_DISTRICT_SYNONYMS = [
+    'council_district',
+    'ward',
+  ];
 
   /**
    * @var array
@@ -139,7 +143,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
                 $districtTypeParts = explode(':', $lastPart);
                 $districtType = $districtTypeParts[0] ?? NULL;
                 if ($districtType) {
-                  if ($districtType == 'council_district') {
+                  if (in_array($districtType, self::COUNCIL_DISTRICT_SYNONYMS)) {
                     $skip = FALSE;
                   }
                 }
