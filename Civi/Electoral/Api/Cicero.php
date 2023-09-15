@@ -95,9 +95,8 @@ class Cicero extends \Civi\Electoral\AbstractApi {
           continue;
         }
         $url = self::CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString;
-        if ($this->includeUpcoming) {
-          $today = (new \DateTime('now'))->format('Y-m-d');
-          $url .= "&valid_on_or_after=$today";
+        if ($this->futureDate) {
+          $url .= "&valid_on_or_after=" . $this->futureDate;
         }
         // One legislative lookup gets all the levels, so don't re-run for each level.
         $legislativeLookupComplete = TRUE;

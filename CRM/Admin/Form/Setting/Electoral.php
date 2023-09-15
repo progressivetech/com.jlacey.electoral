@@ -21,7 +21,7 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
     'allCounties' => 'Electoral API settings',
     'electoralApiAllCities' => 'Electoral API settings',
     'electoralApiDistrictTypes' => 'Electoral API settings',
-    'electoralApiIncludeRedistricted' => 'Electoral API settings',
+    'electoralApiFutureDate' => 'Electoral API settings',
     'electoralApiLookupOnAddressUpdate' => 'Electoral API settings',
     'electoralApiCreateOfficialOnDistrictLookup' => 'Electoral API settings',
   ];

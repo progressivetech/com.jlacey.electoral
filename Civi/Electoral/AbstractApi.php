@@ -57,10 +57,10 @@ abstract class AbstractApi {
   public $createOfficialOnDistrictLookup = FALSE;
 
   /**
-   * @var bool
-   * Get district data for upcoming redistricting where applicable.
+   * @var string 
+   * Get future date for query.
    */
-  protected $includeUpcoming;
+  protected $futureDate;
 
   /**
    * @var array
@@ -200,7 +200,7 @@ abstract class AbstractApi {
         'electoralApiIncludedCountries', 
         'electoralApiAllCities', 
         'electoralApiAllCountries', 
-        'electoralApiIncludeRedistricted',
+        'electoralApiFutureDate',
         'electoralApiCreateOfficialOnDistrictLookup')
       ->execute()
       ->indexBy('name');
@@ -228,7 +228,7 @@ abstract class AbstractApi {
 
     $this->addressLocationType = $settings['addressLocationType']['value'][0];
     $this->districtTypes = $settings['electoralApiDistrictTypes']['value'];
-    $this->includeUpcoming = $settings['electoralApiIncludeRedistricted']['value'];
+    $this->futureDate = $settings['electoralApiFutureDate']['value'];
     $this->createOfficialOnDistrictLookup = $settings['electoralApiCreateOfficialOnDistrictLookup']['value'];
     $this->apiKey = $this->getApiKey();
   }

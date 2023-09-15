@@ -24,9 +24,15 @@
        </tr>
         <tr class="crm-electoral-api-form-block-district-types">
            <td>{$form.electoralApiDistrictTypes.label}</td>
-           <td>{$form.electoralApiDistrictTypes.html|crmAddClass:huge}&nbsp;&nbsp;{$form.electoralApiIncludeRedistricted.html}  {$form.electoralApiIncludeRedistricted.label}<br />
+           <td>{$form.electoralApiDistrictTypes.html|crmAddClass:huge}&nbsp;&nbsp;<br />
            <span class="description">{ts}Select the district types you want district data for.{/ts}</span>
            <span class="cicero-only description"><br />{ts}Nonlegislative data lookups cost a separate credit per type.{/ts}</span>
+           </td>
+       </tr>
+       <tr id="electoral-future-date" class="crm-electoral-api-form-block-future-date">
+           <td>{$form.electoralApiFutureDate.label}</td>
+           <td>{$form.electoralApiFutureDate.html}
+           <span class="description"><br />{ts}If you want to lookup districts that have been re-districted but are not yet active, enter the date they will be active. With this setting, all district lookups will return results valid after the date entered. Only available via Cicero.{/ts}</td>
        </tr>
        <tr class="crm-electoral-api-form-block-address-location-type">
            <td>{$form.addressLocationType.label}</td>
@@ -102,6 +108,13 @@
       CRM.$("#electoralApiDistrictTypes option[value='" + item + "']").prop( 'disabled', '' );
     });
 
+    // Only Cicero has future lookups.
+    if (ciceroVisible) {
+      CRM.$("#electoral-future-date").show();
+    }
+    else {
+      CRM.$("#electoral-future-date").hide();
+    }
     // Cicero and Google both handle administartiveArea2 (county) and locality.
     if (ciceroVisible || gCivicVisible) {
       ['administrativeArea2', 'locality'].forEach(function (item, index) {
