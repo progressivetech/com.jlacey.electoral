@@ -218,7 +218,14 @@ abstract class AbstractApi {
 
     $this->addressLocationType = $settings['addressLocationType']['value'][0];
     $this->districtTypes = $settings['electoralApiDistrictTypes']['value'];
-    $this->futureDate = $settings['electoralApiFutureDate']['value'];
+    $futureDate = $settings['electoralApiFutureDate']['value'];
+    $timestamp = strtotime($futureDate);
+    if ($timestamp && $timestamp > time()) {
+      $this->futureDate = $futureDate;
+    }
+    else {
+      \Civi::log()->debug("Warning: future date invalid or in the past: " . $futureDate);
+    }
     $this->apiKey = $this->getApiKey();
   }
 

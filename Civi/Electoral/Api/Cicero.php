@@ -94,13 +94,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
         }
         $url = self::CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString;
         if ($this->futureDate) {
-          $timestamp = strtotime($this->futureDate);
-          if ($timesamp && $timestamp > time()) {
-            $url .= "&valid_on_or_after=" . $this->futureDate;
-          }
-          else {
-            \Civi::log()->debug("Warning: future date invalid or in the past: " . $this->futureDate);
-          }
+          $url .= "&valid_on_or_after=" . $this->futureDate;
         }
         // One legislative lookup gets all the levels, so don't re-run for each level.
         $legislativeLookupComplete = TRUE;
@@ -118,6 +112,15 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       if ($resp_obj) {
         if (in_array($districtType, $legislativeDistrictTypes)) {
           foreach ($resp_obj->response->results->candidates[0]->districts as $districtInfo) {
+	    if ($this->futureDate) {
+	      $validTo = substr($districtInfo->valid_to, 0, 10);
+	      if ($validTo && $validTo <= $this->futureDate) {
+	        // When pulling in future districts, omit district date that is relatively stale
+		// to avoid having multiple districts.
+	        continue;
+              }
+	    }
+
             // Don't need districts for exec positions, since it'll always be "NEW YORK" for NY, etc.
             if (strpos($districtInfo->district_type, '_EXEC')) {
               continue;
