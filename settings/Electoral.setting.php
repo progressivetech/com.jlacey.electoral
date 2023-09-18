@@ -122,8 +122,8 @@ return [
     'is_domain' => 1,
     'is_contact' => 0,
     'description' => 'Cicero only: Useful when looking up re-districted area that are not yet active.',
-    'html_type' => 'Date',
-    'title' => ts('Use district data valid after the given date.'),
+    'html_type' => 'text',
+    'title' => ts('Use district data valid after the given date'),
   ],
   'electoralApiAllCountries' => [
     'group_name' => 'Electoral API settings',

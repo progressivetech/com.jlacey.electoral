@@ -32,7 +32,7 @@
        <tr id="electoral-future-date" class="crm-electoral-api-form-block-future-date">
            <td>{$form.electoralApiFutureDate.label}</td>
            <td>{$form.electoralApiFutureDate.html}
-           <span class="description"><br />{ts}If you want to lookup districts that have been re-districted but are not yet active, enter the date they will be active. With this setting, all district lookups will return results valid after the date entered. Only available via Cicero.{/ts}</td>
+           <span class="description"><br />{ts}Leave empty to use the current date (default). Or, enter a date in YYYY-MM-DD format and districts that have been re-districted but are not active until after the date you enter will be used. Only available via Cicero.{/ts}</td>
        </tr>
        <tr class="crm-electoral-api-form-block-address-location-type">
            <td>{$form.addressLocationType.label}</td>

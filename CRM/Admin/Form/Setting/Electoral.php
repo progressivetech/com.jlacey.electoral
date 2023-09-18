@@ -1,4 +1,7 @@
 <?php
+
+use CRM_Electoral_ExtensionUtil as E;
+
 /**
  * Form controller class
  *
@@ -70,6 +73,37 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
   }
 
   /**
+   * AddRules hook
+   */
+  public function addRules() {
+    $this->addFormRule([self::class, 'validateForm']);
+  }
+
+  /**
+   * Validates form
+   *
+   * @param $values
+   *
+   * @return array
+   */
+  public static function validateForm($values) {
+    $errors = [];
+    // Ensure date is entered in the proper format.
+    $electoralApiFutureDate = $values['electoralApiFutureDate'] ?? NULL;
+    if ($electoralApiFutureDate) {
+      $looksValid = preg_match('/^[0-9]{4}-[0-9]{2}-[0-9]{2}/', $electoralApiFutureDate);
+      if (!$looksValid) {
+        $errors['electoralApiFutureDate'] = E::ts('Please enter the date in YYYY-MM-DD format.');
+      }
+      else {
+        if (!strtotime($electoralApiFutureDate)) {
+          $errors["electoralApiFutureDate"] = E::ts('Please double check the date format to ensure it is a valid date (YYYY-MM-DD).');
+        }
+      }
+    }
+    return empty($errors) ? TRUE : $errors;
+  }
+  /**
    * Necessary until metadata-driven chain-select is properly handled in Smarty forms.
    */
   public function postProcess() {
@@ -77,7 +111,9 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
     $this->_settings['includedStatesProvinces'] = 'Electoral API settings';
     $this->_settings['includedCounties'] = 'Electoral API settings';
     $this->settingsMetadata = \Civi\Core\SettingsMetadata::getMetadata(['name' => array_keys($this->_settings)], NULL, TRUE);
+
     parent::postProcess();
+    
     // This part is permanent, for now at least.
     // Check if Cicero is active.  Enable or disable the "valid from/to" date custom fields accordingly.
     $ciceroId = \Civi\Api4\OptionValue::get(FALSE)
