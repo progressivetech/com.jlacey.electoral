@@ -35,7 +35,6 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
   protected function apiLookup() : array {
     $return = [
       'district' => [],
-      'official' => [],
     ];
     
     // Assemble the API URL.
@@ -47,31 +46,14 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
     $result = NULL;
     $json = $this->lookupUrl($url);
     if ($json) {
-      $result = $this->processLookupResults($json);
+      $result = $this->decodeLookupResults($json);
     }
     if ($result) {
-      // Google data makes it really hard to parse like the other providers.
-      // Google first provides a list of offices, which contain an "official_indices"
-      // key, which is an array of indexes referring to a second list of officials.
-      //
-      // First we parse the officies to get the district information. And, as we do that,
-      // we keep track of the official_indices so we can then parse the officials.
-      $officialIndices = [];
       foreach ($result['offices'] as $office) {
         $district = $this->parseDistrictData($office);
         if ($district) {
-          // Record the official indices so we can look those up later.
-          foreach($district['official_indices'] as $index) {
-            $officialIndices[$index] = $district;
-          }
-          // Now remove them since we don't record these.
-          unset($district['official_indices']);
           $return['district'][] = $district;
         }
-      }
-      // Now we get the officials 
-      foreach($officialIndices as $officialIndex => $district) {
-        $return['official'][] = $this->parseOfficialData($result['officials'][$officialIndex], $district);
       }
     }
     return $return;
@@ -129,89 +111,10 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
       'valid_from' => NULL,
       'valid_to' => NULL,
       'ocd_id' => $office['divisionId'],
-      // We add this special one to help us with official looksup later.
-      'official_indices' => $office['officialIndices'],
     ];
   }
 
-  private function parseOfficialData($officialData, $district) {
-    $districtId = $district['ocd_id'];
-
-    // Bah, not real identifier. So we make one up. We have to shorten it so it
-    // fits in the 64 character external identifier field. Hopefully no collisions.
-    $externalIdentifier = 'g_' . substr(hash("sha256", $officialData['name'] . $districtId), 0,62);
-    $official = new \CRM_Electoral_Official();
-
-    $firstName = '';
-    $middleName = '';
-    $lastName = '';
-    $names = $this->parseName($officialData['name']);
-    $firstName = $names['first_name'];
-    $middleName = $names['middle_name'];
-    $lastName = $names['last_name'];
-    $official
-      ->setFirstName(utf8_encode($firstName))
-      ->setMiddleName(utf8_encode($middleName))
-      ->setLastName($lastName)
-      ->setExternalIdentifier($externalIdentifier)
-      ->setOcdId($districtId)
-      ->setPoliticalParty($officialData['party'])
-      ->setChamber($district['chamber'])
-      ->setLevel($district['level']);
-    // We're only supporting two addresses/phones/emails at this time due to how Civi handles location types.
-    if (isset($officialData['address'])) {
-      foreach ($officialData['address'] as $key => $addressData) {
-        if ($key === 0) {
-          $locationType = 'Main';
-        }
-        if ($key === 1) {
-          $locationType = 'Other';
-        }
-        if ($key > 1) {
-          break;
-        }
-        $address[$key] = [
-          'street_address' => $addressData['line1'],
-          'supplemental_address_1' => NULL,
-          'supplemental_address_2' => NULL,
-          'city' => $addressData['city'],
-          'state_province' => $addressData['state'],
-          'postal_code' => $addressData['zip'],
-          'county' => NULL,
-          'country' => $this->address['country_id.name'],
-        ];
-        $official->setAddress($address[$key], $locationType);
-      }
-    }
-    if (isset($officialData['phones'])) {
-      foreach ($officialData['phones'] as $key => $phone) {
-        if ($key === 0) {
-          $locationType = 'Main';
-        }
-        if ($key === 1) {
-          $locationType = 'Other';
-        }
-        $official->setPhone($phone, $locationType);
-      }
-    }
-    if (isset($officialData['emails'])) {
-      foreach ($officialData['emails'] as $key => $email) {
-        if ($key === 0) {
-          $locationType = 'Main';
-        }
-        if ($key === 1) {
-          $locationType = 'Other';
-        }
-        if ($key > 1) {
-          break;
-        }
-        $official->setEmailAddress($email, $locationType);
-      }
-    }
-    return $official;
-  }
-
-  protected function processLookupResults($json) {
+  protected function decodeLookupResults($json) {
     $result = $json ? json_decode($json, TRUE) : NULL;
     if (isset($result['error'])) {
       $this->results['status'] = 'failed';

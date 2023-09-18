@@ -270,18 +270,4 @@ return [
     'html_type' => 'checkbox',
     'title' => ts('District Lookup on Address Update'),
   ],
-  'electoralApiCreateOfficialOnDistrictLookup' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
-    'name' => 'electoralApiCreateOfficialOnDistrictLookup',
-    'type' => 'Boolean',
-    'default' => '',
-    'add' => '5.33',
-    'is_domain' => 1,
-    'is_contact' => 0,
-    'description' => 'Create a contact for the matching elected official when performing district lookups.',
-    'help_text' => 'Create a contact for the matching elected official when performing district lookups.',
-    'html_type' => 'checkbox',
-    'title' => ts('Create Official on District Lookup'),
-  ],
 ];

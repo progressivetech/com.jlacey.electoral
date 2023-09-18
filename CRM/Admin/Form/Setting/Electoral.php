@@ -26,7 +26,6 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
     'electoralApiDistrictTypes' => 'Electoral API settings',
     'electoralApiFutureDate' => 'Electoral API settings',
     'electoralApiLookupOnAddressUpdate' => 'Electoral API settings',
-    'electoralApiCreateOfficialOnDistrictLookup' => 'Electoral API settings',
   ];
 
   public function buildQuickForm() {

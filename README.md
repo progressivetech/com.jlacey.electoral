@@ -1,7 +1,7 @@
 # Electoral API
 
 A CiviCRM extension to automatically add information about your contacts'
-electoral districts and elected officials.
+electoral districts.
 
 The extension is licensed under [AGPL-3.0](LICENSE.txt).
 
@@ -52,9 +52,6 @@ Electoral API**.  See screenshot below, with an explanation of each option:
   data will get looked up every time you save an address that matches the
   criteria above. If you do not enable this option, district data will only be
   populated by scheduled job (see below).
-* **Create Official on District Lookup** When doing a district lookup, Cicero
-  can also populate any elected officials of the contact without expending
-  another credit.
 
 ### Scheduled Job
 
@@ -79,14 +76,6 @@ groups=Administrators|Staff
 * **groups** will restrict look ups to contacts in the matching pipe (|) separated
   list of group names. 
 
-### Performance note
-
-It is not recommended to enable both **District Lookup on Address Update** and
-**Create Official on District Lookup** in most cases, since adding a single
-address could cause ten or more additional contacts to be created, slowing
-performance.  However, if you have most elected officials already in your
-database, the penalty for the occasional missing official is relatively low.
-
 ## Usage
 
 ### Districts
@@ -104,19 +93,6 @@ field indicating when redistricting may invalidate the information.
 
 CiviCRM sees district data as a multi-record custom field, and is available in
 searches, reports, etc. as such.
-
-### Officials
-
-A new contact subtype "Official" is created upon installation.  Contacts of
-type Official have an additional tab *Official Info*, which contains the name
-of the office they hold, their political party, the start and end date of their
-term, and a unique identifier for their region ("Open Civic Data ID") for
-integration with other tools.  Additionally, all available information (name,
-contact info, photo) will be added to the contact's *Summary* tab.  See below.
-
-![Screenshot of Summary tab for an elected official](/images/official_summary.png)
-
-![Screenshot of Official Info tab for an elected official](/images/official_info.png)
 
 ## Migrate
 

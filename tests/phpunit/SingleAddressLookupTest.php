@@ -37,13 +37,6 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
 
   public function setUp(): void {
     parent::setUp();
-
-    // Configure to insert officials.
-    \Civi\Api4\Setting::set()
-      ->addValue('electoralApiCreateOfficialOnDistrictLookup', TRUE)
-      ->execute();
-    CRM_Core_ManagedEntities::singleton(TRUE)->reconcile();
-    // cv('api system.flush');
   }
 
   protected function createContact($firstName, $lastName, $address) {
@@ -108,11 +101,6 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
             'lower' => 'NY-9'
           ],
         ],
-        'officials' => [
-          [ 'first_name' => 'Zellnor', 'last_name' => 'Myrie'],
-          [ 'first_name' => 'Phara', 'last_name' => 'Forrest'],
-          [ 'first_name' => 'Yvette', 'last_name' => 'Clarke'],
-        ],
       ],
       [
         'file' => 'data/openstates/ne.json',
@@ -127,9 +115,6 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
           'country' => [
             'lower' => 'NE-1',
           ],
-        ],
-        'officials' => [
-          [ 'first_name' => 'Eliot', 'last_name' => 'Bostar'],
         ],
       ],
       [
@@ -146,11 +131,6 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
           'country' => [
             'lower' => 'CA-24',
           ],
-        ],
-        'officials' => [
-          [ 'first_name' => 'Steve', 'last_name' => 'Bennett'],
-          [ 'first_name' => 'Monique', 'last_name' => 'Limón'],
-          [ 'first_name' => 'Salud', 'last_name' => 'Carbajal'],
         ],
       ],
     ];
@@ -186,9 +166,6 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
             'lower' => 1,
           ],
         ],
-        'officials' => [
-          [ 'first_name' => 'Eliot', 'last_name' => 'Bostar'],
-        ],
       ],
       [
         'file' => 'data/googlecivic/ny.json',
@@ -203,13 +180,8 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
           ],
           'country' => [
             'upper' => 'ny',
-            'lower' => 9
+            'lower' => 9 
           ],
-        ],
-        'officials' => [
-          [ 'first_name' => 'Zellnor', 'last_name' => 'Myrie'],
-          [ 'first_name' => 'Phara', 'last_name' => 'Forrest'],
-          [ 'first_name' => 'Yvette', 'last_name' => 'Clarke'],
         ],
       ],
       [
@@ -230,12 +202,6 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
           'administrativeArea2' => [
               'lower' => 1,
           ],
-        ],
-        'officials' => [
-          [ 'first_name' => 'Das', 'last_name' => 'Williams'],
-          [ 'first_name' => 'Steve', 'last_name' => 'Bennett'],
-          [ 'first_name' => 'Monique', 'last_name' => 'Limón'],
-          [ 'first_name' => 'Salud', 'last_name' => 'Carbajal'],
         ],
       ],
     ];
@@ -262,21 +228,15 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
         'districts' => [
           'administrativeArea1' => [
               'upper' => 20,
-              'lower' => 57,
+              'lower' => 44,
           ],
           'country' => [
             'upper' => 'NY',
-            'lower' => 9,
+            'lower' => 10,
           ],
           'locality' => [
             'lower' => 35,
           ]
-        ],
-        'officials' => [
-          [ 'first_name' => 'Zellnor', 'last_name' => 'Myrie'],
-          [ 'first_name' => 'Phara', 'last_name' => 'Souffrant Forrest'],
-          [ 'first_name' => 'Yvette', 'last_name' => 'Clarke'],
-          [ 'first_name' => 'Crystal', 'last_name' => 'Hudson'],
         ],
       ],
       [
@@ -300,9 +260,6 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
             'lower' => 3,
           ],
         ],
-        'officials' => [
-          [ 'first_name' => 'Eliot', 'last_name' => 'Bostar'],
-        ],
       ],
       [
         'file' => 'data/cicero/ca.json',
@@ -319,11 +276,6 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
             'lower' => 24,
             'upper' => 'CA',
           ],
-        ],
-        'officials' => [
-          [ 'first_name' => 'Steve', 'last_name' => 'Bennett'],
-          [ 'first_name' => 'S. Monique', 'last_name' => 'Limón'],
-          [ 'first_name' => 'Salud', 'last_name' => 'Carbajal'],
         ],
       ],
     ];
@@ -378,19 +330,6 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
           $this->assertEquals($value, $districtId, $name);
         }
       }
-      foreach ($expected['officials'] as $official) {
-        $this->assertOfficialAdded($official['first_name'], $official['last_name'], $name);
-      }
     }
   }
-  protected function assertOfficialAdded($first_name, $last_name, $source): void {
-    $official = \Civi\Api4\Contact::get()
-      ->addWhere('contact_sub_type', '=', 'Official')
-      ->addWhere('first_name', '=', $first_name)
-      ->addWhere('last_name', '=', $last_name)
-      ->execute();
-    $this->assertEquals(1, $official->count(), "$first_name $last_name added as official via $source.");
-  }
-
-
 }

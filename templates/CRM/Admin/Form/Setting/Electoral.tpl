@@ -64,11 +64,6 @@
            <td>{$form.electoralApiLookupOnAddressUpdate.html}<br />
            <span class="description">{ts}Get district data any time an address matching these criteria is added/changed.{/ts}</span></td>
        </tr>
-        <tr class="crm-electoral-api-form-block-create-official-on-district-lookup">
-           <td>{$form.electoralApiCreateOfficialOnDistrictLookup.label}</td>
-           <td>{$form.electoralApiCreateOfficialOnDistrictLookup.html}<br />
-           <span class="description">{ts}Create a contact for the matching elected official when performing district lookups.{/ts}</span></td>
-       </tr>
   </table>
   <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>
 </div>
@@ -132,14 +127,6 @@
       CRM.$("#electoralApiDistrictTypes option[value='" + item + "']").prop( 'disabled', ciceroVisible ? '' : 'disabled').addClass('hidden');
     });
  
-    // cicero and openstates can add elected officials.
-    if (ciceroVisible || openstatesVisible) {
-      CRM.$('.crm-electoral-api-form-block-create-official-on-district-lookup').toggle(true);
-    }
-    else {
-      CRM.$('.crm-electoral-api-form-block-create-official-on-district-lookup').toggle(false);
-    }
-
     var hideStyle = '#select2-drop .select2-results .select2-result-unselectable {display:none;}';
     var styleSheet = document.createElement("style")
     styleSheet.type = "text/css"

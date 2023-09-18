@@ -48,15 +48,6 @@ abstract class AbstractApi {
   protected $apiKey;
 
   /**
-   * Whether or not to create the official
-   *
-   * This one is public so it can be changed on
-   * the fly (e.g. when doing lookups via the petitionemail
-   * extension, which also adds officials).
-   */
-  public $createOfficialOnDistrictLookup = FALSE;
-
-  /**
    * @var string 
    * Get future date for query.
    */
@@ -172,7 +163,7 @@ abstract class AbstractApi {
       $this->address = $address;
       $data = $this->lookup();
       $lastLookupCompleted = time();
-      if ($data['district'] || $data['official']) {
+      if ($data['district']) {
         $this->writeData($data);
         $totalProcessed++;
       }
@@ -200,8 +191,7 @@ abstract class AbstractApi {
         'electoralApiIncludedCountries', 
         'electoralApiAllCities', 
         'electoralApiAllCountries', 
-        'electoralApiFutureDate',
-        'electoralApiCreateOfficialOnDistrictLookup')
+        'electoralApiFutureDate')
       ->execute()
       ->indexBy('name');
 
@@ -229,7 +219,6 @@ abstract class AbstractApi {
     $this->addressLocationType = $settings['addressLocationType']['value'][0];
     $this->districtTypes = $settings['electoralApiDistrictTypes']['value'];
     $this->futureDate = $settings['electoralApiFutureDate']['value'];
-    $this->createOfficialOnDistrictLookup = $settings['electoralApiCreateOfficialOnDistrictLookup']['value'];
     $this->apiKey = $this->getApiKey();
   }
 
@@ -259,8 +248,7 @@ abstract class AbstractApi {
    * processSingleAddress
    *
    * A public function to process a single address' data.  Used for real-time
-   * update on postCommit. Writes district data for the contact and, if configured
-   * inserts elected officials as well.
+   * update on postCommit. Writes district data for the contact.
    *
    * @var int addressId - the addressId to process.
    *
@@ -285,11 +273,6 @@ abstract class AbstractApi {
   protected function writeData(array $data): void {
     foreach ($data['district'] as $district) {
       $this->writeDistrictData($district);
-    }
-    if ($this->createOfficialOnDistrictLookup) {
-      foreach ($data['official'] as $official) {
-        $official->createOfficial();
-      }
     }
   }
 
@@ -694,9 +677,7 @@ abstract class AbstractApi {
    *
    * Provider-specific lookup for a single address.
    *
-   * Returns an array of processed district data keyed to "district" and an
-   * array of official data keyed to "official" returned by the address
-   * set.
+   * Returns an array of processed district data keyed to "district".
    *
    */
   abstract protected function apiLookup() : array;

@@ -3,7 +3,6 @@
 namespace Civi\Electoral\Api;
 
 use CRM_Electoral_ExtensionUtil as E;
-use CRM_Electoral_Official;
 
 // use \GuzzleHttp\Client;
 
@@ -78,10 +77,8 @@ class Openstates extends \Civi\Electoral\AbstractApi {
     
     // successful lookup.
     if ($resp_obj) {
-      // We previously used the district API endpoint to get legislative district info, but now we use the "officials" endpoint to get both district and official in one lookup.
-      foreach ($resp_obj->results as $official) {
-        $response['district'][] = $this->parseDistrictData($official);
-        $response['official'][] = $this->parseOfficialData($official);
+      foreach ($resp_obj->results as $result) {
+        $response['district'][] = $this->parseDistrictData($result);
       }
     }
     return $response;
@@ -185,44 +182,6 @@ class Openstates extends \Civi\Electoral\AbstractApi {
       'valid_to' => $valid_to, 
       'ocd_id' => $ocd_id,
     ];
-  }
-
-  /**
-   * Given an officials from the API, returns an object that can be saved (or not).
-   */
-  private function parseOfficialData($officialInfoObject) : \CRM_Electoral_Official {
-    // Check if we already have this contact in the database.
-    $externalIdentifier = 'openstates_' . $officialInfoObject->id;
-    // Get the basic info.
-    // Sometimes given_name and family_name are empty so we have to parse
-    // the full name.
-    $givenName = $officialInfoObject->given_name; 
-    $familyName = $officialInfoObject->family_name; 
-    $names = $this->parseName($officialInfoObject->name);
-    if (empty($givenName)) {
-      $givenName = $names['first_name'];
-    }
-    if (empty($familyName)) {
-      $familyName = $names['last_name'];
-    }
-    $level = $this->levelMap[$officialInfoObject->jurisdiction->classification];
-    $chamber = $this->parseChamber($officialInfoObject->current_role->org_classification);
-
-    $official = new CRM_Electoral_Official();
-    $official
-      ->setFirstName($givenName)
-      ->setLastName($familyName)
-      ->setExternalIdentifier($externalIdentifier)
-      ->setOcdId($officialInfoObject->jurisdiction->id)
-      ->setPoliticalParty($officialInfoObject->party)
-      ->setChamber($chamber)
-      ->setLevel($level);
-    // Note - we have the image url but civi doesn't render remote images
-    //  ->setImageUrl($officialInfoObject->image);
-    // We're only supporting two addresses/phones/emails at this time due to how Civi handles location types.
-    
-    $official->setEmailAddress($officialInfoObject->email, 'Main');
-    return $official;
   }
 
   /**
