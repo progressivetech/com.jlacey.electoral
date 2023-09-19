@@ -112,14 +112,14 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       if ($resp_obj) {
         if (in_array($districtType, $legislativeDistrictTypes)) {
           foreach ($resp_obj->response->results->candidates[0]->districts as $districtInfo) {
-	    if ($this->futureDate) {
-	      $validTo = substr($districtInfo->valid_to, 0, 10);
-	      if ($validTo && $validTo <= $this->futureDate) {
-	        // When pulling in future districts, omit district date that is relatively stale
-		// to avoid having multiple districts.
-	        continue;
+            if ($this->futureDate) {
+              $validTo = substr($districtInfo->valid_to, 0, 10);
+              if ($validTo && $validTo <= $this->futureDate) {
+                // When pulling in future districts, omit district date that is relatively stale
+                // to avoid having multiple districts.
+                continue;
               }
-	    }
+            }
 
             // Don't need districts for exec positions, since it'll always be "NEW YORK" for NY, etc.
             if (strpos($districtInfo->district_type, '_EXEC')) {
