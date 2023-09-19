@@ -521,7 +521,6 @@ abstract class AbstractApi {
       ->setCheckPermissions(FALSE)
       ->addWhere('entity_id', '=', $data['contactId'])
       ->addWhere('electoral_level', '=', $data['level'])
-      ->addWhere('electoral_states_provinces', '=', $data['state_province_id'])
       ->addWhere('electoral_chamber', '=', $data['chamber'])
       ->execute()->first();
 
