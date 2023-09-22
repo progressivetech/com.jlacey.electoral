@@ -5,6 +5,6 @@ return [
   [
     'name' => 'ScheduledJob',
     'class' => 'CRM_Electoral_DAO_ScheduledJob',
-    'table' => 'civicrm_scheduled_job',
+    'table' => 'civicrm_electoral_scheduled_job',
   ],
 ];

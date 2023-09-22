@@ -3,7 +3,7 @@
 <table>
   <base>CRM/Electoral</base>
   <class>ScheduledJob</class>
-  <name>civicrm_scheduled_job</name>
+  <name>civicrm_electoral_scheduled_job</name>
   <comment>Pre-defined scheduled districting jobs</comment>
   <log>true</log>
 

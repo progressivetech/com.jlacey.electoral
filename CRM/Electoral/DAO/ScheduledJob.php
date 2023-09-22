@@ -22,7 +22,7 @@ class CRM_Electoral_DAO_ScheduledJob extends CRM_Core_DAO {
    *
    * @var string
    */
-  public static $_tableName = 'civicrm_scheduled_job';
+  public static $_tableName = 'civicrm_electoral_scheduled_job';
 
   /**
    * Should CiviCRM log any modifications to this table in the civicrm_log table.
@@ -107,7 +107,7 @@ class CRM_Electoral_DAO_ScheduledJob extends CRM_Core_DAO {
    * Class constructor.
    */
   public function __construct() {
-    $this->__table = 'civicrm_scheduled_job';
+    $this->__table = 'civicrm_electoral_scheduled_job';
     parent::__construct();
   }
 
@@ -141,8 +141,8 @@ class CRM_Electoral_DAO_ScheduledJob extends CRM_Core_DAO {
             'duplicate_matching' => FALSE,
             'token' => FALSE,
           ],
-          'where' => 'civicrm_scheduled_job.id',
-          'table_name' => 'civicrm_scheduled_job',
+          'where' => 'civicrm_electoral_scheduled_job.id',
+          'table_name' => 'civicrm_electoral_scheduled_job',
           'entity' => 'ScheduledJob',
           'bao' => 'CRM_Electoral_DAO_ScheduledJob',
           'localizable' => 0,
@@ -165,8 +165,8 @@ class CRM_Electoral_DAO_ScheduledJob extends CRM_Core_DAO {
             'duplicate_matching' => FALSE,
             'token' => FALSE,
           ],
-          'where' => 'civicrm_scheduled_job.description',
-          'table_name' => 'civicrm_scheduled_job',
+          'where' => 'civicrm_electoral_scheduled_job.description',
+          'table_name' => 'civicrm_electoral_scheduled_job',
           'entity' => 'ScheduledJob',
           'bao' => 'CRM_Electoral_DAO_ScheduledJob',
           'localizable' => 0,
@@ -183,8 +183,8 @@ class CRM_Electoral_DAO_ScheduledJob extends CRM_Core_DAO {
             'duplicate_matching' => FALSE,
             'token' => FALSE,
           ],
-          'where' => 'civicrm_scheduled_job.contact_ids',
-          'table_name' => 'civicrm_scheduled_job',
+          'where' => 'civicrm_electoral_scheduled_job.contact_ids',
+          'table_name' => 'civicrm_electoral_scheduled_job',
           'entity' => 'ScheduledJob',
           'bao' => 'CRM_Electoral_DAO_ScheduledJob',
           'localizable' => 0,
@@ -203,8 +203,8 @@ class CRM_Electoral_DAO_ScheduledJob extends CRM_Core_DAO {
             'duplicate_matching' => FALSE,
             'token' => FALSE,
           ],
-          'where' => 'civicrm_scheduled_job.status',
-          'table_name' => 'civicrm_scheduled_job',
+          'where' => 'civicrm_electoral_scheduled_job.status',
+          'table_name' => 'civicrm_electoral_scheduled_job',
           'entity' => 'ScheduledJob',
           'bao' => 'CRM_Electoral_DAO_ScheduledJob',
           'localizable' => 0,
@@ -223,8 +223,8 @@ class CRM_Electoral_DAO_ScheduledJob extends CRM_Core_DAO {
             'duplicate_matching' => FALSE,
             'token' => FALSE,
           ],
-          'where' => 'civicrm_scheduled_job.status_message',
-          'table_name' => 'civicrm_scheduled_job',
+          'where' => 'civicrm_electoral_scheduled_job.status_message',
+          'table_name' => 'civicrm_electoral_scheduled_job',
           'entity' => 'ScheduledJob',
           'bao' => 'CRM_Electoral_DAO_ScheduledJob',
           'localizable' => 0,
@@ -241,9 +241,9 @@ class CRM_Electoral_DAO_ScheduledJob extends CRM_Core_DAO {
             'duplicate_matching' => FALSE,
             'token' => FALSE,
           ],
-          'where' => 'civicrm_scheduled_job.offset',
+          'where' => 'civicrm_electoral_scheduled_job.offset',
           'default' => '0',
-          'table_name' => 'civicrm_scheduled_job',
+          'table_name' => 'civicrm_electoral_scheduled_job',
           'entity' => 'ScheduledJob',
           'bao' => 'CRM_Electoral_DAO_ScheduledJob',
           'localizable' => 0,
@@ -260,8 +260,8 @@ class CRM_Electoral_DAO_ScheduledJob extends CRM_Core_DAO {
             'duplicate_matching' => FALSE,
             'token' => FALSE,
           ],
-          'where' => 'civicrm_scheduled_job.date_created',
-          'table_name' => 'civicrm_scheduled_job',
+          'where' => 'civicrm_electoral_scheduled_job.date_created',
+          'table_name' => 'civicrm_electoral_scheduled_job',
           'entity' => 'ScheduledJob',
           'bao' => 'CRM_Electoral_DAO_ScheduledJob',
           'localizable' => 0,
@@ -278,8 +278,8 @@ class CRM_Electoral_DAO_ScheduledJob extends CRM_Core_DAO {
             'duplicate_matching' => FALSE,
             'token' => FALSE,
           ],
-          'where' => 'civicrm_scheduled_job.date_updated',
-          'table_name' => 'civicrm_scheduled_job',
+          'where' => 'civicrm_electoral_scheduled_job.date_updated',
+          'table_name' => 'civicrm_electoral_scheduled_job',
           'entity' => 'ScheduledJob',
           'bao' => 'CRM_Electoral_DAO_ScheduledJob',
           'localizable' => 0,
