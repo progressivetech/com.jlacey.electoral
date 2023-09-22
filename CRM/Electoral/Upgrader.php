@@ -80,7 +80,20 @@ class CRM_Electoral_Upgrader extends CRM_Extension_Upgrader_Base {
     return TRUE;
   }
 
+  /**
+   * Add new table for tracking scheduled jobs. 
+   *
+   * @return TRUE on success
+   * @throws Exception
+   */
+  public function upgrade_1006() {
+    $dao = CRM_Core_DAO::executeQuery("SELECT COUNT(*) AS count FROM information_schema.TABLES WHERE TABLE_NAME = 'civicrm_electoral_scheduled_job'");
+    $dao->fetch();
 
-
+    if ($dao->count > 0) {
+      return TRUE;
+    }
+    return $this->executeSqlFile('sql/auto_install.sql');
+  }
 
 }
