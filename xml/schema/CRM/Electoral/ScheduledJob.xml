@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+
+<table>
+  <base>CRM/Electoral</base>
+  <class>ScheduledJob</class>
+  <name>civicrm_scheduled_job</name>
+  <comment>Pre-defined scheduled districting jobs</comment>
+  <log>true</log>
+
+  <field>
+    <name>id</name>
+    <type>int unsigned</type>
+    <required>true</required>
+    <comment>Unique ScheduledJob ID</comment>
+    <html>
+      <type>Number</type>
+    </html>
+  </field>
+  <primaryKey>
+    <name>id</name>
+    <autoincrement>true</autoincrement>
+  </primaryKey>
+  <field>
+    <name>description</name>
+    <type>varchar</type>
+    <!-- pending, in progress, completed, error -->
+    <length>512</length>
+    <comment>Description of the scheduled job </comment>
+  </field>
+  <field>
+    <name>contact_ids</name>
+    <type>text</type>
+    <comment>Comma separated list of contact ids to re-district</comment>
+  </field>
+  <field>
+    <name>status</name>
+    <type>varchar</type>
+    <!-- pending, in progress, completed, error, disabled -->
+    <length>10</length>
+    <comment>Status of the job</comment>
+  </field>
+  <field>
+    <name>status_message</name>
+    <type>varchar</type>
+    <!-- pending, in progress, completed, error -->
+    <length>512</length>
+    <comment>Status explanation of the job</comment>
+    <index>
+      <name>index_status_message</name>
+      <fieldName>status_message</fieldName>
+    </index>
+  </field>
+  <field>
+    <name>offset</name>
+    <type>int unsigned</type>
+    <comment>Keeps track of the index of the last contact id processed</comment>
+    <default>0</default>
+   </field>
+   <field>
+    <name>date_created</name>
+    <type>timestamp</type>
+    <comment>When was the job created.</comment>
+   </field>
+   <field>
+    <name>date_updated</name>
+    <type>timestamp</type>
+    <comment>When was the job last updated.</comment>
+    <index>
+      <name>index_date_updated</name>
+      <fieldName>date_updated</fieldName>
+    </index>
+   </field>
+
+</table>
