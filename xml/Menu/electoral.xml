@@ -6,4 +6,10 @@
     <title>Electoral API Extension Settings</title>
     <access_arguments>administer CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/electoral/form</path>
+    <page_callback>CRM_Electoral_Form_Electoral</page_callback>
+    <title>Electoral</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+  </item>
 </menu>

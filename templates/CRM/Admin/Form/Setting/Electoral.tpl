@@ -68,26 +68,17 @@
        </tr>
   </table>
 
-  <h3>Scheduled A Districting Job</h3>
-
-  <div class="help">Optionally, to set the district information for a group of contacts, create a new scheduled job on this screen, then ensure the "Electoral Run Scheduled Jobs" is configured to execute in the <a href="/civicrm/admin/job?reset=1">CiviCRM list of scheduled jobs.</a></div>
-
-  <table class="form-layout">
-        <tr class="crm-electoral-api-form-group">
-           <td class="label">Select the group of contcts to district</td>
-           <td><input name="electoral-api-group"><br />
-           <span class="description">{ts}The contacts will be selected when you hit submit, not when the job is executed.{/ts}</span></td>
-       </tr>
-      <tr class="crm-electoral-api-form-contacts-per-run">
-           <td class="label">Indicate how many contacts should be districted on each run</td>
-           <td><input name="electoral-api-contacts-per-run"></td>
-       </tr>
-  </table>
   <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>
+
 
   <h3>Scheduled Jobs</h3>
 
-  <div class="help">See below for a list of jobs that have been scheduled</div>
+  <div class="help">Optionally, to set the district information for a group of contacts, create a new scheduled job on this screen, then ensure the "Electoral Run Scheduled Jobs" is configured to execute in the <a href="/civicrm/admin/job?reset=2">CiviCRM list of scheduled jobs.</a></div>
+
+<div class="action-link">
+  <a href="/civicrm/electoral/form" id="newDistrictJob" class="button" target="crm-popup"><i aria-hidden="true" class="crm-i fa-plus-circle"></i> Add New District Job</a>
+</div>
+
   <table class="form-layout-compressed">
         <tr class="crm-electoral-api-form-block-job">
         </tr>

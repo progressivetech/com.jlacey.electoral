@@ -100,6 +100,14 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
         }
       }
     }
+
+    // Ensure limit per run is an integer.
+    $limit = $values['limit_per_run'] ?? NULL;
+    if ($limit) {
+      if (!is_numeric($limit)) {
+        $errors['limit_per_run'] = E::ts("Please enter a number for limit to run.");
+      }
+    }
     return empty($errors) ? TRUE : $errors;
   }
   /**
@@ -126,6 +134,9 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
       ->addWhere('name', 'IN', ['electoral_valid_from', 'electoral_valid_to'])
       ->addValue('is_active', $activeDates)
       ->execute();
+    $session = CRM_Core_Session::singleton();
+    $session->replaceUserContext(CRM_Utils_System::url('civicrm/admin/setting/electoral'));
+
   }
 
 }
