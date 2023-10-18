@@ -64,9 +64,8 @@ class CRM_Electoral_Form_Electoral extends CRM_Core_Form {
     $values = $this->exportValues();
     parent::postProcess();
     $session = CRM_Core_Session::singleton();
-    $session->replaceUserContext(CRM_Utils_System::url('civicrm/admin/setting/electoral'));
-
-
+    $msg = E::ts("Your Scheduled Job has been saved.");
+    $session->setStatus($msg);
   }
 
   /**
