@@ -78,7 +78,12 @@ class Openstates extends \Civi\Electoral\AbstractApi {
     // successful lookup.
     if ($resp_obj) {
       foreach ($resp_obj->results as $result) {
-        $response['district'][] = $this->parseDistrictData($result);
+        if ($this->includeDistricts) {
+          $response['district'][] = $this->parseDistrictData($result);
+        }
+        if ($this->includeOfficials) {
+          $response['officials'][] = $this->parseOfficialData($result);
+        }
       }
     }
     return $response;
@@ -202,4 +207,38 @@ class Openstates extends \Civi\Electoral\AbstractApi {
     }
     return $chamber;
   }
+  /**
+   * Given an officials from the API, returns an object that can be saved (or not).
+   */
+  private function parseOfficialData($officialInfoObject) : Array {
+    // Check if we already have this contact in the database.
+    $externalIdentifier = 'openstates_' . $officialInfoObject->id;
+    // Get the basic info.
+    // Sometimes givtn_name and family_name are empty so we have to parse
+    // the full name.
+    $givenName = $officialInfoObject->given_name;
+    $familyName = $officialInfoObject->family_name;
+    $names = $this->parseName($officialInfoObject->name);
+    if (empty($givenName)) {
+      $givenName = $names['first_name'];
+    }
+    if (empty($familyName)) {
+      $familyName = $names['last_name'];
+    }
+    $level = $this->levelMap[$officialInfoObject->jurisdiction->classification];
+    $chamber = $this->parseChamber($officialInfoObject->current_role->org_classification);
+
+    $official = [];
+    $official['first_name'] = $givenName;
+    $official['last_name'] = $familyName;
+    $official['name'] = $officialInfoObject->name;
+    $official['ocd_id'] = $officialInfoObject->jurisdiction->id;
+    $official['party'] = $officialInfoObject->party;
+    $official['chamber'] = $chamber;
+    $official['level'] = $level;
+    $official['email_address'] = $officialInfoObject->email; 
+    $official['external_identifier'] = $externalIdentifier;
+    return $official;
+  }
+
 }

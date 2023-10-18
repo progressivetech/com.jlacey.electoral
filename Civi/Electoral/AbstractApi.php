@@ -98,6 +98,25 @@ abstract class AbstractApi {
   protected $results = [];
 
   /**
+   * includeOfficials 
+   *
+   * Should info about the elected officials representing the district be
+   * included? With some providers (cicero) this will require an extra query
+   * and an extra cost. This switch is only exposed via the API so extensions
+   * such as the petitionemail extension can use it. 
+   */
+  public $includeOfficials = FALSE;
+
+  /**
+   * includeDistricts
+   *
+   * Whether or not district info should be included. Only available via API. This is
+   * useful if you only want officials and don't want to pay for district lookups. Keep
+   * in mind that futureDate won't work with officials, only districts.
+   */
+  public $includeDistricts = TRUE;
+
+  /**
    * Constructor class.
    */
   public function __construct(int $limit = 0, bool $update = FALSE, bool $cache = FALSE, string $groups = '') {
@@ -219,12 +238,14 @@ abstract class AbstractApi {
     $this->addressLocationType = $settings['addressLocationType']['value'][0];
     $this->districtTypes = $settings['electoralApiDistrictTypes']['value'];
     $futureDate = $settings['electoralApiFutureDate']['value'];
-    $timestamp = strtotime($futureDate);
-    if ($timestamp && $timestamp > time()) {
-      $this->futureDate = $futureDate;
-    }
-    else {
-      \Civi::log()->debug("Warning: future date invalid or in the past: " . $futureDate);
+    if ($futureDate) {
+      $timestamp = strtotime($futureDate);
+      if ($timestamp && $timestamp > time()) {
+        $this->futureDate = $futureDate;
+      }
+      else {
+        \Civi::log()->debug("Warning: future date invalid or in the past: " . $futureDate);
+      }
     }
     $this->apiKey = $this->getApiKey();
   }

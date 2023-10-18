@@ -36,6 +36,16 @@ class Lookup extends \Civi\Api4\Generic\AbstractAction {
    */
   protected $write = FALSE;
 
+  /**
+   * Include officials in output?
+   */
+  protected $includeOfficials = FALSE;
+
+  /*
+   * Include districts in output?
+   */
+  protected $includeDistricts = TRUE;
+
   public function _run(\Civi\Api4\Generic\Result $result) {
     $contactId = $this->getContactId();
     $address = $this->getAddress();
@@ -94,6 +104,8 @@ class Lookup extends \Civi\Api4\Generic\AbstractAction {
       $address = electoral_parse_address($this->getAddress());
     }
     $provider->setAddress($address);
+    $provider->includeOfficials = $this->getIncludeOfficials();
+    $provider->includeDistricts = $this->getIncludeDistricts();
     $out = $provider->lookup();
     if ($write && count($out['district']) > 0) {
       // We should end up using the cached results, so for simplicity just re-run

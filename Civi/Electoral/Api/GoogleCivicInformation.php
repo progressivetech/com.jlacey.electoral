@@ -35,6 +35,7 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
   protected function apiLookup() : array {
     $return = [
       'district' => [],
+      'official' => [],
     ];
     
     // Assemble the API URL.
@@ -49,10 +50,32 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
       $result = $this->decodeLookupResults($json);
     }
     if ($result) {
+      // Google data makes it really hard to parse like the other providers.
+      // Google first provides a list of offices, which contain an "official_indices"
+      // key, which is an array of indexes referring to a second list of officials.
+      //
+      // First we parse the officies to get the district information. And, as we do that,
+      // we keep track of the official_indices so we can then parse the officials.
+      $officialIndices = [];
+
       foreach ($result['offices'] as $office) {
         $district = $this->parseDistrictData($office);
         if ($district) {
+          // Record the official indices so we can look those up later.
+          foreach($district['official_indices'] as $index) {
+            $officialIndices[$index] = $district;
+          }
+          // Now remove them since we don't record these.
+          unset($district['official_indices']);
+
           $return['district'][] = $district;
+        }
+        
+      }
+      // Now we get the officials
+      if ($this->includeOfficials) {
+        foreach($officialIndices as $officialIndex => $district) {
+          $return['official'][] = $this->parseOfficialData($result['officials'][$officialIndex], $district);
         }
       }
     }
@@ -111,7 +134,35 @@ class GoogleCivicInformation extends \Civi\Electoral\AbstractApi {
       'valid_from' => NULL,
       'valid_to' => NULL,
       'ocd_id' => $office['divisionId'],
+      // We add this special one to help us with official looksup later.
+      'official_indices' => $office['officialIndices'],
     ];
+  }
+
+  private function parseOfficialData($officialData, $district) {
+    $districtId = $district['ocd_id'];
+
+    // Bah, not real identifier. So we make one up. We have to shorten it so it
+    // fits in the 64 character external identifier field. Hopefully no collisions.
+    $firstName = '';
+    $middleName = '';
+    $lastName = '';
+    $names = $this->parseName($officialData['name']);
+    $firstName = $names['first_name'];
+    $middleName = $names['middle_name'];
+    $lastName = $names['last_name'];
+    $officialData['first_name'] = utf8_encode($firstName);
+    $officialData['middle_name'] = utf8_encode($middleName);
+    $officialData['last_name'] = utf8_encode($last_name);
+    $officialData['ocd_id'] = $districtId;
+    $officialData['email_address'] = NULL;
+    if (isset($officialData['emails'])) {
+      foreach ($officialData['emails'] as $key => $email) {
+        $officialData['email_address'] = $email;
+        break;
+      }
+    }
+    return $official;
   }
 
   protected function decodeLookupResults($json) {

@@ -12,6 +12,7 @@ use CRM_Electoral_ExtensionUtil as E;
 class Cicero extends \Civi\Electoral\AbstractApi {
 
   const CIVICRM_CICERO_LEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/legislative_district?';
+  const CIVICRM_CICERO_OFFICIAL_QUERY_URL = 'https://cicero.azavea.com/v3.1/official?';
   const CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/nonlegislative_district?';
   const COUNCIL_DISTRICT_SYNONYMS = [
     'council_district',
@@ -79,6 +80,9 @@ class Cicero extends \Civi\Electoral\AbstractApi {
     $response = [
       'district' => [],
     ];
+
+
+    // First districts.
     $legislativeDistrictTypes = [
       'country',
       'administrativeArea1',
@@ -86,22 +90,63 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       'locality',
     ];
     $legislativeLookupComplete = FALSE;
-    foreach ($this->districtTypes as $districtType) {
-      // Cicero has one URL for legislative lookups and a different URL for each other lookup.
-      if (in_array($districtType, $legislativeDistrictTypes)) {
-        if ($legislativeLookupComplete) {
-          continue;
+    if ($this->includeDistricts) {
+      foreach ($this->districtTypes as $districtType) {
+        // Cicero has one URL for legislative lookups and a different URL for each other lookup.
+        if (in_array($districtType, $legislativeDistrictTypes)) {
+          if ($legislativeLookupComplete) {
+            continue;
+          }
+          $url = self::CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString;
+          if ($this->futureDate) {
+            $url .= "&valid_on_or_after=" . $this->futureDate;
+          }
+          // One legislative lookup gets all the levels, so don't re-run for each level.
+          $legislativeLookupComplete = TRUE;
         }
-        $url = self::CIVICRM_CICERO_LEGISLATIVE_QUERY_URL . $queryString;
-        if ($this->futureDate) {
-          $url .= "&valid_on_or_after=" . $this->futureDate;
+        else {
+          $url = self::CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL . "$queryString&type=$districtType";
         }
-        // One legislative lookup gets all the levels, so don't re-run for each level.
-        $legislativeLookupComplete = TRUE;
+        $resp_obj = NULL;
+        $json = $this->lookupUrl($url);
+        if ($json) {
+          $resp_obj = $this->decodeLookupResults($json);
+        }
+        
+        // successful lookup.
+        if ($resp_obj) {
+          if (in_array($districtType, $legislativeDistrictTypes)) {
+            foreach ($resp_obj->response->results->candidates[0]->districts as $districtInfo) {
+              if ($this->futureDate) {
+                $validTo = substr($districtInfo->valid_to, 0, 10);
+                if ($validTo && $validTo <= $this->futureDate) {
+                  // When pulling in future districts, omit district date that is relatively stale
+                  // to avoid having multiple districts.
+                  continue;
+                }
+              }
+
+              if ($this->acceptableDistrict($districtInfo)) {
+                continue;
+              }
+              $response['district'][] = $this->parseDistrictData($districtInfo);
+            }
+          }
+          else {
+            foreach ($resp_obj->response->results->candidates[0]->districts as $districtInfo) {
+              if (empty($districtInfo->district_id)) {
+                continue;
+              }
+              $response['district'][] = $this->parseDistrictData($districtInfo);
+            }
+          }
+        }
       }
-      else {
-        $url = self::CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL . "$queryString&type=$districtType";
-      }
+    }
+
+    // Next officials.
+    if ($this->includeOfficials) {
+      $url = self::CIVICRM_CICERO_OFFICIAL_QUERY_URL . $queryString;
       $resp_obj = NULL;
       $json = $this->lookupUrl($url);
       if ($json) {
@@ -110,74 +155,67 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       
       // successful lookup.
       if ($resp_obj) {
-        if (in_array($districtType, $legislativeDistrictTypes)) {
-          foreach ($resp_obj->response->results->candidates[0]->districts as $districtInfo) {
-            if ($this->futureDate) {
-              $validTo = substr($districtInfo->valid_to, 0, 10);
-              if ($validTo && $validTo <= $this->futureDate) {
-                // When pulling in future districts, omit district date that is relatively stale
-                // to avoid having multiple districts.
-                continue;
-              }
-            }
-
-            // Don't need districts for exec positions, since it'll always be "NEW YORK" for NY, etc.
-            if (strpos($districtInfo->district_type, '_EXEC')) {
-              continue;
-            }
-
-            // Sometimes the mayor shows up as LOCAL_EXEC but other times the
-            // mayor is a member of the city council so they will show up as
-            // just LOCAL making them seem like a city council person. If we
-            // add them as a district it will be added as a AT LARGE district
-            // and will mess up searching on the real city council districts. 
-            //
-            // Rebecca Womack from Cicero said we can use the presence of
-            // "council_district" in the ocd_id field, eg:
-            // ocd-division/country:us/state:tx/place:austin/council_district:32
-            // to indicate that it's a council member and not the mayor.
-            if (preg_match('/^LOCAL/', $districtInfo->district_type)) {
-              // We will skip this record unless council_district is specified.
-              $skip = TRUE;
-              $ocdIdParts = explode('/', $districtInfo->ocd_id);
-              $lastPart = $ocdIdParts[4] ?? NULL;
-              if ($lastPart){
-                $districtTypeParts = explode(':', $lastPart);
-                $districtType = $districtTypeParts[0] ?? NULL;
-                if ($districtType) {
-                  if (in_array($districtType, self::COUNCIL_DISTRICT_SYNONYMS)) {
-                    $skip = FALSE;
-                  }
-                }
-              }
-              if ($skip) {
-                continue;
-              }
-            }
-
-            // We also want to exclude COUNTY as a subtype - to avoid having county
-            // commissioners pop up when we want city council members.
-            if (property_exists($districtInfo, 'subtype') && $districtInfo->subtype == 'COUNTY') {
-              continue;
-            }
-            if (empty($districtInfo->district_id)) {
-              continue;
-            }
-
-            $response['district'][] = $this->parseDistrictData($districtInfo);
+        foreach ($resp_obj->response->results->candidates[0]->officials as $official) {
+          $districtInfo = $official->office->district;
+          if (!$this->acceptableDistrict($districtInfo)) {
+            continue;
           }
-        }
-        else {
-          foreach ($resp_obj->response->results->candidates[0]->districts as $districtInfo) {
-            if (empty($districtInfo->district_id)) {
-              continue;
-            }
-            $response['district'][] = $this->parseDistrictData($districtInfo);
-          }
+          $response['official'][] = $this->parseOfficialData($official);
         }
       }
     }
     return $response;
+  }
+
+  /**
+   * acceptableDistrict
+   *
+   * Whether or not we should include this district in our results.
+   */
+  private function acceptableDistrict($districtInfo) {
+    // Don't need districts for exec positions, since it'll always be "NEW YORK" for NY, etc.
+    if (strpos($districtInfo->district_type, '_EXEC')) {
+      return FALSE;
+    }
+
+    // Sometimes the mayor shows up as LOCAL_EXEC but other times the
+    // mayor is a member of the city council so they will show up as
+    // just LOCAL making them seem like a city council person. If we
+    // add them as a district it will be added as a AT LARGE district
+    // and will mess up searching on the real city council districts. 
+    //
+    // Rebecca Womack from Cicero said we can use the presence of
+    // "council_district" in the ocd_id field, eg:
+    // ocd-division/country:us/state:tx/place:austin/council_district:32
+    // to indicate that it's a council member and not the mayor.
+    if (preg_match('/^LOCAL/', $districtInfo->district_type)) {
+      // We will skip this record unless council_district is specified.
+      $skip = TRUE;
+      $ocdIdParts = explode('/', $districtInfo->ocd_id);
+      $lastPart = $ocdIdParts[4] ?? NULL;
+      if ($lastPart){
+        $districtTypeParts = explode(':', $lastPart);
+        $districtType = $districtTypeParts[0] ?? NULL;
+        if ($districtType) {
+          if (in_array($districtType, self::COUNCIL_DISTRICT_SYNONYMS)) {
+            $skip = FALSE;
+          }
+        }
+      }
+      if ($skip) {
+        return FALSE;
+      }
+    }
+
+    // We also want to exclude COUNTY as a subtype - to avoid having county
+    // commissioners pop up when we want city council members.
+    if (property_exists($districtInfo, 'subtype') && $districtInfo->subtype == 'COUNTY') {
+      return FALSE;
+    }
+    if (empty($districtInfo->district_id)) {
+      return FALSE;
+    }
+    return TRUE;
   }
 
   /**
@@ -310,4 +348,33 @@ class Cicero extends \Civi\Electoral\AbstractApi {
     return $data;
   }
 
+  private function parseOfficialData($officialInfoObject) : Array {
+    $officialInfo = json_decode(json_encode($officialInfoObject), TRUE);
+    if (!$officialInfo) {
+      \Civi::log()->debug("Failed to json decode official");
+      return [];
+    }
+    $official = [];
+
+    $externalIdentifier = 'cicero_' . $officialInfo['id'];
+    // This is for readability.
+    $office = $officialInfo['office'] ?? NULL;
+    $districtType = $office['district']['district_type'];
+
+    // reset some keys for easier parsing.
+    $official['ocd_id'] = $office['district']['ocd_id'];
+    $official['chamber'] = $this->chamberMap[$districtType] ?? NULL;
+    $official['level'] = $this->levelMap[$districtType] ?? NULL;
+    // We are only taking the first email address.
+    foreach ($officialInfo['email_addresses'] as $key => $email) {
+      $official['email_address'] = $email;
+      break;
+    } 
+    $official['first_name'] = $officialInfo['first_name'];
+    $official['middle_name'] = $officialInfo['middle_initial'];
+    $official['last_name'] = $officialInfo['last_name'];
+    $official['name'] = $officialInfo['first_name'] . ' ' . $officialInfo['middle_initial'] . ' ' . $officialInfo['last_name'];
+    $official['external_identifier'] = $externalIdentifier;
+    return $official;
+  }
 }
