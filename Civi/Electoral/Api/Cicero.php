@@ -125,8 +125,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
                   continue;
                 }
               }
-
-              if ($this->acceptableDistrict($districtInfo)) {
+              if (!$this->acceptableDistrict($districtInfo)) {
                 continue;
               }
               $response['district'][] = $this->parseDistrictData($districtInfo);
