@@ -156,6 +156,8 @@ return [
   [
     'name' => 'electoral_all_districts',
     'entity' => 'Job',
+    'cleanup' => 'unused',
+    'update' => 'unmodified',
     'params' => [
       'version' => 3,
       'name'          => 'Electoral API - Districts Lookup',
