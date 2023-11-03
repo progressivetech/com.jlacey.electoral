@@ -82,7 +82,7 @@ class Openstates extends \Civi\Electoral\AbstractApi {
           $response['district'][] = $this->parseDistrictData($result);
         }
         if ($this->includeOfficials) {
-          $response['officials'][] = $this->parseOfficialData($result);
+          $response['official'][] = $this->parseOfficialData($result);
         }
       }
     }
