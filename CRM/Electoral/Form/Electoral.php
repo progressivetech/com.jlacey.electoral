@@ -20,6 +20,7 @@ class CRM_Electoral_Form_Electoral extends CRM_Core_Form {
         'placeholder' => ts('- none -'),
       ]
     );
+    $this->addRule('group_id', E::ts("Please select a group"), 'required', NULL, 'client');
     $this->add('text', 'limit_per_run', ts('Limit per run'));
     $this->add('advcheckbox', 'update', ts('Update?'));
 
@@ -57,12 +58,29 @@ class CRM_Electoral_Form_Electoral extends CRM_Core_Form {
         $errors['limit_per_run'] = E::ts("Please enter a number for limit to run.");
       }
     }
+    $contacts = \CRM_Contact_BAO_Group::getGroupContacts($values['group_id']);
+    if (count($contacts) == 0) {
+      $errors['group_id'] = E::ts("That group has no members. Please pick a group with at least one contact in it.");
+    }
+
     return empty($errors) ? TRUE : $errors;
   }
 
   public function postProcess() {
     $values = $this->exportValues();
+    $group_id = $values['group_id'];
+    $limit_per_run = $values['limit_per_run'] ?? 0;
+    $update = $values['update'] ?? 0;
+
+    $contact_ids = serialize(array_keys(\CRM_Contact_BAO_Group::getGroupContacts($group_id)));
+    \Civi::log()->debug(print_r($contacts, TRUE));
     parent::postProcess();
+    \Civi\Api4\DistrictJob::create()
+      ->addValue('contact_ids', $contact_ids)
+      ->addValue('limit_per_run', $limit_per_run)
+      ->addvalue('update', $update)
+      ->addValue('status', \CRM_Electoral_BAO_DistrictJob::STATUS_PENDING)
+      ->execute();
     $session = CRM_Core_Session::singleton();
     $msg = E::ts("Your Distrct Job has been saved.");
     $session->setStatus($msg);

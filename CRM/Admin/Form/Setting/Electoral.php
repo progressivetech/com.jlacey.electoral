@@ -58,9 +58,17 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
     $this->setDefaultsForMetadataDefinedFields();
     $this->_defaults['includedStatesProvinces'] = Civi::settings()->get('includedStatesProvinces');
     $this->_defaults['includedCounties'] = Civi::settings()->get('includedCounties');
+
+    $this->populateDistrictJobs();
     parent::buildForm();
   }
 
+  protected function populateDistrictJobs() {
+    $districtJobs = \Civi\Api4\DistrictJob::get()
+      ->execute();
+    $this->assign('districtJobs', $districtJobs);
+
+  }
   /**
    * Return options for the location type field.
    * @return array

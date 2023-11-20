@@ -80,8 +80,22 @@
 </div>
 
   <table class="form-layout-compressed">
+    <tr class="crm-electoral-api-form-block-job">
+      <th>Description</th>
+      <th>Status</th>
+      <th>Details</th>
+      <th>Date Created</th>
+      <th>Date modified</th>
+    </tr>
+    {foreach from=$districtJobs item=districtJob}
         <tr class="crm-electoral-api-form-block-job">
+          <td>{$districtJob.description}</td>
+          <td>{$districtJob.status}</td>
+          <td>{$districtJob.description}</td>
+          <td>{$districtJob.date_created}</td>
+          <td>{$districtJob.date_updated}</td>
         </tr>
+    {/foreach}
   </table>
 </div>
 

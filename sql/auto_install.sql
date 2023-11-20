@@ -36,12 +36,12 @@ SET FOREIGN_KEY_CHECKS=1;
 CREATE TABLE `civicrm_electoral_district_job` (
   `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique DistrctJob ID',
   `description` varchar(512) COMMENT 'Description of the district job ',
-  `contact_ids` text COMMENT 'Comma separated list of contact ids to re-district',
+  `contact_ids` text COMMENT 'Serialized list of contact ids to re-district',
   `status` varchar(10) COMMENT 'Status of the job',
   `status_message` varchar(512) COMMENT 'Status explanation of the job',
   `offset` int unsigned DEFAULT 0 COMMENT 'Keeps track of the index of the last contact id processed',
-  `date_created` timestamp COMMENT 'When was the job created.',
-  `date_updated` timestamp COMMENT 'When was the job last updated.',
+  `date_created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When was the job created.',
+  `date_updated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'When was the job last updated.',
   PRIMARY KEY (`id`)
 )
 ENGINE=InnoDB;
