@@ -3,8 +3,8 @@
 // https://docs.civicrm.org/dev/en/latest/hooks/hook_civicrm_entityTypes
 return [
   [
-    'name' => 'ScheduledJob',
-    'class' => 'CRM_Electoral_DAO_ScheduledJob',
-    'table' => 'civicrm_electoral_scheduled_job',
+    'name' => 'DistrictJob',
+    'class' => 'CRM_Electoral_DAO_DistrictJob',
+    'table' => 'civicrm_electoral_district_job',
   ],
 ];

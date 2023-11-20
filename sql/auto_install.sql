@@ -17,7 +17,7 @@
 
 SET FOREIGN_KEY_CHECKS=0;
 
-DROP TABLE IF EXISTS `civicrm_electoral_scheduled_job`;
+DROP TABLE IF EXISTS `civicrm_electoral_district_job`;
 
 SET FOREIGN_KEY_CHECKS=1;
 -- /*******************************************************
@@ -28,14 +28,14 @@ SET FOREIGN_KEY_CHECKS=1;
 
 -- /*******************************************************
 -- *
--- * civicrm_electoral_scheduled_job
+-- * civicrm_electoral_district_job
 -- *
--- * Pre-defined scheduled districting jobs
+-- * Pre-defined district districting jobs
 -- *
 -- *******************************************************/
-CREATE TABLE `civicrm_electoral_scheduled_job` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique ScheduledJob ID',
-  `description` varchar(512) COMMENT 'Description of the scheduled job ',
+CREATE TABLE `civicrm_electoral_district_job` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT COMMENT 'Unique DistrctJob ID',
+  `description` varchar(512) COMMENT 'Description of the district job ',
   `contact_ids` text COMMENT 'Comma separated list of contact ids to re-district',
   `status` varchar(10) COMMENT 'Status of the job',
   `status_message` varchar(512) COMMENT 'Status explanation of the job',

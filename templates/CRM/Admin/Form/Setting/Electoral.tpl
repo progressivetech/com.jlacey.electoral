@@ -71,7 +71,7 @@
   <div class="crm-submit-buttons">{include file="CRM/common/formButtons.tpl" location="bottom"}</div>
 
 
-  <h3>Scheduled Jobs</h3>
+  <h3>Scheduled District Jobs</h3>
 
   <div class="help">Optionally, to set the district information for a group of contacts, create a new scheduled job on this screen, then ensure the "Electoral Run Scheduled Jobs" is configured to execute in the <a href="/civicrm/admin/job?reset=2">CiviCRM list of scheduled jobs.</a></div>
 

@@ -2,12 +2,12 @@
 namespace Civi\Api4;
 
 /**
- * ScheduledJob entity.
+ * DistrictJob entity.
  *
  * Provided by the Electoral API extension.
  *
  * @package Civi\Api4
  */
-class ScheduledJob extends Generic\DAOEntity {
+class DistrictJob extends Generic\DAOEntity {
 
 }

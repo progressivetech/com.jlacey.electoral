@@ -2,16 +2,16 @@
 
 <table>
   <base>CRM/Electoral</base>
-  <class>ScheduledJob</class>
-  <name>civicrm_electoral_scheduled_job</name>
-  <comment>Pre-defined scheduled districting jobs</comment>
+  <class>DistrictJob</class>
+  <name>civicrm_electoral_district_job</name>
+  <comment>Pre-defined districting jobs</comment>
   <log>true</log>
 
   <field>
     <name>id</name>
     <type>int unsigned</type>
     <required>true</required>
-    <comment>Unique ScheduledJob ID</comment>
+    <comment>Unique DistrictJob ID</comment>
     <html>
       <type>Number</type>
     </html>
@@ -25,7 +25,7 @@
     <type>varchar</type>
     <!-- pending, in progress, completed, error -->
     <length>512</length>
-    <comment>Description of the scheduled job </comment>
+    <comment>Description of the district job </comment>
   </field>
   <field>
     <name>contact_ids</name>

@@ -15,6 +15,6 @@
 
 SET FOREIGN_KEY_CHECKS=0;
 
-DROP TABLE IF EXISTS `civicrm_electoral_scheduled_job`;
+DROP TABLE IF EXISTS `civicrm_electoral_district_job`;
 
 SET FOREIGN_KEY_CHECKS=1;

@@ -64,7 +64,7 @@ class CRM_Electoral_Form_Electoral extends CRM_Core_Form {
     $values = $this->exportValues();
     parent::postProcess();
     $session = CRM_Core_Session::singleton();
-    $msg = E::ts("Your Scheduled Job has been saved.");
+    $msg = E::ts("Your Distrct Job has been saved.");
     $session->setStatus($msg);
   }
 

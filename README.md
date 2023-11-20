@@ -53,7 +53,15 @@ Electoral API**.  See screenshot below, with an explanation of each option:
   criteria above. If you do not enable this option, district data will only be
   populated by scheduled job (see below).
 
-### Scheduled Job
+### Scheduled Jobs
+
+There are two types of Scheduled jobs.
+
+#### Recurring jobs
+
+If you would like to run a job on a regular schedule to add district
+information to your contacts that do not already have it, you can use the
+"Electoral API - District Lookup" job.
 
 Under **Administration menu » System Settings » Scheduled Jobs** you will find
 a job titled *Electoral API - Districts Lookup*.  By enabling this job, CiviCRM
@@ -75,6 +83,18 @@ groups=Administrators|Staff
   false
 * **groups** will restrict look ups to contacts in the matching pipe (|) separated
   list of group names. 
+
+#### One time job
+
+Sometimes you just want to schedule a one time job to add district info to a
+particular group.
+
+You can create a one time job via the **Administration menu » System Settings » Electoral API**
+screen. Scroll to the bottom of the page and click the "Add New District Job" button to add a new
+job.
+
+Be sure to enable "Electoral Run Scheduled Distrct Jobs" in the CiviCRM
+Scheduled Jobs screen. Each job scheduled in this manner will be run only once.
 
 ## Usage
 
