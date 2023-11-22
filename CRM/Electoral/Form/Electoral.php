@@ -68,22 +68,28 @@ class CRM_Electoral_Form_Electoral extends CRM_Core_Form {
 
   public function postProcess() {
     $values = $this->exportValues();
-    $group_id = $values['group_id'];
-    $limit_per_run = $values['limit_per_run'] ?? 0;
+    $groupId = $values['group_id'];
+    $limitPerRun = $values['limit_per_run'] ?? 0;
     $update = $values['update'] ?? 0;
 
-    $contact_ids = serialize(array_keys(\CRM_Contact_BAO_Group::getGroupContacts($group_id)));
-    \Civi::log()->debug(print_r($contacts, TRUE));
+    $groupTitle = \Civi\Api4\Group::get()
+      ->addWhere('id', '=', $groupId)
+      ->addSelect('title')
+      ->execute()->first()['title'];
+
+    $contactIds = serialize(array_keys(\CRM_Contact_BAO_Group::getGroupContacts($groupId)));
     parent::postProcess();
     \Civi\Api4\DistrictJob::create()
-      ->addValue('contact_ids', $contact_ids)
-      ->addValue('limit_per_run', $limit_per_run)
+      ->addValue('contact_ids', $contactIds)
+      ->addValue('limit_per_run', $limitPerRun)
       ->addvalue('update', $update)
+      ->addvalue('description', $groupTitle)
       ->addValue('status', \CRM_Electoral_BAO_DistrictJob::STATUS_PENDING)
       ->execute();
     $session = CRM_Core_Session::singleton();
     $msg = E::ts("Your Distrct Job has been saved.");
-    $session->setStatus($msg);
+    $session->setStatus($msg, E::ts("Success"), 'success');
+   
   }
 
   /**

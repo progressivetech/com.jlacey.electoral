@@ -12,4 +12,10 @@
     <title>Electoral</title>
     <access_arguments>administer CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/admin/setting/electoral/delete</path>
+    <page_callback>CRM_Electoral_Form_DeleteDistrictJob</page_callback>
+    <title>DeleteDistrictJob</title>
+    <access_arguments>access CiviCRM</access_arguments>
+  </item>
 </menu>

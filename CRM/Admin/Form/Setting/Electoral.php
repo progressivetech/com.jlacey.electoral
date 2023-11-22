@@ -29,6 +29,7 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
   ];
 
   public function buildQuickForm() {
+    Civi::resources()->addStyleFile('com.jlacey.electoral', 'electoral.css');
     // This whole function is until metadata-driven chain-selects are solid in core.
     $this->addChainSelect('includedStatesProvinces', [
       'control_field' => 'electoralApiIncludedCountries',
@@ -64,8 +65,17 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
   }
 
   protected function populateDistrictJobs() {
-    $districtJobs = \Civi\Api4\DistrictJob::get()
+    $data = \Civi\Api4\DistrictJob::get()
       ->execute();
+    $districtJobs = [];
+    foreach ($data as $job) {
+      // Add some calculated details
+      $contacts = unserialize($job['contact_ids']);
+      $job['total_contacts'] = count($contacts);
+      $job['percent_complete'] = number_format($job['offset'] / $job['total_contacts'] * 100, 0);
+      $job['delete_link'] = CRM_Utils_System::url('civicrm/admin/setting/electoral/delete', ['id' => $job['id']]);
+      $districtJobs[] = $job;
+    }
     $this->assign('districtJobs', $districtJobs);
 
   }

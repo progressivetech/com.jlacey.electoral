@@ -1,4 +1,4 @@
-<h3>Electoral API extension settings</h3>
+<h3>API settings</h3>
 
 <div class="crm-block crm-form-block crm-electroal-api-form-block">
   <div class="help">Enter your API configuration below.</a></div>
@@ -79,21 +79,28 @@
   <a href="/civicrm/electoral/form" id="newDistrictJob" class="button" target="crm-popup"><i aria-hidden="true" class="crm-i fa-plus-circle"></i> Add New District Job</a>
 </div>
 
-  <table class="form-layout-compressed">
+<div id="electoral-district-jobs">
+  <table class="form-layout">
     <tr class="crm-electoral-api-form-block-job">
-      <th>Description</th>
-      <th>Status</th>
-      <th>Details</th>
-      <th>Date Created</th>
-      <th>Date modified</th>
+      <th><label>Description</label></th>
+      <th><label>Total Contacts</label></th>
+      <th><label>Percent complete</label></th>
+      <th><label>Status</label></th>
+      <th><label>Status Details</label></th>
+      <th><label>Date Created</label></th>
+      <th><label>Date modified</label></th>
+      <th><label>Action</label></th>
     </tr>
     {foreach from=$districtJobs item=districtJob}
         <tr class="crm-electoral-api-form-block-job">
           <td>{$districtJob.description}</td>
+          <td>{$districtJob.total_contacts}</td>
+          <td>{$districtJob.percent_complete}%</td>
           <td>{$districtJob.status}</td>
-          <td>{$districtJob.description}</td>
+          <td>{$districtJob.status_message}</td>
           <td>{$districtJob.date_created}</td>
           <td>{$districtJob.date_updated}</td>
+          <td><a class="action-item crm-hover-button crm-popup small-popup" href="{$districtJob.delete_link}" title="Delete District Job">Delete</a></td>
         </tr>
     {/foreach}
   </table>
