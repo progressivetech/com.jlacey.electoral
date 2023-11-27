@@ -25,7 +25,11 @@ class CRM_Electoral_Form_DeleteDistrictJob extends CRM_Core_Form {
         'isDefault' => TRUE,
       ),
     ));
-
+    // This code reloads the main page after deleting district job.
+    Civi::resources()->addScriptFile('com.jlacey.electoral', 'js/delete-district-job.js', [
+      'weight' => 10,
+      'region' => 'page-footer'
+    ]);
     parent::buildQuickForm();
   }
 

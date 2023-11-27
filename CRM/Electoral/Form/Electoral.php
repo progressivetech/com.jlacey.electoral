@@ -32,6 +32,12 @@ class CRM_Electoral_Form_Electoral extends CRM_Core_Form {
     // export form elements
     $this->assign('elementNames', $this->getRenderableElementNames());
 
+    // This code reloads the main page after adding a new district job.
+    Civi::resources()->addScriptFile('com.jlacey.electoral', 'js/electoral.js', [
+      'weight' => 10,
+      'region' => 'page-footer'
+    ]);
+
     parent::buildQuickForm();
   }
 

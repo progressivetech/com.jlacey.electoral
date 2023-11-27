@@ -29,7 +29,14 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
   ];
 
   public function buildQuickForm() {
+    // Add custom style sheet and the javascript necessary to produce a tab layout.
     Civi::resources()->addStyleFile('com.jlacey.electoral', 'electoral.css');
+    Civi::resources()->addScript('CRM.$( function() { CRM.$( "#tabs" ).tabs(); } );', 10, 'page-header');
+
+    if (!$this->apiSettingsEntered()) {
+      $session = CRM_Core_Session::singleton();
+      $session->setStatus(E::ts("Please enter your API settings first!"), E::ts("Missing step"), 'error');
+    }
     // This whole function is until metadata-driven chain-selects are solid in core.
     $this->addChainSelect('includedStatesProvinces', [
       'control_field' => 'electoralApiIncludedCountries',
@@ -128,6 +135,7 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
     }
     return empty($errors) ? TRUE : $errors;
   }
+
   /**
    * Necessary until metadata-driven chain-select is properly handled in Smarty forms.
    */
@@ -139,7 +147,6 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
 
     parent::postProcess();
     
-    // This part is permanent, for now at least.
     // Check if Cicero is active.  Enable or disable the "valid from/to" date custom fields accordingly.
     $ciceroId = \Civi\Api4\OptionValue::get(FALSE)
       ->addSelect('value')
@@ -157,4 +164,15 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
 
   }
 
+  /*
+   * Check if API settings have at least one provider configured.
+   */
+  protected function apiSettingsEntered() {
+    $providers = \Civi::Settings()->get('electoralApiProviders');
+    if (!$providers) {
+      return FALSE;
+    }
+    return TRUE;
+  }
+   
 }
