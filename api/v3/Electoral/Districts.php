@@ -9,33 +9,20 @@ use CRM_Electoral_ExtensionUtil as E;
  * @throws API_Exception
  */
 function civicrm_api3_electoral_Districts(array $params) : array {
-  try {
-    $limit = (int) ($params['limit'] ?? 100);
-    $update = (bool) ($params['update'] ?? FALSE);
-    $groups = $params['groups'] ?? FALSE;
-    if ($groups) {
-      // It's tempting to put double quotes or single quotes around
-      // the group names when adding it as a parameter on the scheduled
-      // jobs web UI.
-      $groups = trim($groups, '"\' ');
-    }
-    $cache = FALSE;
-    $EnabledProviders = \Civi::settings()->get('electoralApiProviders');
-    foreach ($EnabledProviders as $enabledProvider) {
-      $className = \Civi\Api4\OptionValue::get(FALSE)
-        ->addSelect('name')
-        ->addWhere('option_group_id:name', '=', 'electoral_api_data_providers')
-        ->addWhere('value', '=', $enabledProvider)
-        ->execute()
-        ->column('name')[0];
-      $provider = new $className($limit, $update, $cache, $groups);
-      $returnValues[] = $provider->processBatch();
-    }
-
-    return civicrm_api3_create_success($returnValues, $params, 'Electoral', 'Districts');
+  $limit = (int) ($params['limit'] ?? 100);
+  $update = (bool) ($params['update'] ?? FALSE);
+  $groups = $params['groups'] ?? FALSE;
+  if ($groups) {
+    // It's tempting to put double quotes or single quotes around
+    // the group names when adding it as a parameter on the scheduled
+    // jobs web UI.
+    $groups = trim($groups, '"\' ');
   }
-  catch (API_Exception $e) {
-    throw $e;
-  }
+  $result = \Civi\Api4\Electoral::RunOneOff()
+    ->setGroups($groups) 
+    ->setUpdate($update)
+    ->setLimit($limit)
+    ->execute();
 
+  return civicrm_api3_create_success($returnValues, $params, 'Electoral', 'Districts');
 }
