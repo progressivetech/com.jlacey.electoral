@@ -12,8 +12,13 @@ use Civi\Test\TransactionalInterface;
  */
 class mockGeocodeProviderClass {
   public static function format(&$params) {
-    $params['geo_code_1'] = rand(1,100);
-    $params['geo_code_2'] = -rand(1,100);
+    // We don't want to make any network calls, so simulate a geo coding call.
+    // Take an address and return geo coordinates. Ensure it is the same geo
+    // coordinates for the same address.
+    $hash1 = md5($params['street_address'] . ' ' . $params['city']);
+    $hash2 = md5($params['country'] . $params['postal_code'] . $params['street_address']);
+    $params['geo_code_1'] = crc32($hash1);
+    $params['geo_code_2'] = crc32($hash2);
     return TRUE;
   }
 }
@@ -23,7 +28,7 @@ class mockGeocodeProviderClass {
  *
  * @group headless
  */
-class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
+class DistrictJobTest extends \PHPUnit\Framework\TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 
   protected $addressId;
   protected $contactId;
@@ -134,7 +139,7 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
         ],
       ],
     ];
-    $this->checkData($testData, 'openstates');
+    $this->checkData($testData, 'OpenStates');
   }
 
   /**
@@ -205,7 +210,7 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
         ],
       ],
     ];
-    $this->checkData($testData, 'googlecivic');
+    $this->checkData($testData, 'GoogleCivic');
   }
 
   /**
@@ -279,42 +284,66 @@ class SingleAddressLookupTest extends \PHPUnit\Framework\TestCase implements Hea
         ],
       ],
     ];
-    $this->checkData($testData, 'cicero');
+    $this->checkData($testData, 'Cicero');
   }
    
   private function checkData($testData, $name) {
-    $class = NULL;
-    if ($name == 'openstates') {
-      $class = 'Civi\Electoral\Api\Openstates';
-    }
-    elseif ($name == 'cicero') {
-      $class = 'Civi\Electoral\Api\Cicero';
-    }
-    elseif ($name == 'googlecivic') {
-      $class = 'Civi\Electoral\Api\GoogleCivicInformation';
-    }
-    foreach($testData as $expected) {
+    // Build an array of values to pass to the districting code to override
+    // an actual lookup and instead use our test data.
+    $testReplacementMap = [];
+
+    foreach($testData as &$expected) {
+      // Create each contact.
       $this->createContact($expected['first_name'], $expected['last_name'], $expected['address']);
+
+      // Add the contactId so we can accurately test if this contactId
+      // has the correct districts attached when we are done.
+      $expected['contact_id'] = $this->contactId;
+
       // Create a mock guzzle client, specify exactly the response we
-      // should get from running a real query against Open States.
+      // should get from running a real query.
       $json = file_get_contents(__DIR__ . '/' . $expected['file']);
-      $mock = new \GuzzleHttp\Handler\MockHandler([
-        new \GuzzleHttp\Psr7\Response(200, [], $json)
-      ]);
-
+      $response = new \GuzzleHttp\Psr7\Response(200, [], $json);
+      $mock = new \GuzzleHttp\Handler\MockHandler([$response]);
       $handlerStack = \GuzzleHttp\HandlerStack::create($mock);
-      $client = new \GuzzleHttp\Client(['handler' => $handlerStack]);
+      $guzzleClient = new \GuzzleHttp\Client(['handler' => $handlerStack]);
 
-      $e = new $class(0, FALSE, TRUE);
-      $e->setGuzzleClient($client);
-      $e->setGeocodeProviderClass('mockGeocodeProviderClass');
-      $e->processSingleAddress($this->addressId);
+      // This array will be passed to the RunJobs API to ensure we "mock" the
+      // execution to avoid real lookups.
+      $testReplacementMap[$this->contactId] = [
+        'guzzle_client' => $guzzleClient,
+        'api_provider' => $name,
+      ];
+    }
+
+    // Create a district job that will district all these contacts.
+    $districtJobId = \Civi\Api4\DistrictJob::create()
+      ->addValue('contact_ids', serialize($this->contactIds))
+      ->addValue('status', \CRM_Electoral_BAO_DistrictJob::STATUS_PENDING)
+      ->addValue('offset', 0)
+      ->execute()->first()['id'];
+
+    // Execute the job.
+    \Civi\Api4\Electoral::RunJobs()
+      ->setTestReplacementMap($testReplacementMap)
+      ->setGeocodeProviderClass('mockGeocodeProviderClass')
+      ->execute();
+   
+    // Ensure the job status is set to completed as expected.
+    $status = \Civi\Api4\DistrictJob::get()
+      ->addWhere('id', '=', $districtJobId)
+      ->addSelect('status')
+      ->execute()->first()['status'];
+    $this->assertEquals(\CRM_Electoral_BAO_DistrictJob::STATUS_COMPLETED, $status, "District Job status is not complete.");
+
+    // Now test to see if we got the expected results for each contact.
+    foreach($testData as $expected) {
       $districts = \Civi\Api4\Contact::get()
           ->addSelect('electoral_districts.*')
-          ->addWhere('id', '=', $this->contactId)
+          ->addWhere('id', '=', $expected['contact_id'])
           ->execute();
       $identifier = $expected['file'];
-      $this->assertEquals($expected['districts_count'], $districts->count(), "$identifier count of districts.");
+      $this->assertEquals($expected['districts_count'], $districts->count(), "$identifier count of districts for " . $expected['first_name'] . ' ' . $expected['last_name']);
       
       foreach($districts as $district) {
         $level = $district['electoral_districts.electoral_level'];

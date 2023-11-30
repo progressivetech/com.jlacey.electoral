@@ -259,7 +259,7 @@ abstract class AbstractApi {
     //Retain the error, so we can filter out the address on future runs until it's corrected
     $contactId = $this->address['contact_id'] ?? NULL;
     $status = $this->results['status'] ?? NULL;
-    $message = $this->results['message'] ?? NULL;
+    $message = $this->results['message'] ?? '';
     if ($contactId && $status) {
       \Civi\Api4\Contact::update()
         ->setCheckPermissions(FALSE)

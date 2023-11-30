@@ -102,10 +102,10 @@ function electoral_parse_address($strAddress) {
   // 123 Street, City, State, Zip, Country
   $address = [];
   $pieces = explode(',', $strAddress);
-  $address['street_address'] = trim($pieces[0] ?? NULL);
-  $address['city'] = trim($pieces[1] ?? NULL);
-  $address['state_province'] = trim($pieces[2] ?? NULL);
-  $address['postal_code'] = trim($pieces[3] ?? NULL);
-  $address['country'] = trim($pieces[4] ?? NULL);
+  $address['street_address'] = trim($pieces[0] ?? '');
+  $address['city'] = trim($pieces[1] ?? '');
+  $address['state_province'] = trim($pieces[2] ?? '');
+  $address['postal_code'] = trim($pieces[3] ?? '');
+  $address['country'] = trim($pieces[4] ?? '');
   return $address;
 }
