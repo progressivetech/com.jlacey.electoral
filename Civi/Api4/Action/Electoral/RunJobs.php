@@ -68,13 +68,16 @@ class RunJobs extends \Civi\Api4\Generic\AbstractAction {
           // Are we done with this job? $offset starts at 0, so add one.
           $contactId = $contactIds[$activeOffset] ?? NULL;
           if (!$contactId) {
+            $jobResult = E::ts("Job: @jobId: @considered contacts considered, @processed contacts processed.", [ '@jobId' => $jobId, '@considered' => $considered, '@processed' => $processed]);
             // No more contacts to consider. We are done.
             \Civi\Api4\DistrictJob::update(FALSE)
               ->addValue('status', \CRM_Electoral_BAO_DistrictJob::STATUS_COMPLETED)
+              ->addValue('status_message', $jobResult)
               ->addValue('offset', $activeOffset)
               ->addWhere('id', '=', $jobId)
               ->execute()->first()['status'];
             // Continue to the next job.
+            $result[] = $jobResult;
             continue 2;
           }
 
@@ -89,7 +92,7 @@ class RunJobs extends \Civi\Api4\Generic\AbstractAction {
           $guzzleClient = $this->getTestReplacementMap()[$contactId]['guzzle_client'] ?? NULL;
           $apiProvider = $this->getTestReplacementMap()[$contactId]['api_provider'] ?? NULL;
           // Process this contact.
-          $result = \Civi\Api4\Electoral::Lookup(FALSE)
+          \Civi\Api4\Electoral::Lookup(FALSE)
             ->setContactId($contactId)
             ->setWrite(TRUE)
             ->setGuzzleClient($guzzleClient)
@@ -118,7 +121,9 @@ class RunJobs extends \Civi\Api4\Generic\AbstractAction {
         throw($e);
       }
     }
-    $result[] = "{$considered} contacts considered, {$processed} contacts processed.";
+    if (count($result) == 0) {
+      $result[] = E::ts("No jobs to do.");
+    }
   }
   
   /**
