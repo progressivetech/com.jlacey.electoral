@@ -95,5 +95,4 @@ class CRM_Electoral_Upgrader extends CRM_Extension_Upgrader_Base {
     }
     return $this->executeSqlFile('sql/auto_install.sql');
   }
-
 }

@@ -65,23 +65,22 @@ function electoral_civicrm_navigationMenu(&$params) {
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_install
  */
 function electoral_civicrm_install() {
-
-  $demTagExists = civicrm_api3('Tag', 'getcount', ['name' => "Democrat"]);
-  if ($demTagExists == 0) {
-    $demTag = civicrm_api3('Tag', 'create', ['name' => "Democrat"]);
-  }
-  $repTagExists = civicrm_api3('Tag', 'getcount', ['name' => "Republican"]);
-  if ($repTagExists == 0) {
-    $repTag = civicrm_api3('Tag', 'create', ['name' => "Republican"]);
-  }
-  $indTagExists = civicrm_api3('Tag', 'getcount', ['name' => "Independent"]);
-  if ($indTagExists == 0) {
-    $indTag = civicrm_api3('Tag', 'create', ['name' => "Independent"]);
-  }
-
   _electoral_civix_civicrm_install();
 }
 
+/**
+ * Implements hook_civicrm_uninstall().
+ *
+ * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_uninstall
+ */
+function electoral_civicrm_uninstall() {
+  // Remove the settings.
+  $settings = include(E::path('/settings/Electoral.setting.php'));
+  foreach ($settings as $key => $setting) {
+    // How do you delete a setting??
+    \Civi::settings()->set($key, NULL);
+  }
+}
 /**
  * Implements hook_civicrm_enable().
  *

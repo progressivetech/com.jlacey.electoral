@@ -5,8 +5,6 @@
  */
 return [
   'electoralApiProviders' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'electoralApiProviders',
     'type' => 'Select',
     'default' => NULL,
@@ -23,8 +21,6 @@ return [
     'title' => ts('Data Provider(s)'),
   ],
   'ciceroAPIKey' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'ciceroAPIKey',
     'type' => 'String',
     'default' => '',
@@ -37,8 +33,6 @@ return [
     'title' => ts('Cicero API Key'),
   ],
   'googleCivicInformationAPIKey' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'googleCivicInformationAPIKey',
     'type' => 'String',
     'default' => '',
@@ -51,8 +45,6 @@ return [
     'title' => ts('Google Civic Information API Key'),
   ],
   'openstatesAPIKey' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'openstatesAPIKey',
     'type' => 'String',
     'default' => '',
@@ -65,8 +57,6 @@ return [
     'title' => ts('Open States API Key'),
   ],
   'addressLocationType' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'addressLocationType',
     'type' => 'Integer',
     'default' => '1',
@@ -82,8 +72,6 @@ return [
     ],
   ],
   'electoralApiDistrictTypes' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'electoralApiDistrictTypes',
     'type' => 'Array',
     'default' => NULL,
@@ -100,8 +88,6 @@ return [
     'pseudoconstant' => ['optionGroupName' => 'electoral_districts_level_options'],
   ],
   'electoralApiNonlegislativeDistricts' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'electoralApiNonlegislativeDistricts',
     'type' => 'Boolean',
     'default' => '',
@@ -113,8 +99,6 @@ return [
     'title' => ts('Include Non-Legislative Districts'),
   ],
   'electoralApiFutureDate' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'electoralApiFutureDate',
     'type' => 'String',
     'default' => '',
@@ -126,8 +110,6 @@ return [
     'title' => ts('Use district data valid after the given date'),
   ],
   'electoralApiAllCountries' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'electoralApiAllCountries',
     'type' => 'Boolean',
     'default' => '',
@@ -140,8 +122,6 @@ return [
     'title' => ts('All Countries'),
   ],
   'electoralApiIncludedCountries' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'electoralApiIncludedCountries',
     'type' => 'Array',
     'default' => '',
@@ -161,8 +141,6 @@ return [
     ],
   ],
   'electoralApiAllStates' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'electoralApiAllStates',
     'type' => 'Boolean',
     'default' => '',
@@ -175,8 +153,6 @@ return [
     'title' => ts('All States/Provinces'),
   ],
   'includedStatesProvinces' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'includedStatesProvinces',
     'type' => 'Array',
     'default' => '',
@@ -196,8 +172,6 @@ return [
     ],
   ],
   'allCounties' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'allCounties',
     'type' => 'Boolean',
     'default' => '',
@@ -210,8 +184,6 @@ return [
     'title' => ts('All Counties'),
   ],
   'includedCounties' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'includedCounties',
     'type' => 'Array',
     'default' => '',
@@ -229,8 +201,6 @@ return [
     'title' => ts('Counties'),
   ],
   'electoralApiAllCities' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'electoralApiAllCities',
     'type' => 'Boolean',
     'default' => '',
@@ -243,8 +213,6 @@ return [
     'title' => ts('All Cities'),
   ],
   'includedCities' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'includedCities',
     'type' => 'Array',
     'default' => '',
@@ -257,8 +225,6 @@ return [
     'title' => ts('Cities'),
   ],
   'electoralApiLookupOnAddressUpdate' => [
-    'group_name' => 'Electoral API settings',
-    'group' => 'electoral',
     'name' => 'electoralApiLookupOnAddressUpdate',
     'type' => 'Boolean',
     'default' => '',
