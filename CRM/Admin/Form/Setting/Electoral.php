@@ -126,13 +126,6 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
       }
     }
 
-    // Ensure limit per run is an integer.
-    $limit = $values['limit_per_run'] ?? NULL;
-    if ($limit) {
-      if (!is_numeric($limit)) {
-        $errors['limit_per_run'] = E::ts("Please enter a number for limit to run.");
-      }
-    }
     return empty($errors) ? TRUE : $errors;
   }
 

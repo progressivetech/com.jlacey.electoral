@@ -19,6 +19,7 @@
         <tr class="crm-electoral-api-form-block-job">
           <th><label>Description</label></th>
           <th><label>Total Contacts</label></th>
+          <th><label># of Contacts to process per run (0 means unlimited)</label></th>
           <th><label>Percent complete</label></th>
           <th><label>Status</label></th>
           <th><label>Status Details</label></th>
@@ -30,6 +31,7 @@
             <tr class="crm-electoral-api-form-block-job">
               <td>{$districtJob.description}</td>
               <td>{$districtJob.total_contacts}</td>
+              <td>{$districtJob.limit_per_run}</td>
               <td>{$districtJob.percent_complete}%</td>
               <td>{$districtJob.status}</td>
               <td>{$districtJob.status_message}</td>

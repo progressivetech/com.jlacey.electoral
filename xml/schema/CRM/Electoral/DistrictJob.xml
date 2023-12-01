@@ -33,6 +33,12 @@
     <comment>Comma separated list of contact ids to re-district</comment>
   </field>
   <field>
+    <name>limit_per_run</name>
+    <type>int unsigned</type>
+    <comment>Only process the given number of contacts per run. Enter 0 for no limit.</comment>
+    <default>0</default>
+  </field>
+  <field>
     <name>status</name>
     <type>varchar</type>
     <!-- pending, in progress, completed, error, disabled -->
