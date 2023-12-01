@@ -81,6 +81,16 @@ class CRM_Admin_Form_Setting_Electoral extends CRM_Admin_Form_Setting {
       $job['total_contacts'] = count($contacts);
       $job['percent_complete'] = number_format($job['offset'] / $job['total_contacts'] * 100, 0);
       $job['delete_link'] = CRM_Utils_System::url('civicrm/admin/setting/electoral/delete', ['id' => $job['id']]);
+      if (!$job['update']) {
+        $job['update'] = 'no';
+      }
+      else {
+        $job['update'] = 'yes';
+      }
+
+      if (!$job['limit_per_run']) {
+        $job['limit_per_run'] = 'unlimited';
+      }
       $districtJobs[] = $job;
     }
     $this->assign('districtJobs', $districtJobs);

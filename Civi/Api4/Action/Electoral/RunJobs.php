@@ -40,11 +40,11 @@ class RunJobs extends \Civi\Api4\Generic\AbstractAction {
     $jobs = \Civi\Api4\DistrictJob::get(FALSE)
       ->addWhere('status', 'IN', $statuses)
       ->execute(); 
-    $considered = 0;
-    $processed = 0;
     $activeOffset = NULL;
     $jobId = NULL;
     foreach ($jobs as $job) {
+      $considered = 0;
+      $processed = 0;
       try {
         $jobId = $job['id'];
         // We are starting! Update the status.
@@ -56,7 +56,7 @@ class RunJobs extends \Civi\Api4\Generic\AbstractAction {
         $contactIds = unserialize($job['contact_ids']);
         $totalContacts = count($contactIds);
         $activeOffset = $job['offset'] ?? 0;
-        $limit = $job['process_per_run'] ?? 100;
+        $limit = $job['limit_per_run'] ?? 100;
         if ($limit == 0) {
           // This means unlimited, so set to arbirtrary high value
           $limit = 9999999;
@@ -65,11 +65,11 @@ class RunJobs extends \Civi\Api4\Generic\AbstractAction {
         $update = $job['update'] ?? FALSE;
 
         for ($activeOffset; $activeOffset < $activeLimit; $activeOffset++) {
-          // Are we done with this job? $offset starts at 0, so add one.
           $contactId = $contactIds[$activeOffset] ?? NULL;
           if (!$contactId) {
-            $jobResult = E::ts("Job: %1: %2 contacts considered, %3 contacts processed.", [ 1 => $jobId, 2 => $considered, 3 => $processed]);
             // No more contacts to consider. We are done.
+            $jobResult = E::ts("%1 contacts considered, %2 contacts processed.", [ 1 => $considered, 2 => $processed]);
+            $result[] = "Job $jobId: $jobResult";
             \Civi\Api4\DistrictJob::update(FALSE)
               ->addValue('status', \CRM_Electoral_BAO_DistrictJob::STATUS_COMPLETED)
               ->addValue('status_message', $jobResult)
@@ -77,7 +77,6 @@ class RunJobs extends \Civi\Api4\Generic\AbstractAction {
               ->addWhere('id', '=', $jobId)
               ->execute()->first()['status'];
             // Continue to the next job.
-            $result[] = $jobResult;
             continue 2;
           }
 
@@ -101,15 +100,30 @@ class RunJobs extends \Civi\Api4\Generic\AbstractAction {
             ->execute();
           $processed++;
         }
+
+        // Are there any more contacts to process or are we done?
+        $contactId = $contactIds[$activeOffset] ?? NULL;
+        if (!$contactId) {
+          // No more contacts, we are done.
+          $status = \CRM_Electoral_BAO_DistrictJob::STATUS_BREAKME;
+        }
+        else {
+          // More to process on the next run.
+          $status = \CRM_Electoral_BAO_DistrictJob::STATUS_IN_PROCESS;
+        }
+        $jobResult = E::ts("%1 contacts considered, %2 contacts processed.", [ 1 => $considered, 2 => $processed]);
+        $result[] = "Job $jobId: $jobResult";
+
         // Update the job so it's ready for the next run.
         \Civi\Api4\DistrictJob::update(FALSE)
-          ->addValue('status', \CRM_Electoral_BAO_DistrictJob::STATUS_IN_PROCESS)
+          ->addValue('status', $status)
+          ->addValue('status_message', $jobResult)
           ->addValue('offset', $activeOffset)
           ->addWhere('id', '=', $jobId)
           ->execute();
 
       }
-      catch (\Exception $e) {
+      catch (\Throwable $e) {
         // Catch any error so we can log and update the offset.
         \Civi\Api4\DistrictJob::update(FALSE)
           ->addValue('status', \CRM_Electoral_BAO_DistrictJob::STATUS_ERROR)

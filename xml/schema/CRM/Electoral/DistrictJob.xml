@@ -39,7 +39,7 @@
     <default>0</default>
   </field>
   <field>
-    <name>force</name>
+    <name>update</name>
     <type>tinyint</type>
     <default>0</default>
     <comment>Lookup contacts that already have district data present.</comment>
@@ -72,11 +72,13 @@
     <name>date_created</name>
     <type>timestamp</type>
     <comment>When was the job created.</comment>
+    <default>CURRENT_TIMESTAMP</default>
    </field>
    <field>
     <name>date_updated</name>
     <type>timestamp</type>
     <comment>When was the job last updated.</comment>
+    <default>CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP</default>
     <index>
       <name>index_date_updated</name>
       <fieldName>date_updated</fieldName>

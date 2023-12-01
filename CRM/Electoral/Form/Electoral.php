@@ -22,7 +22,7 @@ class CRM_Electoral_Form_Electoral extends CRM_Core_Form {
     );
     $this->addRule('group_id', E::ts("Please select a group"), 'required', NULL, 'client');
     $this->add('text', 'limit_per_run', ts('Limit per run'));
-    $this->add('advcheckbox', 'update', ts('Update?'));
+    $this->add('advcheckbox', 'update', ts('Force update?'));
 
     $this->addButtons([
         ['type' => 'submit', 'name' => E::ts('Schedule'), 'isDefault' => TRUE],

@@ -8,18 +8,15 @@ The extension is licensed under [AGPL-3.0](LICENSE.txt).
 ## Requirements
 
 * PHP v7.2+
-* CiviCRM 5.45+
-
-## Installation (Web UI)
-
-This extension has not yet been published for installation via the web UI.
+* CiviCRM 5.63+
 
 ## Configuration
 
 ### Settings page
 
 After installation, configure the extension at **Administer » System Settings »
-Electoral API**.  See screenshot below, with an explanation of each option:
+Electoral API**. Then click the "API Settings" tabl. See screenshot below, with
+an explanation of each option:
 
 ![Screenshot of Electoral API Settings page](/images/settings_screen.png)
 
@@ -38,10 +35,9 @@ Electoral API**.  See screenshot below, with an explanation of each option:
   levels. Cicero offers additional lookups for "Voting", "Judicial", "Police",
   and "School" (each additional lookup costs an additional credit).  Openstates
   only supports the "Country" and "State" levels.
-* **Include Future Districts** (Cicero only): If data exists for future
-  electoral districts in your area, you can enable this option to download
-  them.  You can distinguish current and future districts with the "Valid From"
-  and "Valid To" dates (see *Usage*, below).
+* **Use distict data valid after the given date** (Cicero only): If data exists for future
+  electoral districts in your area, enter the future date to use for lookups. Instead of getting
+  the current districts, you will get the districts that will be valid after the date given.
 * **Address location for district lookup**: Choose the address (home, work,
   etc.) you want to use to determine a contact's districts.
 * **Countries**/**States**/**Counties**: You can choose to only look up
@@ -57,17 +53,17 @@ Electoral API**.  See screenshot below, with an explanation of each option:
 
 There are two types of Scheduled jobs.
 
-#### Recurring jobs
+#### Recurring job
 
 If you would like to run a job on a regular schedule to add district
-information to your contacts that do not already have it, you can use the
-"Electoral API - District Lookup" job.
+information to your contacts that do not already have it, choose the
+recurring job.
 
-Under **Administration menu » System Settings » Scheduled Jobs** you will find
-a job titled *Electoral API - Districts Lookup*.  By enabling this job, CiviCRM
-will populate the districts of all contacts whose addresses meet the criteria
-specified on the Settings page.  Default is 100 contacts a day.  You can
-optionally set the parameters `limit`, `update`, or `groups` for example:
+Under **Administration menu » System Settings » Scheduled Jobs** enable
+*Electoral API - Lookup districts for all contacts*.  By enabling this job,
+CiviCRM will populate the districts of all contacts whose addresses meet the
+criteria specified on the Settings page.  You can optionally set the parameters
+`limit`, `update`, or `groups` for example:
 
 ```
 limit=100
@@ -78,22 +74,22 @@ groups=Administrators|Staff
 * **Limit** indicates how many contacts to look up districts for in a single
   run. Default: 100
 * **Update** set to false will not look up district data for contacts that
-  already have it.  **Update** set to true will include contacts that have
+  already have it. Set to true will include contacts that have
   already been looked up and overwrite their existing district data.  Default:
   false
 * **groups** will restrict look ups to contacts in the matching pipe (|) separated
-  list of group names. 
+  list of group names. No default, will look up all contacts in your database.
 
 #### One time job
 
 Sometimes you just want to schedule a one time job to add district info to a
 particular group.
 
-You can create a one time job via the **Administration menu » System Settings » Electoral API**
-screen. Scroll to the bottom of the page and click the "Add New District Job" button to add a new
+You can create a one time job via the **Administration menu » System Settings »
+Electoral API** screen. Click the "Add New District Job" button to add a new
 job.
 
-Be sure to enable "Electoral Run Scheduled Distrct Jobs" in the CiviCRM
+Then, enable the *Electoral API - Run pending district jobs* in the CiviCRM
 Scheduled Jobs screen. Each job scheduled in this manner will be run only once.
 
 ## Usage

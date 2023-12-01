@@ -8,7 +8,7 @@
   <div id="tabs-1">
     <h3>Scheduled District Jobs</h3>
 
-    <div class="help">Optionally, to set the district information for a group of contacts, create a new scheduled job on this screen, then ensure the "Electoral Run Scheduled Jobs" is configured to execute in the <a href="/civicrm/admin/job?reset=2">CiviCRM list of scheduled jobs.</a></div>
+    <div class="help">To set the district information for a group of contacts, create a new scheduled job on this screen, then ensure the "Electoral API - Run pending district jobs" is configured to execute in the <a href="/civicrm/admin/job?reset=1">CiviCRM list of scheduled jobs.</a></div>
 
     <div class="action-link">
       <a href="/civicrm/electoral/form" id="newDistrictJob" class="button" target="crm-popup"><i aria-hidden="true" class="crm-i fa-plus-circle"></i> Add New District Job</a>
@@ -19,10 +19,11 @@
         <tr class="crm-electoral-api-form-block-job">
           <th><label>Description</label></th>
           <th><label>Total Contacts</label></th>
-          <th><label>Contacts per run (0 for no limit)</label></th>
+          <th><label>Contacts per run</label></th>
+          <th><label>Force update</label></th>
           <th><label>Percent complete</label></th>
           <th><label>Status</label></th>
-          <th><label>Status Details</label></th>
+          <th><label>Status of last run</label></th>
           <th><label>Date Created</label></th>
           <th><label>Date modified</label></th>
           <th><label>Action</label></th>
@@ -32,6 +33,7 @@
               <td>{$districtJob.description}</td>
               <td>{$districtJob.total_contacts}</td>
               <td>{$districtJob.limit_per_run}</td>
+              <td>{$districtJob.update}</td>
               <td>{$districtJob.percent_complete}%</td>
               <td>{$districtJob.status}</td>
               <td>{$districtJob.status_message}</td>
