@@ -38,6 +38,7 @@ CREATE TABLE `civicrm_electoral_district_job` (
   `description` varchar(512) COMMENT 'Description of the district job ',
   `contact_ids` text COMMENT 'Comma separated list of contact ids to re-district',
   `limit_per_run` int unsigned DEFAULT 0 COMMENT 'Only process the given number of contacts per run. Enter 0 for no limit.',
+  `force` tinyint DEFAULT 0 COMMENT 'Lookup contacts that already have district data present.',
   `status` varchar(10) COMMENT 'Status of the job',
   `status_message` varchar(512) COMMENT 'Status explanation of the job',
   `offset` int unsigned DEFAULT 0 COMMENT 'Keeps track of the index of the last contact id processed',

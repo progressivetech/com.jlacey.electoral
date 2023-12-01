@@ -39,6 +39,12 @@
     <default>0</default>
   </field>
   <field>
+    <name>force</name>
+    <type>tinyint</type>
+    <default>0</default>
+    <comment>Lookup contacts that already have district data present.</comment>
+  </field>
+  <field>
     <name>status</name>
     <type>varchar</type>
     <!-- pending, in progress, completed, error, disabled -->

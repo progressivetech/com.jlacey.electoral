@@ -56,7 +56,7 @@ class RunJobs extends \Civi\Api4\Generic\AbstractAction {
         $contactIds = unserialize($job['contact_ids']);
         $totalContacts = count($contactIds);
         $activeOffset = $job['offset'] ?? 0;
-        $limit = $job['limit'] ?? 100;
+        $limit = $job['process_per_run'] ?? 100;
         if ($limit == 0) {
           // This means unlimited, so set to arbirtrary high value
           $limit = 9999999;
@@ -68,7 +68,7 @@ class RunJobs extends \Civi\Api4\Generic\AbstractAction {
           // Are we done with this job? $offset starts at 0, so add one.
           $contactId = $contactIds[$activeOffset] ?? NULL;
           if (!$contactId) {
-            $jobResult = E::ts("Job: @jobId: @considered contacts considered, @processed contacts processed.", [ '@jobId' => $jobId, '@considered' => $considered, '@processed' => $processed]);
+            $jobResult = E::ts("Job: %1: %2 contacts considered, %3 contacts processed.", [ 1 => $jobId, 2 => $considered, 3 => $processed]);
             // No more contacts to consider. We are done.
             \Civi\Api4\DistrictJob::update(FALSE)
               ->addValue('status', \CRM_Electoral_BAO_DistrictJob::STATUS_COMPLETED)
