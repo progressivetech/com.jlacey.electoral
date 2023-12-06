@@ -11,9 +11,9 @@ use CRM_Electoral_ExtensionUtil as E;
  */
 class Cicero extends \Civi\Electoral\AbstractApi {
 
-  const CIVICRM_CICERO_LEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/legislative_district?';
-  const CIVICRM_CICERO_OFFICIAL_QUERY_URL = 'https://cicero.azavea.com/v3.1/official?';
-  const CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL = 'https://cicero.azavea.com/v3.1/nonlegislative_district?';
+  const CIVICRM_CICERO_LEGISLATIVE_QUERY_URL = 'https://app.cicerodata.com/v3.1/legislative_district?';
+  const CIVICRM_CICERO_OFFICIAL_QUERY_URL = 'https://app.cicerodata.com/v3.1/official?';
+  const CIVICRM_CICERO_NONLEGISLATIVE_QUERY_URL = 'https://app.cicerodata.com/v3.1/nonlegislative_district?';
   const COUNCIL_DISTRICT_SYNONYMS = [
     'council_district',
     'ward',
