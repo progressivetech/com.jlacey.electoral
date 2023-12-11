@@ -15,7 +15,7 @@ The extension is licensed under [AGPL-3.0](LICENSE.txt).
 ### Settings page
 
 After installation, configure the extension at **Administer » System Settings »
-Electoral API**. Then click the "API Settings" tabl. See screenshot below, with
+Electoral API**. Then click the "API Settings" tab. See screenshot below, with
 an explanation of each option:
 
 ![Screenshot of Electoral API Settings page](/images/settings_screen.png)
