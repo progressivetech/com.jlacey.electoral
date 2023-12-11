@@ -10,7 +10,7 @@ use CRM_Electoral_ExtensionUtil as E;
  */
 function civicrm_api3_electoral_Runjobs(array $params) : array {
   $result = \Civi\Api4\Electoral::RunJobs()
-    ->execute();
+    ->execute()->first();
 
   return civicrm_api3_create_success($result, $params, 'Electoral', 'Runjobs');
 }
