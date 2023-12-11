@@ -283,6 +283,26 @@ class DistrictJobTest extends \PHPUnit\Framework\TestCase implements HeadlessInt
           ],
         ],
       ],
+      [
+        'file' => 'data/cicero/mo.json',
+        'first_name' => 'Mo',
+        'last_name' => 'McCicero',
+        'address' => "1505 Pinetree Ln, St. Louis, MO, 63119",
+        'districts_count' => 5,
+        'districts' => [
+          'administrativeArea2' => [
+              'lower' => 5,
+          ],
+          'administrativeArea1' => [
+              'upper' => 1,
+              'lower' => 91,
+          ],
+          'country' => [
+            'lower' => 2,
+            'upper' => 'MO',
+          ],
+        ],
+      ],
     ];
     $this->checkData($testData, 'Cicero');
   }
@@ -292,13 +312,13 @@ class DistrictJobTest extends \PHPUnit\Framework\TestCase implements HeadlessInt
     // an actual lookup and instead use our test data.
     $testReplacementMap = [];
 
-    foreach($testData as &$expected) {
+    foreach($testData as $key => $expected) {
       // Create each contact.
       $this->createContact($expected['first_name'], $expected['last_name'], $expected['address']);
 
       // Add the contactId so we can accurately test if this contactId
       // has the correct districts attached when we are done.
-      $expected['contact_id'] = $this->contactId;
+      $testData[$key]['contact_id'] = $this->contactId;
 
       // Create a mock guzzle client, specify exactly the response we
       // should get from running a real query.

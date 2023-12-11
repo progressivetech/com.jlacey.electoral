@@ -24,6 +24,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    * Map Cicero district types to Civi's levels.
    */
   private $levelMap = [
+    'COUNTY' => 'administrativeArea2',
     'LOCAL' => 'locality',
     'LOCAL_EXEC' => 'locality',
     'LOCAL_REDISTRICTED' => 'locality',
@@ -88,6 +89,7 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       'administrativeArea1',
       'administrativeArea2',
       'locality',
+      'county',
     ];
     $legislativeLookupComplete = FALSE;
     if ($this->includeDistricts) {
@@ -204,12 +206,6 @@ class Cicero extends \Civi\Electoral\AbstractApi {
       if ($skip) {
         return FALSE;
       }
-    }
-
-    // We also want to exclude COUNTY as a subtype - to avoid having county
-    // commissioners pop up when we want city council members.
-    if (property_exists($districtInfo, 'subtype') && $districtInfo->subtype == 'COUNTY') {
-      return FALSE;
     }
     if (empty($districtInfo->district_id)) {
       return FALSE;
@@ -330,7 +326,6 @@ class Cicero extends \Civi\Electoral\AbstractApi {
    */
   private function parseDistrictData($districtDatum) : array {
     $data['contactId'] = $this->address['contact_id'];
-    $data['level'] = $this->levelMap[$districtDatum->district_type];
     $data['state_province_id'] = $this->address['state_province_id'] ?? '';
     $data['county'] = NULL;
     $data['city'] = $districtDatum->city;
@@ -341,6 +336,23 @@ class Cicero extends \Civi\Electoral\AbstractApi {
     $data['valid_from'] = $districtDatum->valid_from ?? NULL;
     $data['valid_to'] = $districtDatum->valid_to ?? NULL;
     $data['ocd_id'] = $districtDatum->ocd_id;
+    // Is this a county district?
+    $isCountyDistrict = FALSE;
+    if ($districtDatum->district_type == 'LOCAL') {
+      if (property_exists($districtDatum, 'subtype') && $districtDatum->subtype == 'COUNTY') {
+        $isCountyDistrict = TRUE;
+      }
+    }
+
+    if ($isCountyDistrict) {
+      // If it's local, and county, we use the subtype.
+      $data['level'] = $this->levelMap[$districtDatum->subtype];
+    }
+    else {
+      // Otherwise, we use the district_type.
+      $data['level'] = $this->levelMap[$districtDatum->district_type];
+    }
+
     if ($districtDatum->district_type == 'LOCAL') {
       $data['note'] = str_replace(" " . $districtDatum->district_id, '', $districtDatum->label);
     }
