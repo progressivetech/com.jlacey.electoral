@@ -157,7 +157,7 @@ return [
     'name' => 'electoral_all_districts',
     'entity' => 'Job',
     'cleanup' => 'unused',
-    'update' => 'always',
+    'update' => 'unmodified',
     'params' => [
       'version' => 3,
       'name'          => 'Electoral API - Lookup districts for all contacts',
@@ -172,7 +172,7 @@ return [
     'name' => 'electoral_run_jobs',
     'entity' => 'Job',
     'cleanup' => 'unused',
-    'update' => 'always',
+    'update' => 'unmodified',
     'params' => [
       'version' => 3,
       'name'          => 'Electoral API - Run pending district jobs',
