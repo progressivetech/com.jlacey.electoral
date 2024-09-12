@@ -10,6 +10,16 @@ The extension is licensed under [AGPL-3.0](LICENSE.txt).
 * PHP v7.2+
 * CiviCRM 5.63+
 
+Based on a chat conversation with Jon Goldberg (the current maintainer), 
+in late 2023-April, I was informed that the code (presumably on the main branch), 
+is "a bit of a mess, honestly.  V2.0 only has Azavea support, v1 only has GCivic".  
+
+I (hesco) found no tags on this repository, but there does exist branches for 2.x and 1.x.  
+
+I suspect that the documentation below represents the 2.x branch, as the 
+configuration page at the HEAD of the main branch does not seem to represent 
+what we are led to expect from the documentation below.  
+
 ## Configuration
 
 ### Settings page
